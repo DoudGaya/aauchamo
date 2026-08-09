@@ -1,0 +1,8 @@
+import { z } from "zod";
+import { requireAccess, requirePermission, requireStation } from "@/lib/server/access";
+import { NotFoundError, apiFailure, apiSuccess, parseJson, requestIdFrom } from "@/lib/server/api";
+import { writeAudit } from "@/lib/server/audit";
+import { db } from "@/lib/server/db";
+
+const schema = z.object({ format: z.enum(["A4", "A5", "THERMAL_80MM", "LABEL"]), printerName: z.string().trim().max(120).optional(), reason: z.string().trim().min(3).max(500).optional() });
+export async function POST(request: Request, { params }: { params: Promise<{ documentId: string }> }) { const requestId = requestIdFrom(request); try { const access = requirePermission(await requireAccess(), "documents.view"); const input = await parseJson(request, schema); const { documentId } = await params; const document = await db.generatedDocument.findFirst({ where: { id: documentId, companyId: access.companyId } }); if (!document) throw new NotFoundError("Document was not found."); if (document.stationId) requireStation(access, document.stationId); const event = await db.$transaction(async (tx) => { const created = await tx.printEvent.create({ data: { documentId, printedById: access.userId, format: input.format, printerName: input.printerName, reason: input.reason } }); await writeAudit(tx, { companyId: access.companyId, actorId: access.userId, stationId: document.stationId, action: "document.printed", entityType: "GeneratedDocument", entityId: document.id, requestId, metadata: { format: input.format, printerName: input.printerName, reason: input.reason } }); return created; }); return apiSuccess(event, requestId); } catch (error) { return apiFailure(error, requestId); } }

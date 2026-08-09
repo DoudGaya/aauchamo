@@ -1,0 +1,2095 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserStatus {
+  PENDING_INVITE
+  ACTIVE
+  LOCKED
+  DISABLED
+}
+
+enum StationStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum RoleScope {
+  COMPANY
+  BUSINESS_UNIT
+  STATION
+}
+
+enum LoginAttemptResult {
+  SUCCESS
+  INVALID_CREDENTIALS
+  LOCKED
+  DISABLED
+  RATE_LIMITED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+enum AuditOutcome {
+  SUCCESS
+  DENIED
+  FAILURE
+}
+
+enum AttachmentStatus {
+  PENDING_UPLOAD
+  ACTIVE
+  QUARANTINED
+  DELETED
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+}
+
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  PUBLISHED
+  FAILED
+}
+
+enum IdempotencyStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum SettingValueType {
+  STRING
+  NUMBER
+  BOOLEAN
+  JSON
+  SECRET_REFERENCE
+}
+
+enum PaymentMethodType {
+  CASH
+  POS_TERMINAL
+  BANK_TRANSFER
+  WALLET
+  CREDIT
+  OTHER
+}
+
+enum EmploymentType {
+  PERMANENT
+  CONTRACT
+  TEMPORARY
+  INTERN
+  CONSULTANT
+}
+
+enum StaffStatus {
+  ACTIVE
+  ON_LEAVE
+  SUSPENDED
+  TERMINATED
+  RESIGNED
+  RETIRED
+}
+
+enum CustomerType {
+  INDIVIDUAL
+  BUSINESS
+}
+
+enum CustomerStatus {
+  ACTIVE
+  DISABLED
+  MERGED
+}
+
+enum CustomerContactType {
+  PHONE
+  EMAIL
+  ADDRESS
+}
+
+enum CustomerIdentifierType {
+  NATIONAL_ID
+  PASSPORT
+  TAX_ID
+  PNR
+  OTHER
+}
+
+enum ProductStatus {
+  ACTIVE
+  DISCONTINUED
+  DISABLED
+}
+
+enum PurchaseStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  PARTIALLY_RECEIVED
+  RECEIVED
+  CANCELLED
+}
+
+enum ReceiptStatus {
+  DRAFT
+  POSTED
+  REVERSED
+}
+
+enum StockMovementType {
+  OPENING
+  PURCHASE_RECEIPT
+  SALE
+  SALE_RETURN
+  TRANSFER_OUT
+  TRANSFER_IN
+  ADJUSTMENT
+  DAMAGE
+  RETURN_TO_SUPPLIER
+  REVERSAL
+}
+
+enum TransferStatus {
+  REQUESTED
+  DISPATCHED
+  RECEIVED
+  REJECTED
+  CANCELLED
+}
+
+enum AdjustmentStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  POSTED
+  REVERSED
+}
+
+enum SaleStatus {
+  HELD
+  POSTED
+  PARTIALLY_PAID
+  PAID
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum RefundStatus {
+  PENDING_APPROVAL
+  POSTED
+  REJECTED
+  REVERSED
+}
+
+enum CargoStatus {
+  DRAFT
+  PROCESSING
+  LABELLED
+  DISPATCHED
+  IN_TRANSIT
+  ARRIVED
+  DELIVERED
+  ON_HOLD
+  CANCELLED
+}
+
+enum AgentStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum WalletEntryType {
+  DEPOSIT
+  SALE_DEBIT
+  REFUND_CREDIT
+  ADJUSTMENT_CREDIT
+  ADJUSTMENT_DEBIT
+  REVERSAL
+}
+
+enum FinanceDirection {
+  DEBIT
+  CREDIT
+}
+
+enum PostingStatus {
+  DRAFT
+  PENDING_APPROVAL
+  POSTED
+  RECONCILED
+  REVERSED
+  REJECTED
+}
+
+enum CashSessionStatus {
+  OPEN
+  CLOSED
+  RECONCILED
+}
+
+enum BookingStatus {
+  RESERVED
+  TICKETED
+  CANCELLED
+  REFUNDED
+}
+
+enum DocumentStatus {
+  GENERATING
+  READY
+  FAILED
+  SUPERSEDED
+}
+
+model Company {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  legalName     String
+  displayName   String
+  email         String?
+  phone         String?
+  address       String?
+  logoObjectKey String?
+  timezone      String   @default("Africa/Lagos")
+  currencyCode  String   @default("NGN")
+  locale        String   @default("en-NG")
+  taxRate       Decimal  @default(0) @db.Decimal(7, 4)
+  isActive      Boolean  @default(true)
+  version       Int      @default(1)
+  createdById   String?
+  updatedById   String?
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(3)
+
+  businessUnits        BusinessUnit[]
+  stations             Station[]
+  users                User[]
+  roles                Role[]
+  sequences            Sequence[]
+  auditEvents          AuditEvent[]
+  approvals            ApprovalRequest[]
+  attachments          Attachment[]
+  notifications        Notification[]
+  settings             SystemSetting[]
+  outboxEvents         OutboxEvent[]
+  idempotencyKeys      IdempotencyKey[]
+  paymentMethods       PaymentMethod[]
+  departments          Department[]
+  positions            Position[]
+  staff                Staff[]
+  customers            Customer[]
+  customerMerges       CustomerMerge[]
+  productCategories    ProductCategory[]
+  unitsOfMeasure       UnitOfMeasure[]
+  suppliers            Supplier[]
+  products             Product[]
+  stockMovements       StockMovement[]
+  purchaseOrders       PurchaseOrder[]
+  goodsReceipts        GoodsReceipt[]
+  stockTransfers       StockTransfer[]
+  inventoryAdjustments InventoryAdjustment[]
+  sales                Sale[]
+  payments             Payment[]
+  refunds              Refund[]
+  cargoShipments       CargoShipment[]
+  agents               Agent[]
+  walletEntries        WalletEntry[]
+  financialAccounts    FinancialAccount[]
+  financialCategories  FinancialCategory[]
+  cashbookEntries      CashbookEntry[]
+  financialPeriods     FinancialPeriod[]
+  reconciliations      Reconciliation[]
+  ticketBookings       TicketBooking[]
+  generatedDocuments   GeneratedDocument[]
+
+  @@map("companies")
+}
+
+model BusinessUnit {
+  id          String   @id @default(cuid())
+  companyId   String
+  code        String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  version     Int      @default(1)
+  createdById String?
+  updatedById String?
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+
+  company         Company                 @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  stationLinks    StationBusinessUnit[]
+  roleAssignments UserRole[]
+  userScopes      UserBusinessUnitScope[]
+  sequences       Sequence[]
+  auditEvents     AuditEvent[]
+  approvals       ApprovalRequest[]
+  attachments     Attachment[]
+  notifications   Notification[]
+  settings        SystemSetting[]
+  departments     Department[]
+  staff           Staff[]
+  customers       Customer[]
+  purchaseOrders  PurchaseOrder[]
+  sales           Sale[]
+  cashbookEntries CashbookEntry[]
+  ticketBookings  TicketBooking[]
+
+  @@unique([companyId, code])
+  @@index([companyId, isActive])
+  @@map("business_units")
+}
+
+model Station {
+  id             String        @id @default(cuid())
+  companyId      String
+  code           String
+  name           String
+  legalName      String?
+  email          String?
+  phone          String?
+  address        String?
+  city           String?
+  state          String?
+  countryCode    String        @default("NG")
+  timezone       String        @default("Africa/Lagos")
+  status         StationStatus @default(ACTIVE)
+  openedAt       DateTime?     @db.Date
+  disabledAt     DateTime?     @db.Timestamptz(3)
+  disabledReason String?
+  version        Int           @default(1)
+  createdById    String?
+  updatedById    String?
+  createdAt      DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime      @updatedAt @db.Timestamptz(3)
+
+  company              Company                    @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  businessUnits        StationBusinessUnit[]
+  managerHistory       StationManagerAssignment[]
+  roleAssignments      UserRole[]
+  userScopes           UserStationScope[]
+  sequences            Sequence[]
+  auditEvents          AuditEvent[]
+  approvals            ApprovalRequest[]
+  attachments          Attachment[]
+  notifications        Notification[]
+  settings             SystemSetting[]
+  staffHome            Staff[]                    @relation("StaffHomeStation")
+  staffAssignments     StaffStationAssignment[]
+  customers            Customer[]
+  inventoryBalances    InventoryBalance[]
+  stockMovements       StockMovement[]
+  purchaseOrders       PurchaseOrder[]
+  goodsReceipts        GoodsReceipt[]
+  transfersOut         StockTransfer[]            @relation("TransferOrigin")
+  transfersIn          StockTransfer[]            @relation("TransferDestination")
+  inventoryAdjustments InventoryAdjustment[]
+  posSessions          POSSession[]
+  sales                Sale[]
+  payments             Payment[]
+  refunds              Refund[]
+  cargoShipments       CargoShipment[]
+  agents               Agent[]
+  walletEntries        WalletEntry[]
+  cashbookEntries      CashbookEntry[]
+  cashSessions         CashSession[]
+  ticketBookings       TicketBooking[]
+  generatedDocuments   GeneratedDocument[]
+
+  @@unique([companyId, code])
+  @@index([companyId, status])
+  @@map("stations")
+}
+
+model StationBusinessUnit {
+  stationId      String
+  businessUnitId String
+  isPrimary      Boolean  @default(false)
+  createdAt      DateTime @default(now()) @db.Timestamptz(3)
+
+  station      Station      @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  businessUnit BusinessUnit @relation(fields: [businessUnitId], references: [id], onDelete: Cascade)
+
+  @@id([stationId, businessUnitId])
+  @@index([businessUnitId])
+  @@map("station_business_units")
+}
+
+model User {
+  id                    String     @id @default(cuid())
+  companyId             String
+  name                  String?
+  firstName             String
+  lastName              String
+  username              String     @unique
+  email                 String?    @unique
+  emailVerified         DateTime?  @db.Timestamptz(3)
+  phone                 String?
+  image                 String?
+  passwordHash          String?
+  passwordChangedAt     DateTime?  @db.Timestamptz(3)
+  mustChangePassword    Boolean    @default(true)
+  status                UserStatus @default(PENDING_INVITE)
+  failedLoginCount      Int        @default(0)
+  lockedUntil           DateTime?  @db.Timestamptz(3)
+  lastLoginAt           DateTime?  @db.Timestamptz(3)
+  lastLoginIp           String?
+  securityVersion       Int        @default(1)
+  twoFactorEnabled      Boolean    @default(false)
+  twoFactorSecretCipher String?
+  version               Int        @default(1)
+  createdById           String?
+  updatedById           String?
+  createdAt             DateTime   @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime   @updatedAt @db.Timestamptz(3)
+
+  company             Company                    @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  accounts            Account[]
+  sessions            Session[]
+  roleAssignments     UserRole[]
+  stationScopes       UserStationScope[]
+  businessUnitScopes  UserBusinessUnitScope[]
+  managedStations     StationManagerAssignment[]
+  auditEvents         AuditEvent[]               @relation("AuditActor")
+  approvalsRequested  ApprovalRequest[]          @relation("ApprovalRequester")
+  approvalsAssigned   ApprovalRequest[]          @relation("ApprovalAssignee")
+  approvalsDecided    ApprovalRequest[]          @relation("ApprovalDecider")
+  attachmentsUploaded Attachment[]
+  notifications       Notification[]
+  notificationPrefs   NotificationPreference[]
+  idempotencyKeys     IdempotencyKey[]
+  loginAttempts       LoginAttempt[]
+  staffProfile        Staff?
+
+  @@index([companyId, status])
+  @@index([companyId, lastName, firstName])
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id              String    @id @default(cuid())
+  sessionToken    String    @unique
+  userId          String
+  expires         DateTime  @db.Timestamptz(3)
+  securityVersion Int       @default(1)
+  ipAddress       String?
+  userAgent       String?
+  lastSeenAt      DateTime  @default(now()) @db.Timestamptz(3)
+  revokedAt       DateTime? @db.Timestamptz(3)
+  revokedReason   String?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt, expires])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  purpose    String    @default("EMAIL_VERIFICATION")
+  expires    DateTime  @db.Timestamptz(3)
+  usedAt     DateTime? @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+
+  @@unique([identifier, token])
+  @@index([token, expires])
+  @@map("verification_tokens")
+}
+
+model Role {
+  id          String    @id @default(cuid())
+  companyId   String
+  code        String
+  name        String
+  description String?
+  scope       RoleScope @default(STATION)
+  isSystem    Boolean   @default(false)
+  isActive    Boolean   @default(true)
+  version     Int       @default(1)
+  createdById String?
+  updatedById String?
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
+
+  company     Company          @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  users       UserRole[]
+  permissions RolePermission[]
+
+  @@unique([companyId, code])
+  @@index([companyId, isActive])
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  module      String
+  action      String
+  description String
+  isSensitive Boolean  @default(false)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+
+  roles RolePermission[]
+
+  @@index([module, action])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  grantedById  String?
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  id             String    @id @default(cuid())
+  userId         String
+  roleId         String
+  stationId      String?
+  businessUnitId String?
+  validFrom      DateTime  @default(now()) @db.Timestamptz(3)
+  validUntil     DateTime? @db.Timestamptz(3)
+  assignedById   String?
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role         Role          @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  station      Station?      @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  businessUnit BusinessUnit? @relation(fields: [businessUnitId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId, stationId, businessUnitId])
+  @@index([userId, validUntil])
+  @@index([stationId])
+  @@index([businessUnitId])
+  @@map("user_roles")
+}
+
+model UserStationScope {
+  id           String   @id @default(cuid())
+  userId       String
+  stationId    String
+  canView      Boolean  @default(true)
+  canOperate   Boolean  @default(false)
+  isPrimary    Boolean  @default(false)
+  assignedById String?
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  station Station @relation(fields: [stationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, stationId])
+  @@index([stationId, canOperate])
+  @@map("user_station_scopes")
+}
+
+model UserBusinessUnitScope {
+  id             String   @id @default(cuid())
+  userId         String
+  businessUnitId String
+  canView        Boolean  @default(true)
+  canOperate     Boolean  @default(false)
+  assignedById   String?
+  createdAt      DateTime @default(now()) @db.Timestamptz(3)
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessUnit BusinessUnit @relation(fields: [businessUnitId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, businessUnitId])
+  @@index([businessUnitId, canOperate])
+  @@map("user_business_unit_scopes")
+}
+
+model StationManagerAssignment {
+  id           String    @id @default(cuid())
+  stationId    String
+  managerId    String
+  startsAt     DateTime  @default(now()) @db.Timestamptz(3)
+  endsAt       DateTime? @db.Timestamptz(3)
+  assignedById String?
+  createdAt    DateTime  @default(now()) @db.Timestamptz(3)
+
+  station Station @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  manager User    @relation(fields: [managerId], references: [id], onDelete: Restrict)
+
+  @@index([stationId, endsAt])
+  @@index([managerId])
+  @@map("station_manager_assignments")
+}
+
+model LoginAttempt {
+  id         String             @id @default(cuid())
+  userId     String?
+  identifier String
+  result     LoginAttemptResult
+  ipAddress  String?
+  userAgent  String?
+  requestId  String?
+  occurredAt DateTime           @default(now()) @db.Timestamptz(3)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([identifier, occurredAt])
+  @@index([ipAddress, occurredAt])
+  @@map("login_attempts")
+}
+
+model Sequence {
+  id             String   @id @default(cuid())
+  companyId      String
+  stationId      String?
+  businessUnitId String?
+  scopeKey       String
+  documentType   String
+  dateKey        String   @default("")
+  prefix         String
+  nextValue      BigInt   @default(1)
+  padding        Int      @default(6)
+  version        Int      @default(1)
+  updatedAt      DateTime @updatedAt @db.Timestamptz(3)
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  station      Station?      @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  businessUnit BusinessUnit? @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+
+  @@unique([companyId, scopeKey, documentType, dateKey])
+  @@index([stationId, documentType])
+  @@map("sequences")
+}
+
+model AuditEvent {
+  id             String       @id @default(cuid())
+  companyId      String
+  actorId        String?
+  stationId      String?
+  businessUnitId String?
+  action         String
+  entityType     String
+  entityId       String?
+  outcome        AuditOutcome @default(SUCCESS)
+  reason         String?
+  requestId      String?
+  ipAddress      String?
+  userAgent      String?
+  before         Json?
+  after          Json?
+  metadata       Json?
+  previousHash   String?
+  eventHash      String       @unique
+  occurredAt     DateTime     @default(now()) @db.Timestamptz(3)
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  actor        User?         @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  station      Station?      @relation(fields: [stationId], references: [id], onDelete: SetNull)
+  businessUnit BusinessUnit? @relation(fields: [businessUnitId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, occurredAt])
+  @@index([actorId, occurredAt])
+  @@index([entityType, entityId, occurredAt])
+  @@index([stationId, occurredAt])
+  @@index([companyId, eventHash])
+  @@map("audit_events")
+}
+
+model ApprovalRequest {
+  id              String         @id @default(cuid())
+  companyId       String
+  stationId       String?
+  businessUnitId  String?
+  entityType      String
+  entityId        String
+  action          String
+  status          ApprovalStatus @default(PENDING)
+  requestedById   String
+  assignedToId    String?
+  assignedRoleKey String?
+  decidedById     String?
+  requestReason   String
+  decisionReason  String?
+  payload         Json?
+  requestedAt     DateTime       @default(now()) @db.Timestamptz(3)
+  decidedAt       DateTime?      @db.Timestamptz(3)
+  expiresAt       DateTime?      @db.Timestamptz(3)
+  version         Int            @default(1)
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  station      Station?      @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  businessUnit BusinessUnit? @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  requestedBy  User          @relation("ApprovalRequester", fields: [requestedById], references: [id], onDelete: Restrict)
+  assignedTo   User?         @relation("ApprovalAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  decidedBy    User?         @relation("ApprovalDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+
+  @@index([companyId, status, requestedAt])
+  @@index([assignedToId, status])
+  @@index([entityType, entityId])
+  @@map("approval_requests")
+}
+
+model Attachment {
+  id              String           @id @default(cuid())
+  companyId       String
+  stationId       String?
+  businessUnitId  String?
+  uploadedById    String
+  module          String
+  recordType      String
+  recordId        String
+  bucket          String
+  objectKey       String           @unique
+  originalName    String
+  mimeType        String
+  sizeBytes       BigInt
+  checksumSha256  String?
+  encryptionKeyId String?
+  status          AttachmentStatus @default(PENDING_UPLOAD)
+  uploadedAt      DateTime?        @db.Timestamptz(3)
+  deletedAt       DateTime?        @db.Timestamptz(3)
+  createdAt       DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime         @updatedAt @db.Timestamptz(3)
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  station      Station?      @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  businessUnit BusinessUnit? @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  uploadedBy   User          @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([recordType, recordId])
+  @@index([companyId, module, createdAt])
+  @@map("attachments")
+}
+
+model Notification {
+  id             String             @id @default(cuid())
+  companyId      String
+  recipientId    String
+  stationId      String?
+  businessUnitId String?
+  type           String
+  severity       String             @default("INFO")
+  title          String
+  message        String
+  href           String?
+  entityType     String?
+  entityId       String?
+  status         NotificationStatus @default(UNREAD)
+  readAt         DateTime?          @db.Timestamptz(3)
+  archivedAt     DateTime?          @db.Timestamptz(3)
+  createdAt      DateTime           @default(now()) @db.Timestamptz(3)
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  recipient    User          @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  station      Station?      @relation(fields: [stationId], references: [id], onDelete: SetNull)
+  businessUnit BusinessUnit? @relation(fields: [businessUnitId], references: [id], onDelete: SetNull)
+
+  @@index([recipientId, status, createdAt])
+  @@index([companyId, type, createdAt])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id        String              @id @default(cuid())
+  userId    String
+  type      String
+  channel   NotificationChannel
+  enabled   Boolean             @default(true)
+  quietFrom String?
+  quietTo   String?
+  createdAt DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime            @updatedAt @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, channel])
+  @@map("notification_preferences")
+}
+
+model SystemSetting {
+  id             String           @id @default(cuid())
+  companyId      String
+  stationId      String?
+  businessUnitId String?
+  scopeKey       String           @default("COMPANY")
+  namespace      String
+  key            String
+  valueType      SettingValueType @default(JSON)
+  value          Json
+  isSensitive    Boolean          @default(false)
+  version        Int              @default(1)
+  updatedById    String?
+  createdAt      DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime         @updatedAt @db.Timestamptz(3)
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  station      Station?      @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  businessUnit BusinessUnit? @relation(fields: [businessUnitId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, scopeKey, namespace, key])
+  @@index([stationId, namespace])
+  @@index([businessUnitId, namespace])
+  @@map("system_settings")
+}
+
+model OutboxEvent {
+  id            String       @id @default(cuid())
+  companyId     String
+  aggregateType String
+  aggregateId   String
+  eventType     String
+  payload       Json
+  status        OutboxStatus @default(PENDING)
+  attempts      Int          @default(0)
+  availableAt   DateTime     @default(now()) @db.Timestamptz(3)
+  lockedAt      DateTime?    @db.Timestamptz(3)
+  lockedBy      String?
+  publishedAt   DateTime?    @db.Timestamptz(3)
+  lastError     String?
+  createdAt     DateTime     @default(now()) @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
+
+  @@index([status, availableAt])
+  @@index([aggregateType, aggregateId])
+  @@map("outbox_events")
+}
+
+model IdempotencyKey {
+  id           String            @id @default(cuid())
+  companyId    String
+  userId       String
+  route        String
+  key          String
+  requestHash  String
+  status       IdempotencyStatus @default(PROCESSING)
+  responseCode Int?
+  responseBody Json?
+  expiresAt    DateTime          @db.Timestamptz(3)
+  createdAt    DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime          @updatedAt @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([companyId, route, key])
+  @@index([expiresAt])
+  @@map("idempotency_keys")
+}
+
+model PaymentMethod {
+  id                String            @id @default(cuid())
+  companyId         String
+  code              String
+  name              String
+  type              PaymentMethodType
+  requiresReference Boolean           @default(false)
+  requiresTerminal  Boolean           @default(false)
+  allowsChange      Boolean           @default(false)
+  isActive          Boolean           @default(true)
+  displayOrder      Int               @default(0)
+  version           Int               @default(1)
+  createdAt         DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime          @updatedAt @db.Timestamptz(3)
+
+  company           Company            @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  payments          Payment[]
+  walletEntries     WalletEntry[]
+  financialAccounts FinancialAccount[]
+  cashbookEntries   CashbookEntry[]
+  refunds           Refund[]
+
+  @@unique([companyId, code])
+  @@index([companyId, isActive, displayOrder])
+  @@map("payment_methods")
+}
+
+model Department {
+  id             String   @id @default(cuid())
+  companyId      String
+  businessUnitId String?
+  code           String
+  name           String
+  description    String?
+  isActive       Boolean  @default(true)
+  version        Int      @default(1)
+  createdById    String?
+  updatedById    String?
+  createdAt      DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @db.Timestamptz(3)
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  businessUnit BusinessUnit? @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  staff        Staff[]
+
+  @@unique([companyId, code])
+  @@index([companyId, isActive])
+  @@map("departments")
+}
+
+model Position {
+  id          String   @id @default(cuid())
+  companyId   String
+  code        String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  version     Int      @default(1)
+  createdById String?
+  updatedById String?
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  staff   Staff[]
+
+  @@unique([companyId, code])
+  @@index([companyId, isActive])
+  @@map("positions")
+}
+
+model Staff {
+  id                   String         @id @default(cuid())
+  companyId            String
+  businessUnitId       String?
+  userId               String?        @unique
+  staffNumber          String
+  firstName            String
+  middleName           String?
+  lastName             String
+  preferredName        String?
+  phone                String
+  email                String?
+  address              String?
+  nationalIdCiphertext String?
+  salary               Decimal?       @db.Decimal(18, 2)
+  employmentDate       DateTime       @db.Date
+  employmentType       EmploymentType
+  status               StaffStatus    @default(ACTIVE)
+  departmentId         String
+  positionId           String
+  homeStationId        String
+  passportAttachmentId String?
+  version              Int            @default(1)
+  createdById          String?
+  updatedById          String?
+  createdAt            DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime       @updatedAt @db.Timestamptz(3)
+
+  company           Company                  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  businessUnit      BusinessUnit?            @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  user              User?                    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  department        Department               @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  position          Position                 @relation(fields: [positionId], references: [id], onDelete: Restrict)
+  homeStation       Station                  @relation("StaffHomeStation", fields: [homeStationId], references: [id], onDelete: Restrict)
+  employmentHistory EmploymentHistory[]
+  stationHistory    StaffStationAssignment[]
+  nextOfKin         NextOfKin[]
+
+  @@unique([companyId, staffNumber])
+  @@index([companyId, status, lastName, firstName])
+  @@index([homeStationId, status])
+  @@index([departmentId])
+  @@map("staff")
+}
+
+model EmploymentHistory {
+  id              String       @id @default(cuid())
+  staffId         String
+  previousStatus  StaffStatus?
+  newStatus       StaffStatus
+  effectiveAt     DateTime     @db.Date
+  reason          String
+  changedById     String
+  previousDetails Json?
+  newDetails      Json?
+  createdAt       DateTime     @default(now()) @db.Timestamptz(3)
+
+  staff Staff @relation(fields: [staffId], references: [id], onDelete: Restrict)
+
+  @@index([staffId, effectiveAt])
+  @@map("employment_history")
+}
+
+model StaffStationAssignment {
+  id           String    @id @default(cuid())
+  staffId      String
+  stationId    String
+  isPrimary    Boolean   @default(true)
+  startsAt     DateTime  @db.Date
+  endsAt       DateTime? @db.Date
+  reason       String
+  assignedById String
+  createdAt    DateTime  @default(now()) @db.Timestamptz(3)
+
+  staff   Staff   @relation(fields: [staffId], references: [id], onDelete: Restrict)
+  station Station @relation(fields: [stationId], references: [id], onDelete: Restrict)
+
+  @@index([staffId, endsAt])
+  @@index([stationId, endsAt])
+  @@map("staff_station_assignments")
+}
+
+model NextOfKin {
+  id           String   @id @default(cuid())
+  staffId      String
+  name         String
+  relationship String
+  phone        String
+  email        String?
+  address      String?
+  isPrimary    Boolean  @default(false)
+  createdById  String?
+  updatedById  String?
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+
+  staff Staff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId])
+  @@map("next_of_kin")
+}
+
+model Customer {
+  id                   String         @id @default(cuid())
+  companyId            String
+  businessUnitId       String?
+  homeStationId        String
+  customerNumber       String
+  type                 CustomerType   @default(INDIVIDUAL)
+  firstName            String?
+  lastName             String?
+  companyName          String?
+  displayName          String
+  primaryPhone         String
+  normalizedPhone      String
+  primaryEmail         String?
+  normalizedEmail      String?
+  defaultPnr           String?
+  defaultDestination   String?
+  defaultAirline       String?
+  nationalIdCiphertext String?
+  remarks              String?
+  status               CustomerStatus @default(ACTIVE)
+  mergedIntoId         String?
+  version              Int            @default(1)
+  createdById          String?
+  updatedById          String?
+  createdAt            DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime       @updatedAt @db.Timestamptz(3)
+
+  company         Company              @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  businessUnit    BusinessUnit?        @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  homeStation     Station              @relation(fields: [homeStationId], references: [id], onDelete: Restrict)
+  mergedInto      Customer?            @relation("CustomerMergedInto", fields: [mergedIntoId], references: [id], onDelete: Restrict)
+  mergedCustomers Customer[]           @relation("CustomerMergedInto")
+  contacts        CustomerContact[]
+  identifiers     CustomerIdentifier[]
+  mergeSources    CustomerMerge[]      @relation("CustomerMergeSource")
+  mergeTargets    CustomerMerge[]      @relation("CustomerMergeTarget")
+  sales           Sale[]
+  payments        Payment[]
+  refunds         Refund[]
+  cargoShipments  CargoShipment[]
+  agentProfile    Agent?
+  ticketBookings  TicketBooking[]
+
+  @@unique([companyId, customerNumber])
+  @@index([companyId, normalizedPhone])
+  @@index([companyId, normalizedEmail])
+  @@index([companyId, displayName])
+  @@index([homeStationId, status])
+  @@map("customers")
+}
+
+model CustomerContact {
+  id         String              @id @default(cuid())
+  customerId String
+  type       CustomerContactType
+  label      String?
+  value      String
+  normalized String
+  isPrimary  Boolean             @default(false)
+  isVerified Boolean             @default(false)
+  createdAt  DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime            @updatedAt @db.Timestamptz(3)
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, type, normalized])
+  @@index([type, normalized])
+  @@map("customer_contacts")
+}
+
+model CustomerIdentifier {
+  id              String                 @id @default(cuid())
+  customerId      String
+  type            CustomerIdentifierType
+  valueCiphertext String
+  valueHash       String
+  lastFour        String?
+  expiresAt       DateTime?              @db.Date
+  createdById     String?
+  createdAt       DateTime               @default(now()) @db.Timestamptz(3)
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, type, valueHash])
+  @@index([type, valueHash])
+  @@map("customer_identifiers")
+}
+
+model CustomerMerge {
+  id               String    @id @default(cuid())
+  companyId        String
+  sourceCustomerId String
+  targetCustomerId String
+  reason           String
+  snapshot         Json
+  mergedById       String
+  mergedAt         DateTime  @default(now()) @db.Timestamptz(3)
+  restoredAt       DateTime? @db.Timestamptz(3)
+  restoredById     String?
+
+  company        Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  sourceCustomer Customer @relation("CustomerMergeSource", fields: [sourceCustomerId], references: [id], onDelete: Restrict)
+  targetCustomer Customer @relation("CustomerMergeTarget", fields: [targetCustomerId], references: [id], onDelete: Restrict)
+
+  @@index([companyId, mergedAt])
+  @@index([sourceCustomerId])
+  @@index([targetCustomerId])
+  @@map("customer_merges")
+}
+
+model ProductCategory {
+  id          String   @id @default(cuid())
+  companyId   String
+  code        String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  products Product[]
+
+  @@unique([companyId, code])
+  @@index([companyId, isActive])
+  @@map("product_categories")
+}
+
+model UnitOfMeasure {
+  id        String   @id @default(cuid())
+  companyId String
+  code      String
+  name      String
+  precision Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  products Product[]
+
+  @@unique([companyId, code])
+  @@map("units_of_measure")
+}
+
+model Supplier {
+  id             String   @id @default(cuid())
+  companyId      String
+  supplierNumber String
+  name           String
+  contactName    String?
+  phone          String?
+  email          String?
+  address        String?
+  taxId          String?
+  paymentTerms   String?
+  isActive       Boolean  @default(true)
+  version        Int      @default(1)
+  createdById    String?
+  updatedById    String?
+  createdAt      DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @db.Timestamptz(3)
+
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  defaultProducts Product[]
+  purchaseOrders  PurchaseOrder[]
+
+  @@unique([companyId, supplierNumber])
+  @@index([companyId, name])
+  @@map("suppliers")
+}
+
+model Product {
+  id                String        @id @default(cuid())
+  companyId         String
+  categoryId        String
+  unitId            String
+  defaultSupplierId String?
+  code              String
+  barcode           String?
+  qrValue           String?
+  name              String
+  description       String?
+  purchasePrice     Decimal       @default(0) @db.Decimal(18, 2)
+  sellingPrice      Decimal       @db.Decimal(18, 2)
+  taxRate           Decimal       @default(0) @db.Decimal(7, 4)
+  reorderLevel      Decimal       @default(0) @db.Decimal(18, 3)
+  minimumLevel      Decimal       @default(0) @db.Decimal(18, 3)
+  trackBatches      Boolean       @default(false)
+  trackExpiry       Boolean       @default(false)
+  status            ProductStatus @default(ACTIVE)
+  version           Int           @default(1)
+  createdById       String?
+  updatedById       String?
+  createdAt         DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime      @updatedAt @db.Timestamptz(3)
+
+  company         Company                   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  category        ProductCategory           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  unit            UnitOfMeasure             @relation(fields: [unitId], references: [id], onDelete: Restrict)
+  defaultSupplier Supplier?                 @relation(fields: [defaultSupplierId], references: [id], onDelete: SetNull)
+  batches         Batch[]
+  balances        InventoryBalance[]
+  movements       StockMovement[]
+  purchaseLines   PurchaseOrderLine[]
+  receiptLines    GoodsReceiptLine[]
+  transferLines   StockTransferLine[]
+  adjustmentLines InventoryAdjustmentLine[]
+  saleLines       SaleLine[]
+  refundLines     RefundLine[]
+
+  @@unique([companyId, code])
+  @@unique([companyId, barcode])
+  @@index([companyId, name, status])
+  @@map("products")
+}
+
+model Batch {
+  id             String    @id @default(cuid())
+  productId      String
+  code           String
+  manufacturedAt DateTime? @db.Date
+  expiresAt      DateTime? @db.Date
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+
+  product   Product            @relation(fields: [productId], references: [id], onDelete: Restrict)
+  balances  InventoryBalance[]
+  movements StockMovement[]
+
+  @@unique([productId, code])
+  @@index([expiresAt])
+  @@map("batches")
+}
+
+model InventoryBalance {
+  id        String   @id @default(cuid())
+  stationId String
+  productId String
+  batchId   String?
+  batchKey  String   @default("")
+  quantity  Decimal  @default(0) @db.Decimal(18, 3)
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  station Station @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  batch   Batch?  @relation(fields: [batchId], references: [id], onDelete: Restrict)
+
+  @@unique([stationId, productId, batchKey])
+  @@index([productId, stationId])
+  @@map("inventory_balances")
+}
+
+model StockMovement {
+  id            String            @id @default(cuid())
+  companyId     String
+  stationId     String
+  productId     String
+  batchId       String?
+  movementType  StockMovementType
+  quantityDelta Decimal           @db.Decimal(18, 3)
+  balanceAfter  Decimal           @db.Decimal(18, 3)
+  unitCost      Decimal?          @db.Decimal(18, 2)
+  referenceType String
+  referenceId   String
+  reason        String?
+  occurredById  String
+  occurredAt    DateTime          @default(now()) @db.Timestamptz(3)
+  reversedById  String?
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  station Station @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  batch   Batch?  @relation(fields: [batchId], references: [id], onDelete: Restrict)
+
+  @@index([stationId, productId, occurredAt])
+  @@index([referenceType, referenceId])
+  @@map("stock_movements")
+}
+
+model PurchaseOrder {
+  id             String         @id @default(cuid())
+  companyId      String
+  stationId      String
+  businessUnitId String?
+  supplierId     String
+  orderNumber    String
+  status         PurchaseStatus @default(DRAFT)
+  orderDate      DateTime       @default(now()) @db.Date
+  expectedDate   DateTime?      @db.Date
+  subtotal       Decimal        @default(0) @db.Decimal(18, 2)
+  taxTotal       Decimal        @default(0) @db.Decimal(18, 2)
+  total          Decimal        @default(0) @db.Decimal(18, 2)
+  notes          String?
+  approvedById   String?
+  approvedAt     DateTime?      @db.Timestamptz(3)
+  createdById    String
+  version        Int            @default(1)
+  createdAt      DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime       @updatedAt @db.Timestamptz(3)
+
+  company      Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  station      Station             @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  businessUnit BusinessUnit?       @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  supplier     Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  lines        PurchaseOrderLine[]
+  receipts     GoodsReceipt[]
+
+  @@unique([companyId, orderNumber])
+  @@index([stationId, status, orderDate])
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderLine {
+  id               String  @id @default(cuid())
+  purchaseOrderId  String
+  productId        String
+  quantityOrdered  Decimal @db.Decimal(18, 3)
+  quantityReceived Decimal @default(0) @db.Decimal(18, 3)
+  unitCost         Decimal @db.Decimal(18, 2)
+  taxRate          Decimal @default(0) @db.Decimal(7, 4)
+  lineTotal        Decimal @db.Decimal(18, 2)
+
+  purchaseOrder PurchaseOrder      @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  product       Product            @relation(fields: [productId], references: [id], onDelete: Restrict)
+  receiptLines  GoodsReceiptLine[]
+
+  @@unique([purchaseOrderId, productId])
+  @@map("purchase_order_lines")
+}
+
+model GoodsReceipt {
+  id              String        @id @default(cuid())
+  companyId       String
+  stationId       String
+  purchaseOrderId String
+  receiptNumber   String
+  supplierRef     String?
+  status          ReceiptStatus @default(DRAFT)
+  receivedAt      DateTime      @default(now()) @db.Timestamptz(3)
+  receivedById    String
+  postedAt        DateTime?     @db.Timestamptz(3)
+  notes           String?
+  createdAt       DateTime      @default(now()) @db.Timestamptz(3)
+
+  company       Company            @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  station       Station            @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  purchaseOrder PurchaseOrder      @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict)
+  lines         GoodsReceiptLine[]
+
+  @@unique([companyId, receiptNumber])
+  @@index([purchaseOrderId, status])
+  @@map("goods_receipts")
+}
+
+model GoodsReceiptLine {
+  id                  String  @id @default(cuid())
+  goodsReceiptId      String
+  purchaseOrderLineId String
+  productId           String
+  batchId             String?
+  quantity            Decimal @db.Decimal(18, 3)
+  unitCost            Decimal @db.Decimal(18, 2)
+
+  goodsReceipt      GoodsReceipt      @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
+  purchaseOrderLine PurchaseOrderLine @relation(fields: [purchaseOrderLineId], references: [id], onDelete: Restrict)
+  product           Product           @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([goodsReceiptId])
+  @@map("goods_receipt_lines")
+}
+
+model StockTransfer {
+  id                   String         @id @default(cuid())
+  companyId            String
+  originStationId      String
+  destinationStationId String
+  transferNumber       String
+  status               TransferStatus @default(REQUESTED)
+  requestedById        String
+  requestedAt          DateTime       @default(now()) @db.Timestamptz(3)
+  dispatchedById       String?
+  dispatchedAt         DateTime?      @db.Timestamptz(3)
+  receivedById         String?
+  receivedAt           DateTime?      @db.Timestamptz(3)
+  reason               String
+  notes                String?
+  version              Int            @default(1)
+
+  company            Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  originStation      Station             @relation("TransferOrigin", fields: [originStationId], references: [id], onDelete: Restrict)
+  destinationStation Station             @relation("TransferDestination", fields: [destinationStationId], references: [id], onDelete: Restrict)
+  lines              StockTransferLine[]
+
+  @@unique([companyId, transferNumber])
+  @@index([originStationId, status, requestedAt])
+  @@index([destinationStationId, status, requestedAt])
+  @@map("stock_transfers")
+}
+
+model StockTransferLine {
+  id                 String  @id @default(cuid())
+  stockTransferId    String
+  productId          String
+  batchId            String?
+  quantityRequested  Decimal @db.Decimal(18, 3)
+  quantityDispatched Decimal @default(0) @db.Decimal(18, 3)
+  quantityReceived   Decimal @default(0) @db.Decimal(18, 3)
+
+  stockTransfer StockTransfer @relation(fields: [stockTransferId], references: [id], onDelete: Cascade)
+  product       Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([stockTransferId])
+  @@map("stock_transfer_lines")
+}
+
+model InventoryAdjustment {
+  id               String           @id @default(cuid())
+  companyId        String
+  stationId        String
+  adjustmentNumber String
+  status           AdjustmentStatus @default(DRAFT)
+  reason           String
+  requestedById    String
+  requestedAt      DateTime         @default(now()) @db.Timestamptz(3)
+  approvedById     String?
+  approvedAt       DateTime?        @db.Timestamptz(3)
+  postedAt         DateTime?        @db.Timestamptz(3)
+  version          Int              @default(1)
+
+  company Company                   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  station Station                   @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  lines   InventoryAdjustmentLine[]
+
+  @@unique([companyId, adjustmentNumber])
+  @@index([stationId, status, requestedAt])
+  @@map("inventory_adjustments")
+}
+
+model InventoryAdjustmentLine {
+  id                    String  @id @default(cuid())
+  inventoryAdjustmentId String
+  productId             String
+  batchId               String?
+  expectedQuantity      Decimal @db.Decimal(18, 3)
+  countedQuantity       Decimal @db.Decimal(18, 3)
+  quantityDelta         Decimal @db.Decimal(18, 3)
+
+  adjustment InventoryAdjustment @relation(fields: [inventoryAdjustmentId], references: [id], onDelete: Cascade)
+  product    Product             @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([inventoryAdjustmentId])
+  @@map("inventory_adjustment_lines")
+}
+
+model POSSession {
+  id           String            @id @default(cuid())
+  stationId    String
+  openedById   String
+  openedAt     DateTime          @default(now()) @db.Timestamptz(3)
+  openingCash  Decimal           @default(0) @db.Decimal(18, 2)
+  status       CashSessionStatus @default(OPEN)
+  closedById   String?
+  closedAt     DateTime?         @db.Timestamptz(3)
+  expectedCash Decimal?          @db.Decimal(18, 2)
+  countedCash  Decimal?          @db.Decimal(18, 2)
+  variance     Decimal?          @db.Decimal(18, 2)
+
+  station Station @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  sales   Sale[]
+
+  @@index([stationId, status, openedAt])
+  @@map("pos_sessions")
+}
+
+model Sale {
+  id                 String     @id @default(cuid())
+  companyId          String
+  stationId          String
+  businessUnitId     String
+  customerId         String
+  agentId            String?
+  posSessionId       String?
+  saleNumber         String
+  status             SaleStatus @default(POSTED)
+  subtotal           Decimal    @db.Decimal(18, 2)
+  taxTotal           Decimal    @default(0) @db.Decimal(18, 2)
+  discountTotal      Decimal    @default(0) @db.Decimal(18, 2)
+  total              Decimal    @db.Decimal(18, 2)
+  paidTotal          Decimal    @default(0) @db.Decimal(18, 2)
+  outstandingTotal   Decimal    @default(0) @db.Decimal(18, 2)
+  officerId          String
+  postedAt           DateTime   @default(now()) @db.Timestamptz(3)
+  cancelledAt        DateTime?  @db.Timestamptz(3)
+  cancellationReason String?
+  reversedSaleId     String?
+  version            Int        @default(1)
+  createdAt          DateTime   @default(now()) @db.Timestamptz(3)
+
+  company      Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  station      Station             @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  businessUnit BusinessUnit        @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  customer     Customer            @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  agent        Agent?              @relation(fields: [agentId], references: [id], onDelete: Restrict)
+  posSession   POSSession?         @relation(fields: [posSessionId], references: [id], onDelete: Restrict)
+  reversedSale Sale?               @relation("SaleReversal", fields: [reversedSaleId], references: [id], onDelete: Restrict)
+  reversals    Sale[]              @relation("SaleReversal")
+  lines        SaleLine[]
+  allocations  PaymentAllocation[]
+  refunds      Refund[]
+  outstanding  OutstandingPayment?
+
+  @@unique([companyId, saleNumber])
+  @@index([stationId, postedAt, status])
+  @@index([customerId, postedAt])
+  @@map("sales")
+}
+
+model SaleLine {
+  id               String  @id @default(cuid())
+  saleId           String
+  productId        String
+  productCode      String
+  productName      String
+  unitCode         String
+  quantity         Decimal @db.Decimal(18, 3)
+  unitPrice        Decimal @db.Decimal(18, 2)
+  costPrice        Decimal @default(0) @db.Decimal(18, 2)
+  taxRate          Decimal @default(0) @db.Decimal(7, 4)
+  taxAmount        Decimal @default(0) @db.Decimal(18, 2)
+  discountAmount   Decimal @default(0) @db.Decimal(18, 2)
+  lineTotal        Decimal @db.Decimal(18, 2)
+  quantityRefunded Decimal @default(0) @db.Decimal(18, 3)
+
+  sale        Sale         @relation(fields: [saleId], references: [id], onDelete: Restrict)
+  product     Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+  refundLines RefundLine[]
+
+  @@index([saleId])
+  @@map("sale_lines")
+}
+
+model Payment {
+  id              String    @id @default(cuid())
+  companyId       String
+  stationId       String
+  customerId      String?
+  paymentMethodId String
+  paymentNumber   String
+  amount          Decimal   @db.Decimal(18, 2)
+  reference       String?
+  terminalId      String?
+  receivedById    String
+  receivedAt      DateTime  @default(now()) @db.Timestamptz(3)
+  reversedAt      DateTime? @db.Timestamptz(3)
+  reversalReason  String?
+
+  company       Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  station       Station             @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  customer      Customer?           @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  paymentMethod PaymentMethod       @relation(fields: [paymentMethodId], references: [id], onDelete: Restrict)
+  allocations   PaymentAllocation[]
+
+  @@unique([companyId, paymentNumber])
+  @@index([stationId, receivedAt])
+  @@index([reference])
+  @@map("payments")
+}
+
+model PaymentAllocation {
+  id        String   @id @default(cuid())
+  paymentId String
+  saleId    String
+  amount    Decimal  @db.Decimal(18, 2)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  sale    Sale    @relation(fields: [saleId], references: [id], onDelete: Restrict)
+
+  @@unique([paymentId, saleId])
+  @@index([saleId])
+  @@map("payment_allocations")
+}
+
+model OutstandingPayment {
+  id          String    @id @default(cuid())
+  saleId      String    @unique
+  original    Decimal   @db.Decimal(18, 2)
+  outstanding Decimal   @db.Decimal(18, 2)
+  dueAt       DateTime? @db.Date
+  settledAt   DateTime? @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
+
+  sale Sale @relation(fields: [saleId], references: [id], onDelete: Restrict)
+
+  @@index([outstanding, dueAt])
+  @@map("outstanding_payments")
+}
+
+model Refund {
+  id               String       @id @default(cuid())
+  companyId        String
+  stationId        String
+  saleId           String
+  customerId       String
+  paymentMethodId  String
+  refundNumber     String
+  status           RefundStatus @default(POSTED)
+  amount           Decimal      @db.Decimal(18, 2)
+  reason           String
+  returnToStock    Boolean      @default(true)
+  paymentReference String?
+  requestedById    String
+  approvedById     String?
+  postedAt         DateTime?    @db.Timestamptz(3)
+  createdAt        DateTime     @default(now()) @db.Timestamptz(3)
+
+  company       Company       @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  station       Station       @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  sale          Sale          @relation(fields: [saleId], references: [id], onDelete: Restrict)
+  customer      Customer      @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id], onDelete: Restrict)
+  lines         RefundLine[]
+
+  @@unique([companyId, refundNumber])
+  @@index([saleId, status])
+  @@map("refunds")
+}
+
+model RefundLine {
+  id         String  @id @default(cuid())
+  refundId   String
+  saleLineId String
+  productId  String
+  quantity   Decimal @db.Decimal(18, 3)
+  amount     Decimal @db.Decimal(18, 2)
+
+  refund   Refund   @relation(fields: [refundId], references: [id], onDelete: Restrict)
+  saleLine SaleLine @relation(fields: [saleLineId], references: [id], onDelete: Restrict)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([refundId, saleLineId])
+  @@map("refund_lines")
+}
+
+model CargoShipment {
+  id              String      @id @default(cuid())
+  companyId       String
+  stationId       String
+  customerId      String
+  awbNumber       String
+  senderName      String
+  senderPhone     String
+  receiverName    String
+  receiverPhone   String
+  receiverAddress String?
+  origin          String
+  destination     String
+  weightKg        Decimal     @db.Decimal(12, 3)
+  pieces          Int
+  commodity       String
+  airline         String?
+  flightNumber    String?
+  flightDate      DateTime?   @db.Date
+  handlingNotes   String?
+  declaredValue   Decimal?    @db.Decimal(18, 2)
+  status          CargoStatus @default(DRAFT)
+  labelVersion    Int         @default(1)
+  reprintCount    Int         @default(0)
+  createdById     String
+  dispatchedAt    DateTime?   @db.Timestamptz(3)
+  deliveredAt     DateTime?   @db.Timestamptz(3)
+  version         Int         @default(1)
+  createdAt       DateTime    @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime    @updatedAt @db.Timestamptz(3)
+
+  company  Company            @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  station  Station            @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  customer Customer           @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  events   CargoStatusEvent[]
+
+  @@unique([companyId, awbNumber])
+  @@index([stationId, status, createdAt])
+  @@index([customerId, createdAt])
+  @@map("cargo_shipments")
+}
+
+model CargoStatusEvent {
+  id             String       @id @default(cuid())
+  shipmentId     String
+  previousStatus CargoStatus?
+  status         CargoStatus
+  location       String?
+  notes          String?
+  changedById    String
+  occurredAt     DateTime     @default(now()) @db.Timestamptz(3)
+
+  shipment CargoShipment @relation(fields: [shipmentId], references: [id], onDelete: Restrict)
+
+  @@index([shipmentId, occurredAt])
+  @@map("cargo_status_events")
+}
+
+model Agent {
+  id            String      @id @default(cuid())
+  companyId     String
+  homeStationId String
+  customerId    String?     @unique
+  agentNumber   String
+  name          String
+  contactName   String
+  phone         String
+  email         String?
+  address       String?
+  creditLimit   Decimal     @default(0) @db.Decimal(18, 2)
+  status        AgentStatus @default(ACTIVE)
+  version       Int         @default(1)
+  createdById   String
+  createdAt     DateTime    @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime    @updatedAt @db.Timestamptz(3)
+
+  company     Company         @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  homeStation Station         @relation(fields: [homeStationId], references: [id], onDelete: Restrict)
+  customer    Customer?       @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  wallet      WalletAccount?
+  sales       Sale[]
+  bookings    TicketBooking[]
+
+  @@unique([companyId, agentNumber])
+  @@index([companyId, name, status])
+  @@map("agents")
+}
+
+model WalletAccount {
+  id        String   @id @default(cuid())
+  agentId   String   @unique
+  balance   Decimal  @default(0) @db.Decimal(18, 2)
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  agent   Agent         @relation(fields: [agentId], references: [id], onDelete: Restrict)
+  entries WalletEntry[]
+
+  @@map("wallet_accounts")
+}
+
+model WalletEntry {
+  id              String          @id @default(cuid())
+  companyId       String
+  stationId       String
+  walletAccountId String
+  paymentMethodId String?
+  entryNumber     String
+  type            WalletEntryType
+  amount          Decimal         @db.Decimal(18, 2)
+  balanceAfter    Decimal         @db.Decimal(18, 2)
+  referenceType   String
+  referenceId     String
+  externalRef     String?
+  reason          String?
+  postedById      String
+  reversedEntryId String?
+  postedAt        DateTime        @default(now()) @db.Timestamptz(3)
+
+  company       Company        @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  station       Station        @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  walletAccount WalletAccount  @relation(fields: [walletAccountId], references: [id], onDelete: Restrict)
+  paymentMethod PaymentMethod? @relation(fields: [paymentMethodId], references: [id], onDelete: Restrict)
+  reversedEntry WalletEntry?   @relation("WalletReversal", fields: [reversedEntryId], references: [id], onDelete: Restrict)
+  reversals     WalletEntry[]  @relation("WalletReversal")
+
+  @@unique([companyId, entryNumber])
+  @@index([walletAccountId, postedAt])
+  @@index([referenceType, referenceId])
+  @@map("wallet_entries")
+}
+
+model FinancialAccount {
+  id              String   @id @default(cuid())
+  companyId       String
+  code            String
+  name            String
+  accountType     String
+  paymentMethodId String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  paymentMethod   PaymentMethod?   @relation(fields: [paymentMethodId], references: [id], onDelete: Restrict)
+  entries         CashbookEntry[]
+  cashSessions    CashSession[]
+  reconciliations Reconciliation[]
+
+  @@unique([companyId, code])
+  @@map("financial_accounts")
+}
+
+model FinancialCategory {
+  id        String           @id @default(cuid())
+  companyId String
+  code      String
+  name      String
+  type      FinanceDirection
+  isActive  Boolean          @default(true)
+
+  company Company         @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  entries CashbookEntry[]
+
+  @@unique([companyId, code])
+  @@map("financial_categories")
+}
+
+model CashbookEntry {
+  id                String           @id @default(cuid())
+  companyId         String
+  stationId         String
+  businessUnitId    String?
+  accountId         String
+  categoryId        String
+  paymentMethodId   String?
+  entryNumber       String
+  direction         FinanceDirection
+  amount            Decimal          @db.Decimal(18, 2)
+  description       String
+  sourceType        String
+  sourceId          String
+  externalReference String?
+  status            PostingStatus    @default(POSTED)
+  postedById        String
+  approvedById      String?
+  postedAt          DateTime?        @db.Timestamptz(3)
+  reversalOfId      String?
+  reversalReason    String?
+  version           Int              @default(1)
+  createdAt         DateTime         @default(now()) @db.Timestamptz(3)
+
+  company       Company           @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  station       Station           @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  businessUnit  BusinessUnit?     @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  account       FinancialAccount  @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  category      FinancialCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  paymentMethod PaymentMethod?    @relation(fields: [paymentMethodId], references: [id], onDelete: Restrict)
+  reversalOf    CashbookEntry?    @relation("CashbookReversal", fields: [reversalOfId], references: [id], onDelete: Restrict)
+  reversals     CashbookEntry[]   @relation("CashbookReversal")
+
+  @@unique([companyId, entryNumber])
+  @@unique([companyId, sourceType, sourceId, direction, accountId])
+  @@index([stationId, status, createdAt])
+  @@index([accountId, postedAt])
+  @@map("cashbook_entries")
+}
+
+model FinancialPeriod {
+  id         String    @id @default(cuid())
+  companyId  String
+  name       String
+  startsAt   DateTime  @db.Date
+  endsAt     DateTime  @db.Date
+  isClosed   Boolean   @default(false)
+  closedById String?
+  closedAt   DateTime? @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
+
+  @@unique([companyId, startsAt, endsAt])
+  @@index([companyId, isClosed])
+  @@map("financial_periods")
+}
+
+model CashSession {
+  id             String            @id @default(cuid())
+  stationId      String
+  accountId      String
+  openedById     String
+  openedAt       DateTime          @default(now()) @db.Timestamptz(3)
+  openingBalance Decimal           @db.Decimal(18, 2)
+  status         CashSessionStatus @default(OPEN)
+  closedById     String?
+  closedAt       DateTime?         @db.Timestamptz(3)
+  expected       Decimal?          @db.Decimal(18, 2)
+  counted        Decimal?          @db.Decimal(18, 2)
+  variance       Decimal?          @db.Decimal(18, 2)
+
+  station Station          @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  account FinancialAccount @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@index([stationId, status, openedAt])
+  @@map("cash_sessions")
+}
+
+model Reconciliation {
+  id               String   @id @default(cuid())
+  companyId        String
+  accountId        String
+  statementDate    DateTime @db.Date
+  statementBalance Decimal  @db.Decimal(18, 2)
+  systemBalance    Decimal  @db.Decimal(18, 2)
+  difference       Decimal  @db.Decimal(18, 2)
+  status           String
+  reconciledById   String
+  reconciledAt     DateTime @default(now()) @db.Timestamptz(3)
+  notes            String?
+
+  company Company          @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  account FinancialAccount @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@index([accountId, statementDate])
+  @@map("reconciliations")
+}
+
+model TicketBooking {
+  id             String        @id @default(cuid())
+  companyId      String
+  stationId      String
+  businessUnitId String?
+  customerId     String
+  agentId        String?
+  bookingNumber  String
+  pnr            String
+  passengerName  String
+  origin         String
+  destination    String
+  airline        String
+  flightNumber   String?
+  travelDate     DateTime      @db.Date
+  fare           Decimal       @db.Decimal(18, 2)
+  sellingPrice   Decimal       @db.Decimal(18, 2)
+  profit         Decimal       @db.Decimal(18, 2)
+  status         BookingStatus @default(RESERVED)
+  createdById    String
+  ticketedAt     DateTime?     @db.Timestamptz(3)
+  cancelledAt    DateTime?     @db.Timestamptz(3)
+  version        Int           @default(1)
+  createdAt      DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime      @updatedAt @db.Timestamptz(3)
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  station      Station       @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  businessUnit BusinessUnit? @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  customer     Customer      @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  agent        Agent?        @relation(fields: [agentId], references: [id], onDelete: Restrict)
+
+  @@unique([companyId, bookingNumber])
+  @@index([companyId, pnr])
+  @@index([stationId, travelDate, status])
+  @@map("ticket_bookings")
+}
+
+model GeneratedDocument {
+  id             String         @id @default(cuid())
+  companyId      String
+  stationId      String?
+  documentType   String
+  documentNumber String
+  sourceType     String
+  sourceId       String
+  templateKey    String
+  version        Int            @default(1)
+  status         DocumentStatus @default(GENERATING)
+  objectKey      String?
+  mimeType       String?
+  checksum       String?
+  generatedById  String
+  generatedAt    DateTime?      @db.Timestamptz(3)
+  createdAt      DateTime       @default(now()) @db.Timestamptz(3)
+
+  company Company      @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  station Station?     @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  prints  PrintEvent[]
+
+  @@unique([companyId, documentNumber, version])
+  @@index([sourceType, sourceId])
+  @@map("generated_documents")
+}
+
+model PrintEvent {
+  id          String   @id @default(cuid())
+  documentId  String
+  printedById String
+  printerName String?
+  format      String
+  reason      String?
+  printedAt   DateTime @default(now()) @db.Timestamptz(3)
+
+  document GeneratedDocument @relation(fields: [documentId], references: [id], onDelete: Restrict)
+
+  @@index([documentId, printedAt])
+  @@map("print_events")
+}
