@@ -17,6 +17,7 @@ const updateSchema = z.object({
   city: z.string().trim().max(80).nullable().optional(),
   state: z.string().trim().max(80).nullable().optional(),
   timezone: z.string().trim().min(3).max(80).optional(),
+  businessUnitIds: z.array(z.string().cuid()).optional(),
   reason: z.string().trim().min(5).max(500),
 });
 
@@ -69,6 +70,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ st
         },
       });
       if (!result.count) throw new ConflictError("This station changed after you opened it. Refresh and try again.");
+      
+      if (input.businessUnitIds !== undefined) {
+        await tx.stationBusinessUnit.deleteMany({ where: { stationId } });
+        await tx.stationBusinessUnit.createMany({
+          data: input.businessUnitIds.map((businessUnitId, index) => ({
+            stationId,
+            businessUnitId,
+            isPrimary: index === 0,
+          })),
+        });
+      }
+      
       const updated = await tx.station.findUniqueOrThrow({ where: { id: stationId } });
       await writeAudit(tx, {
         companyId: access.companyId,

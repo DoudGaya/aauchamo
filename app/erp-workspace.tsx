@@ -128,6 +128,7 @@ type StationRecord = AllowedStation & {
 
 type StaffRecord = {
   id: string;
+  userId: string | null;
   staffNumber: string;
   firstName: string;
   middleName: string | null;
@@ -1614,6 +1615,8 @@ function StationsView() {
 function StationProfilePanel({ station, onDone }: { station: StationRecord; onDone: () => void }) {
   const detailApi = useApiData<StationDetailRecord>(`/api/stations/${station.id}`);
   const detail = detailApi.data;
+  const buApi = useApiData<any[]>("/api/settings/business-units");
+  
   const [busy, setBusy] = useState(false);
   const [disableBusy, setDisableBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -1624,6 +1627,7 @@ function StationProfilePanel({ station, onDone }: { station: StationRecord; onDo
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [timezone, setTimezone] = useState("");
+  const [selectedBus, setSelectedBus] = useState<string[]>([]);
   const [reason, setReason] = useState("");
   const [disableReason, setDisableReason] = useState("");
 
@@ -1637,15 +1641,31 @@ function StationProfilePanel({ station, onDone }: { station: StationRecord; onDo
     setPhone(detail.phone ?? "");
     setEmail(detail.email ?? "");
     setTimezone(detail.timezone ?? "Africa/Lagos");
+    setSelectedBus(detail.businessUnits.map((bu) => bu.businessUnit.id));
   }, [detail]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleUpdate = async (event: FormEvent) => {
     event.preventDefault();
     if (!detail) return;
+    if (selectedBus.length === 0) {
+      setErr("At least one business unit must be enabled for this station.");
+      return;
+    }
     setErr(null); setBusy(true);
     try {
-      await workflowPost(`/api/stations/${station.id}`, { version: detail.version, name, city, state: stateVal, address, phone: phone || null, email: email || null, timezone, reason }, "PATCH");
+      await workflowPost(`/api/stations/${station.id}`, {
+        version: detail.version,
+        name,
+        city,
+        state: stateVal,
+        address,
+        phone: phone || null,
+        email: email || null,
+        timezone,
+        businessUnitIds: selectedBus,
+        reason
+      }, "PATCH");
       onDone();
     } catch (e) { setErr(e instanceof Error ? e.message : "Update failed."); }
     finally { setBusy(false); }
@@ -1677,6 +1697,31 @@ function StationProfilePanel({ station, onDone }: { station: StationRecord; onDo
           <Field label="Email"><input className="field-input" type="email" value={email} onChange={e => setEmail(e.target.value)} /></Field>
           <Field label="Timezone"><input className="field-input" value={timezone} onChange={e => setTimezone(e.target.value)} /></Field>
           <Field label="Address (full width)" full><input className="field-input" value={address} onChange={e => setAddress(e.target.value)} /></Field>
+          
+          <Field label="Enabled Business Units" full>
+            <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginTop: "8px", border: "1px solid var(--line)", padding: "10px", borderRadius: "4px", background: "var(--field-bg)" }}>
+              {buApi.loading ? (
+                <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>Loading business units...</span>
+              ) : (buApi.data ?? []).map((bu) => (
+                <label key={bu.id} style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedBus.includes(bu.id)}
+                    style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedBus([...selectedBus, bu.id]);
+                      } else {
+                        setSelectedBus(selectedBus.filter((id) => id !== bu.id));
+                      }
+                    }}
+                  />
+                  <span style={{ fontSize: "11px", color: "var(--text-primary)" }}>{bu.name}</span>
+                </label>
+              ))}
+            </div>
+          </Field>
+
           <Field label="Reason for change" full><input className="field-input" value={reason} onChange={e => setReason(e.target.value)} required minLength={5} placeholder="Briefly describe this update" /></Field>
         </div>
         <div className="workflow-actions">
@@ -1745,10 +1790,16 @@ function StationManagerPanel({ station, onDone }: { station: StationRecord; onDo
           <Field label="New manager">
             <select className="field-input" value={managerId} onChange={e => setManagerId(e.target.value)} required>
               <option value="">— Select staff member —</option>
-              {(staffApi.data ?? []).map(person => {
-                const name = [person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ");
-                return <option key={person.id} value={person.id}>{name} · {person.homeStation.code}</option>;
-              })}
+              {(staffApi.data ?? [])
+                .filter((person) => person.userId !== null)
+                .map((person) => {
+                  const name = [person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ");
+                  return (
+                    <option key={person.id} value={person.userId!}>
+                      {name} · {person.homeStation.code}
+                    </option>
+                  );
+                })}
             </select>
           </Field>
           <Field label="Reason for assignment">
