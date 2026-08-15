@@ -2068,11 +2068,18 @@ function StaffDetailModal({
 
   const printIDCard = () => {
     if (!detail) return;
-    const printWindow = window.open("", "_blank", "width=600,height=800");
+    const printWindow = window.open("", "_blank", "width=800,height=600");
     if (!printWindow) return;
     const name = [detail.firstName, detail.middleName, detail.lastName].filter(Boolean).join(" ");
     const passport = passportPhoto || "";
+    const logoUrl = new URL("/aauchamo-logo.png", window.location.origin).toString();
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=STAFF:${detail.staffNumber}`;
     
+    // Calculate 5 years expiry
+    const empDate = new Date(detail.employmentDate);
+    const expiryDate = new Date(empDate.setFullYear(empDate.getFullYear() + 5));
+    const expiryStr = expiryDate.toLocaleDateString("en-GB");
+
     printWindow.document.write(`
       <html>
         <head>
@@ -2083,141 +2090,278 @@ function StaffDetailModal({
               display: flex;
               justify-content: center;
               align-items: center;
+              gap: 30px;
               height: 100vh;
               margin: 0;
               background: #f3f4f6;
+              padding: 20px;
+            }
+            .card-container {
+              display: flex;
+              gap: 30px;
             }
             .id-card {
-              width: 250px;
-              height: 380px;
-              background: white;
-              border-radius: 12px;
-              box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+              width: 280px;
+              height: 440px;
+              border-radius: 16px;
+              box-shadow: 0 8px 24px rgba(0,0,0,0.12);
               overflow: hidden;
+              border: 1px solid #d1d5db;
+              position: relative;
+              box-sizing: border-box;
+              background: white;
               display: flex;
               flex-direction: column;
               align-items: center;
-              border: 1px solid #e5e7eb;
-              position: relative;
             }
-            .card-header {
+            .id-card.front {
+              background: #dc2626;
+              color: white;
+            }
+            .logo-container {
               width: 100%;
-              height: 80px;
-              background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+              height: 90px;
               display: flex;
               justify-content: center;
               align-items: center;
-              color: white;
-              font-weight: bold;
-              font-size: 16px;
-              letter-spacing: 1px;
-              text-transform: uppercase;
+              padding: 15px 10px 5px;
+              box-sizing: border-box;
             }
-            .photo-container {
-              width: 100px;
-              height: 100px;
+            .logo-box {
+              background: white;
+              border-radius: 8px;
+              padding: 6px 12px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              max-width: 90%;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            }
+            .logo-img {
+              max-height: 45px;
+              max-width: 100%;
+              object-fit: contain;
+            }
+            .photo-border {
+              width: 125px;
+              height: 125px;
               border-radius: 50%;
               border: 3px solid white;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-              background: #e5e7eb;
-              margin-top: -40px;
-              z-index: 10;
+              box-shadow: 0 4px 10px rgba(0,0,0,0.2);
               overflow: hidden;
               display: flex;
               justify-content: center;
               align-items: center;
+              background: #e5e7eb;
+              margin: 10px 0;
             }
-            .photo-container img {
+            .photo-border img {
               width: 100%;
               height: 100%;
               object-fit: cover;
             }
             .photo-placeholder {
-              font-size: 32px;
+              font-size: 40px;
               color: #9ca3af;
             }
             .details {
-              margin-top: 16px;
               display: flex;
               flex-direction: column;
               align-items: center;
               text-align: center;
-              padding: 0 16px;
               flex: 1;
+              padding: 0 15px;
+              margin-top: 10px;
             }
             .name {
-              font-size: 16px;
+              font-size: 18px;
               font-weight: bold;
-              color: #111827;
               margin-bottom: 2px;
-            }
-            .number {
-              font-size: 11px;
-              color: #3b82f6;
-              font-weight: 600;
               letter-spacing: 0.5px;
+            }
+            .position {
+              font-size: 11px;
+              font-weight: bold;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              margin-bottom: 4px;
+              color: #fca5a5;
+            }
+            .department {
+              font-size: 11px;
+              color: #f3f4f6;
               margin-bottom: 12px;
             }
-            .info-group {
+            .contacts {
+              font-size: 10px;
+              color: #fca5a5;
+              display: flex;
+              flex-direction: column;
+              gap: 2px;
+            }
+            .footer-bar {
+              width: 100%;
+              height: 45px;
+              background: #7f1d1d;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding: 0 16px;
+              box-sizing: border-box;
+              font-size: 11px;
+              font-weight: bold;
+              border-top: 1px solid rgba(0,0,0,0.1);
+              color: white;
+            }
+
+            /* BACK CARD */
+            .id-card.back {
+              background: white;
+              padding: 20px 16px;
+              color: #374151;
+            }
+            .auth-header {
+              font-size: 12px;
+              font-weight: bold;
+              color: #dc2626;
+              text-transform: uppercase;
               margin-bottom: 8px;
               text-align: center;
             }
-            .info-label {
+            .auth-text {
               font-size: 9px;
-              text-transform: uppercase;
-              color: #9ca3af;
-              letter-spacing: 0.5px;
-              margin-bottom: 1px;
+              text-align: center;
+              line-height: 1.4;
+              margin-bottom: 12px;
+              color: #4b5563;
             }
-            .info-value {
-              font-size: 12px;
-              font-weight: 600;
-              color: #374151;
+            .office-details {
+              font-size: 10px;
+              text-align: center;
+              line-height: 1.4;
+              margin-bottom: 15px;
             }
-            .card-footer {
-              width: 100%;
-              height: 35px;
-              background: #f9fafb;
-              border-top: 1px solid #f3f4f6;
+            .office-details strong {
+              display: block;
+              font-size: 11px;
+              color: #111827;
+              margin-bottom: 2px;
+            }
+            .qr-container {
               display: flex;
               justify-content: center;
               align-items: center;
+              margin-bottom: 12px;
+              background: #f9fafb;
+              padding: 8px;
+              border-radius: 8px;
+              border: 1px solid #f3f4f6;
+            }
+            .back-contacts {
               font-size: 9px;
               color: #6b7280;
+              text-align: center;
+              line-height: 1.4;
+              flex: 1;
+            }
+            .back-contacts strong {
+              font-size: 11px;
+              color: #111827;
+              display: block;
+              margin-bottom: 2px;
+            }
+            .expiry-bar {
+              width: 100%;
+              border-top: 1px solid #e5e7eb;
+              padding-top: 10px;
+              text-align: center;
+              font-size: 10px;
+              color: #9ca3af;
               font-weight: 500;
             }
+
             @media print {
-              body { background: white; }
-              .id-card { box-shadow: none; border: 1px solid #d1d5db; }
+              body {
+                background: transparent;
+                padding: 0;
+                margin: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 20px;
+                height: auto;
+              }
+              .card-container {
+                gap: 20px;
+              }
+              .id-card {
+                box-shadow: none;
+                border: 1px solid #d1d5db;
+                page-break-inside: avoid;
+              }
             }
           </style>
         </head>
         <body>
-          <div class="id-card">
-            <div class="card-header">AAU CHAMO</div>
-            <div class="photo-container">
-              ${passport ? `<img src="${passport}" alt="Photo" />` : `<div class="photo-placeholder">👤</div>`}
+          <div class="card-container">
+            <!-- FRONT -->
+            <div class="id-card front">
+              <div class="logo-container">
+                <div class="logo-box">
+                  <img class="logo-img" src="${logoUrl}" alt="AAU Chamo Logo" />
+                </div>
+              </div>
+              
+              <div class="photo-border">
+                ${passport ? `<img src="${passport}" alt="${name}" />` : `<div class="photo-placeholder">👤</div>`}
+              </div>
+              
+              <div class="details">
+                <div class="name">${name}</div>
+                <div class="position">${detail.position?.name || "STAFF"}</div>
+                <div class="department">${detail.department?.name || "OPERATIONS"}</div>
+                <div class="contacts">
+                  <span>${detail.email || ""}</span>
+                  <span>${detail.phone || ""}</span>
+                </div>
+              </div>
+              
+              <div class="footer-bar">
+                <span>ID: ${detail.staffNumber}</span>
+                <span>${detail.homeStation?.code || "HQ"}</span>
+              </div>
             </div>
-            <div class="details">
-              <div class="name">${name}</div>
-              <div class="number">${detail.staffNumber}</div>
-              <div class="info-group">
-                <div class="info-label">Department</div>
-                <div class="info-value">${detail.department?.name || "HR"}</div>
+
+            <!-- BACK -->
+            <div class="id-card back">
+              <div class="auth-header">AUTHORIZATION</div>
+              <div class="auth-text">
+                This card is the property of <strong>AAU Chamo Groups</strong>. It must be surrendered upon termination of employment or upon request by an authorized official. If found, please return to the Head Office.
               </div>
-              <div class="info-group">
-                <div class="info-label">Position</div>
-                <div class="info-value">${detail.position?.name || "Staff"}</div>
+              
+              <div class="office-details">
+                <strong>Head Office</strong>
+                BLOCK AL, Maiduguri Road<br />
+                Phone: 08062249834<br />
+                Email: doudgaya@gmail.com
               </div>
-              <div class="info-group">
-                <div class="info-label">Home Station</div>
-                <div class="info-value">${detail.homeStation?.name || "Lagos"}</div>
+
+              <div class="qr-container">
+                <img src="${qrCodeUrl}" alt="QR Code" width="100" height="100" />
               </div>
-            </div>
-            <div class="card-footer">
-              SECURITY ACCESS CARD
+
+              <div class="back-contacts">
+                <strong>${detail.staffNumber}</strong>
+                <span>${detail.phone}</span><br />
+                <span>${detail.email || "info@aauchamo.com"}</span>
+              </div>
+
+              <div class="expiry-bar">
+                Valid until: ${expiryStr}
+              </div>
             </div>
           </div>
+          
           <script>
             window.onload = function() {
               setTimeout(function() {
@@ -2242,6 +2386,7 @@ function StaffDetailModal({
       month: "long",
       day: "numeric",
     });
+    const logoUrl = new URL("/aauchamo-logo.png", window.location.origin).toString();
     const salaryFormatted = salary
       ? new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(Number(salary))
       : "₦[Negotiated]";
@@ -2253,29 +2398,35 @@ function StaffDetailModal({
           <style>
             body {
               font-family: 'Times New Roman', Times, serif;
-              padding: 40px;
+              padding: 50px;
               color: #111827;
               line-height: 1.6;
               font-size: 15px;
             }
             .letterhead {
               text-align: center;
-              border-bottom: 2px solid #111827;
+              border-bottom: 3px double #b91c1c;
               padding-bottom: 20px;
               margin-bottom: 30px;
             }
+            .letterhead img {
+              max-height: 80px;
+              object-fit: contain;
+              margin-bottom: 10px;
+            }
             .letterhead h1 {
-              font-size: 26px;
+              font-size: 24px;
               margin: 0 0 5px;
               letter-spacing: 1px;
               text-transform: uppercase;
               font-family: 'Segoe UI', Arial, sans-serif;
-              color: #1e3a8a;
+              color: #b91c1c;
             }
             .letterhead p {
               margin: 2px 0;
-              font-size: 12px;
+              font-size: 11px;
               color: #4b5563;
+              font-family: 'Segoe UI', Arial, sans-serif;
             }
             .date {
               margin-bottom: 20px;
@@ -2283,6 +2434,7 @@ function StaffDetailModal({
             }
             .recipient {
               margin-bottom: 30px;
+              line-height: 1.4;
             }
             .subject {
               text-align: center;
@@ -2290,10 +2442,19 @@ function StaffDetailModal({
               text-transform: uppercase;
               margin-bottom: 25px;
               text-decoration: underline;
+              font-size: 16px;
             }
             .content p {
               margin-bottom: 16px;
               text-align: justify;
+            }
+            .clause-title {
+              font-weight: bold;
+              margin-top: 15px;
+              margin-bottom: 5px;
+              text-transform: uppercase;
+              font-size: 14px;
+              color: #111827;
             }
             .signature-section {
               margin-top: 50px;
@@ -2301,65 +2462,85 @@ function StaffDetailModal({
               justify-content: space-between;
             }
             .signature-box {
-              width: 200px;
+              width: 250px;
             }
             .signature-line {
               border-top: 1px solid #111827;
-              margin-top: 40px;
+              margin-top: 50px;
               padding-top: 5px;
               text-align: center;
               font-size: 13px;
             }
             @media print {
-              body { padding: 20px; }
+              body { padding: 30px; }
             }
           </style>
         </head>
         <body>
           <div class="letterhead">
-            <h1>AAU CHAMO GROUPS</h1>
-            <p>Headquarters: Lagos, Nigeria | Tel: +234 (0) 1 234 5678 | Email: hr@aauchamo.com</p>
+            <img src="${logoUrl}" alt="AAU Chamo Logo" /><br />
+            <h1>A.A.U Chamo International Business Agency Services Limited</h1>
+            <p>Corporate Headquarters: BLOCK AL, Maiduguri Road | Tel: +234 (0) 806 224 9834 | Email: hr@aauchamo.com</p>
             <p>www.aauchamo.com</p>
           </div>
           
-          <div class="date">${dateStr}</div>
+          <div class="date">Date: ${dateStr}</div>
           
           <div class="recipient">
             <strong>To:</strong><br />
             ${name}<br />
-            Ref: ${detail.staffNumber}<br />
-            ${detail.address || "Nigeria"}
+            Staff Reference Number: ${detail.staffNumber}<br />
+            Residential Address: ${detail.address || "Nigeria"}
           </div>
           
-          <div class="subject">Letter of Appointment</div>
+          <div class="subject">OFFER OF EMPLOYMENT & LETTER OF APPOINTMENT</div>
           
           <div class="content">
             <p>Dear ${detail.firstName},</p>
             
-            <p>On behalf of AAU Chamo, we are pleased to offer you the position of <strong>${detail.position?.name || "Staff"}</strong> in the <strong>${detail.department?.name || "HR"}</strong> department, effective from <strong>${dateStr}</strong>. Your primary assignment will be base-stationed at <strong>${detail.homeStation?.name || "Lagos Station"}</strong>.</p>
+            <p>On behalf of the Management of <strong>A.A.U Chamo International Business Agency Services Limited</strong>, we are pleased to offer you formal employment for the position of <strong>${detail.position?.name || "Staff"}</strong> in the <strong>${detail.department?.name || "Operations"}</strong> department. Your primary base station assignment will be at <strong>${detail.homeStation?.name || "Lagos Station"}</strong>.</p>
             
-            <p><strong>Remuneration & Type:</strong> Your employment status will be classified as <strong>${detail.employmentType}</strong>. You will receive a base salary of <strong>${salaryFormatted}</strong> per month, subject to standard statutory tax deductions and compliance requirements.</p>
+            <p>This appointment is subject to the terms and conditions outlined in our corporate employee handbook and the following summary clauses:</p>
             
-            <p><strong>Responsibilities:</strong> As a ${detail.position?.name || "Staff member"}, you will report directly to the department head or assigned supervisor. Your specific duties, performance standards, and operational guidelines will be aligned with company standard operating procedures.</p>
+            <div class="clause-title">1. Commencement and Duties</div>
+            <p>Your employment will commence on <strong>${dateStr}</strong>. In your capacity as <strong>${detail.position?.name || "Staff"}</strong>, you will report directly to the Head of Department or any designated supervisor. You will be responsible for executing your duties diligently and complying with operational protocols and directives.</p>
             
-            <p>Please review and sign the duplicate copy of this letter to confirm your acceptance of this offer and return it to the Human Resources department.</p>
+            <div class="clause-title">2. Hours of Work</div>
+            <p>Your standard working hours shall be forty (40) hours per week, normally scheduled from Monday to Friday. Due to the service-oriented nature of our operations, you may be required to work additional hours or shift assignments as operational demands require.</p>
             
-            <p>We welcome you to AAU Chamo and look forward to working together to achieve outstanding professional milestones.</p>
+            <div class="clause-title">3. Remuneration</div>
+            <p>You will receive a base salary of <strong>${salaryFormatted}</strong> per month, payable in arrears on or before the 28th day of each calendar month. This compensation is subject to standard statutory tax deductions, pension contributions, and other government-mandated levies.</p>
             
-            <p>Sincerely,</p>
+            <div class="clause-title">4. Probationary Period</div>
+            <p>Your employment is subject to a probationary period of six (6) months from your commencement date. Upon successful performance review, your employment will be confirmed in writing. During probation, either party may terminate this agreement by giving one (1) week's notice.</p>
+            
+            <div class="clause-title">5. Leave Entitlement</div>
+            <p>Upon confirmation, you will be entitled to twenty (20) working days of annual paid leave for each completed year of service, to be scheduled in consultation with your supervisor. You are also entitled to public holidays observed in Nigeria.</p>
+            
+            <div class="clause-title">6. Confidentiality and Code of Conduct</div>
+            <p>You shall not disclose any confidential information, trade secrets, passenger databases, or proprietary operational structures of AAU Chamo to any third parties. Strict adherence to our Code of Conduct and Anti-Bribery policies is a condition of continued service.</p>
+            
+            <div class="clause-title">7. Termination of Appointment</div>
+            <p>After confirmation, either party may terminate this agreement by providing one (1) month's written notice or payment of one month's basic salary in lieu of notice. The company reserves the right to terminate your employment summarily for gross misconduct.</p>
+            
+            <p>If you accept this offer and its terms, please sign and return the duplicate copy of this letter to the Human Resources department within seven (7) days.</p>
+            
+            <p>We welcome you to AAU Chamo and look forward to a successful professional journey together.</p>
+            
+            <p>Yours faithfully,<br />For: <strong>A.A.U Chamo International Business Agency Services Limited</strong></p>
           </div>
           
           <div class="signature-section">
             <div class="signature-box">
               <div class="signature-line">
-                <strong>Human Resources</strong><br />
+                <strong>Head of Human Resources</strong><br />
                 AAU Chamo Groups
               </div>
             </div>
             <div class="signature-box">
               <div class="signature-line">
-                <strong>Employee Signature</strong><br />
-                Acceptance Signature
+                <strong>Employee Signature & Date</strong><br />
+                I accept the terms of this appointment
               </div>
             </div>
           </div>
