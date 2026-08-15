@@ -304,6 +304,7 @@ model Company {
   departments          Department[]
   positions            Position[]
   staff                Staff[]
+  attendance           StaffAttendance[]
   customers            Customer[]
   customerMerges       CustomerMerge[]
   productCategories    ProductCategory[]
@@ -1041,12 +1042,39 @@ model Staff {
   employmentHistory EmploymentHistory[]
   stationHistory    StaffStationAssignment[]
   nextOfKin         NextOfKin[]
+  attendance        StaffAttendance[]
 
   @@unique([companyId, staffNumber])
   @@index([companyId, status, lastName, firstName])
   @@index([homeStationId, status])
   @@index([departmentId])
   @@map("staff")
+}
+
+model StaffAttendance {
+  id               String    @id @default(cuid())
+  companyId        String
+  staffId          String
+  date             DateTime  @db.Date
+  clockInAt        DateTime  @db.Timestamptz(3)
+  clockOutAt       DateTime? @db.Timestamptz(3)
+  clockInLatitude  Float?
+  clockInLongitude Float?
+  clockOutLatitude Float?
+  clockOutLongitude Float?
+  clockInIp        String?
+  clockOutIp       String?
+  status           String    @default("PRESENT")
+  notes            String?   @db.Text
+  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime  @updatedAt @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  staff   Staff   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, date])
+  @@index([companyId, date])
+  @@map("staff_attendance")
 }
 
 model EmploymentHistory {

@@ -187,6 +187,11 @@ export type Position = Prisma.PositionModel
  */
 export type Staff = Prisma.StaffModel
 /**
+ * Model StaffAttendance
+ * 
+ */
+export type StaffAttendance = Prisma.StaffAttendanceModel
+/**
  * Model EmploymentHistory
  * 
  */

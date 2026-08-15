@@ -405,6 +405,7 @@ export type StaffWhereInput = {
   employmentHistory?: Prisma.EmploymentHistoryListRelationFilter
   stationHistory?: Prisma.StaffStationAssignmentListRelationFilter
   nextOfKin?: Prisma.NextOfKinListRelationFilter
+  attendance?: Prisma.StaffAttendanceListRelationFilter
 }
 
 export type StaffOrderByWithRelationInput = {
@@ -444,6 +445,7 @@ export type StaffOrderByWithRelationInput = {
   employmentHistory?: Prisma.EmploymentHistoryOrderByRelationAggregateInput
   stationHistory?: Prisma.StaffStationAssignmentOrderByRelationAggregateInput
   nextOfKin?: Prisma.NextOfKinOrderByRelationAggregateInput
+  attendance?: Prisma.StaffAttendanceOrderByRelationAggregateInput
 }
 
 export type StaffWhereUniqueInput = Prisma.AtLeast<{
@@ -487,6 +489,7 @@ export type StaffWhereUniqueInput = Prisma.AtLeast<{
   employmentHistory?: Prisma.EmploymentHistoryListRelationFilter
   stationHistory?: Prisma.StaffStationAssignmentListRelationFilter
   nextOfKin?: Prisma.NextOfKinListRelationFilter
+  attendance?: Prisma.StaffAttendanceListRelationFilter
 }, "id" | "userId" | "companyId_staffNumber">
 
 export type StaffOrderByWithAggregationInput = {
@@ -588,6 +591,7 @@ export type StaffCreateInput = {
   employmentHistory?: Prisma.EmploymentHistoryCreateNestedManyWithoutStaffInput
   stationHistory?: Prisma.StaffStationAssignmentCreateNestedManyWithoutStaffInput
   nextOfKin?: Prisma.NextOfKinCreateNestedManyWithoutStaffInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutStaffInput
 }
 
 export type StaffUncheckedCreateInput = {
@@ -621,6 +625,7 @@ export type StaffUncheckedCreateInput = {
   employmentHistory?: Prisma.EmploymentHistoryUncheckedCreateNestedManyWithoutStaffInput
   stationHistory?: Prisma.StaffStationAssignmentUncheckedCreateNestedManyWithoutStaffInput
   nextOfKin?: Prisma.NextOfKinUncheckedCreateNestedManyWithoutStaffInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutStaffInput
 }
 
 export type StaffUpdateInput = {
@@ -654,6 +659,7 @@ export type StaffUpdateInput = {
   employmentHistory?: Prisma.EmploymentHistoryUpdateManyWithoutStaffNestedInput
   stationHistory?: Prisma.StaffStationAssignmentUpdateManyWithoutStaffNestedInput
   nextOfKin?: Prisma.NextOfKinUpdateManyWithoutStaffNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffUncheckedUpdateInput = {
@@ -687,6 +693,7 @@ export type StaffUncheckedUpdateInput = {
   employmentHistory?: Prisma.EmploymentHistoryUncheckedUpdateManyWithoutStaffNestedInput
   stationHistory?: Prisma.StaffStationAssignmentUncheckedUpdateManyWithoutStaffNestedInput
   nextOfKin?: Prisma.NextOfKinUncheckedUpdateManyWithoutStaffNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffCreateManyInput = {
@@ -1156,6 +1163,20 @@ export type EnumStaffStatusFieldUpdateOperationsInput = {
   set?: $Enums.StaffStatus
 }
 
+export type StaffCreateNestedOneWithoutAttendanceInput = {
+  create?: Prisma.XOR<Prisma.StaffCreateWithoutAttendanceInput, Prisma.StaffUncheckedCreateWithoutAttendanceInput>
+  connectOrCreate?: Prisma.StaffCreateOrConnectWithoutAttendanceInput
+  connect?: Prisma.StaffWhereUniqueInput
+}
+
+export type StaffUpdateOneRequiredWithoutAttendanceNestedInput = {
+  create?: Prisma.XOR<Prisma.StaffCreateWithoutAttendanceInput, Prisma.StaffUncheckedCreateWithoutAttendanceInput>
+  connectOrCreate?: Prisma.StaffCreateOrConnectWithoutAttendanceInput
+  upsert?: Prisma.StaffUpsertWithoutAttendanceInput
+  connect?: Prisma.StaffWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StaffUpdateToOneWithWhereWithoutAttendanceInput, Prisma.StaffUpdateWithoutAttendanceInput>, Prisma.StaffUncheckedUpdateWithoutAttendanceInput>
+}
+
 export type StaffCreateNestedOneWithoutEmploymentHistoryInput = {
   create?: Prisma.XOR<Prisma.StaffCreateWithoutEmploymentHistoryInput, Prisma.StaffUncheckedCreateWithoutEmploymentHistoryInput>
   connectOrCreate?: Prisma.StaffCreateOrConnectWithoutEmploymentHistoryInput
@@ -1228,6 +1249,7 @@ export type StaffCreateWithoutCompanyInput = {
   employmentHistory?: Prisma.EmploymentHistoryCreateNestedManyWithoutStaffInput
   stationHistory?: Prisma.StaffStationAssignmentCreateNestedManyWithoutStaffInput
   nextOfKin?: Prisma.NextOfKinCreateNestedManyWithoutStaffInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutStaffInput
 }
 
 export type StaffUncheckedCreateWithoutCompanyInput = {
@@ -1260,6 +1282,7 @@ export type StaffUncheckedCreateWithoutCompanyInput = {
   employmentHistory?: Prisma.EmploymentHistoryUncheckedCreateNestedManyWithoutStaffInput
   stationHistory?: Prisma.StaffStationAssignmentUncheckedCreateNestedManyWithoutStaffInput
   nextOfKin?: Prisma.NextOfKinUncheckedCreateNestedManyWithoutStaffInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutStaffInput
 }
 
 export type StaffCreateOrConnectWithoutCompanyInput = {
@@ -1351,6 +1374,7 @@ export type StaffCreateWithoutBusinessUnitInput = {
   employmentHistory?: Prisma.EmploymentHistoryCreateNestedManyWithoutStaffInput
   stationHistory?: Prisma.StaffStationAssignmentCreateNestedManyWithoutStaffInput
   nextOfKin?: Prisma.NextOfKinCreateNestedManyWithoutStaffInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutStaffInput
 }
 
 export type StaffUncheckedCreateWithoutBusinessUnitInput = {
@@ -1383,6 +1407,7 @@ export type StaffUncheckedCreateWithoutBusinessUnitInput = {
   employmentHistory?: Prisma.EmploymentHistoryUncheckedCreateNestedManyWithoutStaffInput
   stationHistory?: Prisma.StaffStationAssignmentUncheckedCreateNestedManyWithoutStaffInput
   nextOfKin?: Prisma.NextOfKinUncheckedCreateNestedManyWithoutStaffInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutStaffInput
 }
 
 export type StaffCreateOrConnectWithoutBusinessUnitInput = {
@@ -1441,6 +1466,7 @@ export type StaffCreateWithoutHomeStationInput = {
   employmentHistory?: Prisma.EmploymentHistoryCreateNestedManyWithoutStaffInput
   stationHistory?: Prisma.StaffStationAssignmentCreateNestedManyWithoutStaffInput
   nextOfKin?: Prisma.NextOfKinCreateNestedManyWithoutStaffInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutStaffInput
 }
 
 export type StaffUncheckedCreateWithoutHomeStationInput = {
@@ -1473,6 +1499,7 @@ export type StaffUncheckedCreateWithoutHomeStationInput = {
   employmentHistory?: Prisma.EmploymentHistoryUncheckedCreateNestedManyWithoutStaffInput
   stationHistory?: Prisma.StaffStationAssignmentUncheckedCreateNestedManyWithoutStaffInput
   nextOfKin?: Prisma.NextOfKinUncheckedCreateNestedManyWithoutStaffInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutStaffInput
 }
 
 export type StaffCreateOrConnectWithoutHomeStationInput = {
@@ -1531,6 +1558,7 @@ export type StaffCreateWithoutUserInput = {
   employmentHistory?: Prisma.EmploymentHistoryCreateNestedManyWithoutStaffInput
   stationHistory?: Prisma.StaffStationAssignmentCreateNestedManyWithoutStaffInput
   nextOfKin?: Prisma.NextOfKinCreateNestedManyWithoutStaffInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutStaffInput
 }
 
 export type StaffUncheckedCreateWithoutUserInput = {
@@ -1563,6 +1591,7 @@ export type StaffUncheckedCreateWithoutUserInput = {
   employmentHistory?: Prisma.EmploymentHistoryUncheckedCreateNestedManyWithoutStaffInput
   stationHistory?: Prisma.StaffStationAssignmentUncheckedCreateNestedManyWithoutStaffInput
   nextOfKin?: Prisma.NextOfKinUncheckedCreateNestedManyWithoutStaffInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutStaffInput
 }
 
 export type StaffCreateOrConnectWithoutUserInput = {
@@ -1611,6 +1640,7 @@ export type StaffUpdateWithoutUserInput = {
   employmentHistory?: Prisma.EmploymentHistoryUpdateManyWithoutStaffNestedInput
   stationHistory?: Prisma.StaffStationAssignmentUpdateManyWithoutStaffNestedInput
   nextOfKin?: Prisma.NextOfKinUpdateManyWithoutStaffNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffUncheckedUpdateWithoutUserInput = {
@@ -1643,6 +1673,7 @@ export type StaffUncheckedUpdateWithoutUserInput = {
   employmentHistory?: Prisma.EmploymentHistoryUncheckedUpdateManyWithoutStaffNestedInput
   stationHistory?: Prisma.StaffStationAssignmentUncheckedUpdateManyWithoutStaffNestedInput
   nextOfKin?: Prisma.NextOfKinUncheckedUpdateManyWithoutStaffNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffCreateWithoutDepartmentInput = {
@@ -1675,6 +1706,7 @@ export type StaffCreateWithoutDepartmentInput = {
   employmentHistory?: Prisma.EmploymentHistoryCreateNestedManyWithoutStaffInput
   stationHistory?: Prisma.StaffStationAssignmentCreateNestedManyWithoutStaffInput
   nextOfKin?: Prisma.NextOfKinCreateNestedManyWithoutStaffInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutStaffInput
 }
 
 export type StaffUncheckedCreateWithoutDepartmentInput = {
@@ -1707,6 +1739,7 @@ export type StaffUncheckedCreateWithoutDepartmentInput = {
   employmentHistory?: Prisma.EmploymentHistoryUncheckedCreateNestedManyWithoutStaffInput
   stationHistory?: Prisma.StaffStationAssignmentUncheckedCreateNestedManyWithoutStaffInput
   nextOfKin?: Prisma.NextOfKinUncheckedCreateNestedManyWithoutStaffInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutStaffInput
 }
 
 export type StaffCreateOrConnectWithoutDepartmentInput = {
@@ -1765,6 +1798,7 @@ export type StaffCreateWithoutPositionInput = {
   employmentHistory?: Prisma.EmploymentHistoryCreateNestedManyWithoutStaffInput
   stationHistory?: Prisma.StaffStationAssignmentCreateNestedManyWithoutStaffInput
   nextOfKin?: Prisma.NextOfKinCreateNestedManyWithoutStaffInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutStaffInput
 }
 
 export type StaffUncheckedCreateWithoutPositionInput = {
@@ -1797,6 +1831,7 @@ export type StaffUncheckedCreateWithoutPositionInput = {
   employmentHistory?: Prisma.EmploymentHistoryUncheckedCreateNestedManyWithoutStaffInput
   stationHistory?: Prisma.StaffStationAssignmentUncheckedCreateNestedManyWithoutStaffInput
   nextOfKin?: Prisma.NextOfKinUncheckedCreateNestedManyWithoutStaffInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutStaffInput
 }
 
 export type StaffCreateOrConnectWithoutPositionInput = {
@@ -1823,6 +1858,154 @@ export type StaffUpdateWithWhereUniqueWithoutPositionInput = {
 export type StaffUpdateManyWithWhereWithoutPositionInput = {
   where: Prisma.StaffScalarWhereInput
   data: Prisma.XOR<Prisma.StaffUpdateManyMutationInput, Prisma.StaffUncheckedUpdateManyWithoutPositionInput>
+}
+
+export type StaffCreateWithoutAttendanceInput = {
+  id?: string
+  staffNumber: string
+  firstName: string
+  middleName?: string | null
+  lastName: string
+  preferredName?: string | null
+  phone: string
+  email?: string | null
+  address?: string | null
+  nationalIdCiphertext?: string | null
+  salary?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  employmentDate: Date | string
+  employmentType: $Enums.EmploymentType
+  status?: $Enums.StaffStatus
+  passportAttachmentId?: string | null
+  passportObjectKey?: string | null
+  version?: number
+  createdById?: string | null
+  updatedById?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  company: Prisma.CompanyCreateNestedOneWithoutStaffInput
+  businessUnit?: Prisma.BusinessUnitCreateNestedOneWithoutStaffInput
+  user?: Prisma.UserCreateNestedOneWithoutStaffProfileInput
+  department: Prisma.DepartmentCreateNestedOneWithoutStaffInput
+  position: Prisma.PositionCreateNestedOneWithoutStaffInput
+  homeStation: Prisma.StationCreateNestedOneWithoutStaffHomeInput
+  employmentHistory?: Prisma.EmploymentHistoryCreateNestedManyWithoutStaffInput
+  stationHistory?: Prisma.StaffStationAssignmentCreateNestedManyWithoutStaffInput
+  nextOfKin?: Prisma.NextOfKinCreateNestedManyWithoutStaffInput
+}
+
+export type StaffUncheckedCreateWithoutAttendanceInput = {
+  id?: string
+  companyId: string
+  businessUnitId?: string | null
+  userId?: string | null
+  staffNumber: string
+  firstName: string
+  middleName?: string | null
+  lastName: string
+  preferredName?: string | null
+  phone: string
+  email?: string | null
+  address?: string | null
+  nationalIdCiphertext?: string | null
+  salary?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  employmentDate: Date | string
+  employmentType: $Enums.EmploymentType
+  status?: $Enums.StaffStatus
+  departmentId: string
+  positionId: string
+  homeStationId: string
+  passportAttachmentId?: string | null
+  passportObjectKey?: string | null
+  version?: number
+  createdById?: string | null
+  updatedById?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  employmentHistory?: Prisma.EmploymentHistoryUncheckedCreateNestedManyWithoutStaffInput
+  stationHistory?: Prisma.StaffStationAssignmentUncheckedCreateNestedManyWithoutStaffInput
+  nextOfKin?: Prisma.NextOfKinUncheckedCreateNestedManyWithoutStaffInput
+}
+
+export type StaffCreateOrConnectWithoutAttendanceInput = {
+  where: Prisma.StaffWhereUniqueInput
+  create: Prisma.XOR<Prisma.StaffCreateWithoutAttendanceInput, Prisma.StaffUncheckedCreateWithoutAttendanceInput>
+}
+
+export type StaffUpsertWithoutAttendanceInput = {
+  update: Prisma.XOR<Prisma.StaffUpdateWithoutAttendanceInput, Prisma.StaffUncheckedUpdateWithoutAttendanceInput>
+  create: Prisma.XOR<Prisma.StaffCreateWithoutAttendanceInput, Prisma.StaffUncheckedCreateWithoutAttendanceInput>
+  where?: Prisma.StaffWhereInput
+}
+
+export type StaffUpdateToOneWithWhereWithoutAttendanceInput = {
+  where?: Prisma.StaffWhereInput
+  data: Prisma.XOR<Prisma.StaffUpdateWithoutAttendanceInput, Prisma.StaffUncheckedUpdateWithoutAttendanceInput>
+}
+
+export type StaffUpdateWithoutAttendanceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  staffNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  middleName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  preferredName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationalIdCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  employmentDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  employmentType?: Prisma.EnumEmploymentTypeFieldUpdateOperationsInput | $Enums.EmploymentType
+  status?: Prisma.EnumStaffStatusFieldUpdateOperationsInput | $Enums.StaffStatus
+  passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  version?: Prisma.IntFieldUpdateOperationsInput | number
+  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  company?: Prisma.CompanyUpdateOneRequiredWithoutStaffNestedInput
+  businessUnit?: Prisma.BusinessUnitUpdateOneWithoutStaffNestedInput
+  user?: Prisma.UserUpdateOneWithoutStaffProfileNestedInput
+  department?: Prisma.DepartmentUpdateOneRequiredWithoutStaffNestedInput
+  position?: Prisma.PositionUpdateOneRequiredWithoutStaffNestedInput
+  homeStation?: Prisma.StationUpdateOneRequiredWithoutStaffHomeNestedInput
+  employmentHistory?: Prisma.EmploymentHistoryUpdateManyWithoutStaffNestedInput
+  stationHistory?: Prisma.StaffStationAssignmentUpdateManyWithoutStaffNestedInput
+  nextOfKin?: Prisma.NextOfKinUpdateManyWithoutStaffNestedInput
+}
+
+export type StaffUncheckedUpdateWithoutAttendanceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  companyId?: Prisma.StringFieldUpdateOperationsInput | string
+  businessUnitId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  staffNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  firstName?: Prisma.StringFieldUpdateOperationsInput | string
+  middleName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastName?: Prisma.StringFieldUpdateOperationsInput | string
+  preferredName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationalIdCiphertext?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  employmentDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  employmentType?: Prisma.EnumEmploymentTypeFieldUpdateOperationsInput | $Enums.EmploymentType
+  status?: Prisma.EnumStaffStatusFieldUpdateOperationsInput | $Enums.StaffStatus
+  departmentId?: Prisma.StringFieldUpdateOperationsInput | string
+  positionId?: Prisma.StringFieldUpdateOperationsInput | string
+  homeStationId?: Prisma.StringFieldUpdateOperationsInput | string
+  passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  version?: Prisma.IntFieldUpdateOperationsInput | number
+  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  employmentHistory?: Prisma.EmploymentHistoryUncheckedUpdateManyWithoutStaffNestedInput
+  stationHistory?: Prisma.StaffStationAssignmentUncheckedUpdateManyWithoutStaffNestedInput
+  nextOfKin?: Prisma.NextOfKinUncheckedUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffCreateWithoutEmploymentHistoryInput = {
@@ -1855,6 +2038,7 @@ export type StaffCreateWithoutEmploymentHistoryInput = {
   homeStation: Prisma.StationCreateNestedOneWithoutStaffHomeInput
   stationHistory?: Prisma.StaffStationAssignmentCreateNestedManyWithoutStaffInput
   nextOfKin?: Prisma.NextOfKinCreateNestedManyWithoutStaffInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutStaffInput
 }
 
 export type StaffUncheckedCreateWithoutEmploymentHistoryInput = {
@@ -1887,6 +2071,7 @@ export type StaffUncheckedCreateWithoutEmploymentHistoryInput = {
   updatedAt?: Date | string
   stationHistory?: Prisma.StaffStationAssignmentUncheckedCreateNestedManyWithoutStaffInput
   nextOfKin?: Prisma.NextOfKinUncheckedCreateNestedManyWithoutStaffInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutStaffInput
 }
 
 export type StaffCreateOrConnectWithoutEmploymentHistoryInput = {
@@ -1935,6 +2120,7 @@ export type StaffUpdateWithoutEmploymentHistoryInput = {
   homeStation?: Prisma.StationUpdateOneRequiredWithoutStaffHomeNestedInput
   stationHistory?: Prisma.StaffStationAssignmentUpdateManyWithoutStaffNestedInput
   nextOfKin?: Prisma.NextOfKinUpdateManyWithoutStaffNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffUncheckedUpdateWithoutEmploymentHistoryInput = {
@@ -1967,6 +2153,7 @@ export type StaffUncheckedUpdateWithoutEmploymentHistoryInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   stationHistory?: Prisma.StaffStationAssignmentUncheckedUpdateManyWithoutStaffNestedInput
   nextOfKin?: Prisma.NextOfKinUncheckedUpdateManyWithoutStaffNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffCreateWithoutStationHistoryInput = {
@@ -1999,6 +2186,7 @@ export type StaffCreateWithoutStationHistoryInput = {
   homeStation: Prisma.StationCreateNestedOneWithoutStaffHomeInput
   employmentHistory?: Prisma.EmploymentHistoryCreateNestedManyWithoutStaffInput
   nextOfKin?: Prisma.NextOfKinCreateNestedManyWithoutStaffInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutStaffInput
 }
 
 export type StaffUncheckedCreateWithoutStationHistoryInput = {
@@ -2031,6 +2219,7 @@ export type StaffUncheckedCreateWithoutStationHistoryInput = {
   updatedAt?: Date | string
   employmentHistory?: Prisma.EmploymentHistoryUncheckedCreateNestedManyWithoutStaffInput
   nextOfKin?: Prisma.NextOfKinUncheckedCreateNestedManyWithoutStaffInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutStaffInput
 }
 
 export type StaffCreateOrConnectWithoutStationHistoryInput = {
@@ -2079,6 +2268,7 @@ export type StaffUpdateWithoutStationHistoryInput = {
   homeStation?: Prisma.StationUpdateOneRequiredWithoutStaffHomeNestedInput
   employmentHistory?: Prisma.EmploymentHistoryUpdateManyWithoutStaffNestedInput
   nextOfKin?: Prisma.NextOfKinUpdateManyWithoutStaffNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffUncheckedUpdateWithoutStationHistoryInput = {
@@ -2111,6 +2301,7 @@ export type StaffUncheckedUpdateWithoutStationHistoryInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   employmentHistory?: Prisma.EmploymentHistoryUncheckedUpdateManyWithoutStaffNestedInput
   nextOfKin?: Prisma.NextOfKinUncheckedUpdateManyWithoutStaffNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffCreateWithoutNextOfKinInput = {
@@ -2143,6 +2334,7 @@ export type StaffCreateWithoutNextOfKinInput = {
   homeStation: Prisma.StationCreateNestedOneWithoutStaffHomeInput
   employmentHistory?: Prisma.EmploymentHistoryCreateNestedManyWithoutStaffInput
   stationHistory?: Prisma.StaffStationAssignmentCreateNestedManyWithoutStaffInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutStaffInput
 }
 
 export type StaffUncheckedCreateWithoutNextOfKinInput = {
@@ -2175,6 +2367,7 @@ export type StaffUncheckedCreateWithoutNextOfKinInput = {
   updatedAt?: Date | string
   employmentHistory?: Prisma.EmploymentHistoryUncheckedCreateNestedManyWithoutStaffInput
   stationHistory?: Prisma.StaffStationAssignmentUncheckedCreateNestedManyWithoutStaffInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutStaffInput
 }
 
 export type StaffCreateOrConnectWithoutNextOfKinInput = {
@@ -2223,6 +2416,7 @@ export type StaffUpdateWithoutNextOfKinInput = {
   homeStation?: Prisma.StationUpdateOneRequiredWithoutStaffHomeNestedInput
   employmentHistory?: Prisma.EmploymentHistoryUpdateManyWithoutStaffNestedInput
   stationHistory?: Prisma.StaffStationAssignmentUpdateManyWithoutStaffNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffUncheckedUpdateWithoutNextOfKinInput = {
@@ -2255,6 +2449,7 @@ export type StaffUncheckedUpdateWithoutNextOfKinInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   employmentHistory?: Prisma.EmploymentHistoryUncheckedUpdateManyWithoutStaffNestedInput
   stationHistory?: Prisma.StaffStationAssignmentUncheckedUpdateManyWithoutStaffNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffCreateManyCompanyInput = {
@@ -2316,6 +2511,7 @@ export type StaffUpdateWithoutCompanyInput = {
   employmentHistory?: Prisma.EmploymentHistoryUpdateManyWithoutStaffNestedInput
   stationHistory?: Prisma.StaffStationAssignmentUpdateManyWithoutStaffNestedInput
   nextOfKin?: Prisma.NextOfKinUpdateManyWithoutStaffNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffUncheckedUpdateWithoutCompanyInput = {
@@ -2348,6 +2544,7 @@ export type StaffUncheckedUpdateWithoutCompanyInput = {
   employmentHistory?: Prisma.EmploymentHistoryUncheckedUpdateManyWithoutStaffNestedInput
   stationHistory?: Prisma.StaffStationAssignmentUncheckedUpdateManyWithoutStaffNestedInput
   nextOfKin?: Prisma.NextOfKinUncheckedUpdateManyWithoutStaffNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffUncheckedUpdateManyWithoutCompanyInput = {
@@ -2438,6 +2635,7 @@ export type StaffUpdateWithoutBusinessUnitInput = {
   employmentHistory?: Prisma.EmploymentHistoryUpdateManyWithoutStaffNestedInput
   stationHistory?: Prisma.StaffStationAssignmentUpdateManyWithoutStaffNestedInput
   nextOfKin?: Prisma.NextOfKinUpdateManyWithoutStaffNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffUncheckedUpdateWithoutBusinessUnitInput = {
@@ -2470,6 +2668,7 @@ export type StaffUncheckedUpdateWithoutBusinessUnitInput = {
   employmentHistory?: Prisma.EmploymentHistoryUncheckedUpdateManyWithoutStaffNestedInput
   stationHistory?: Prisma.StaffStationAssignmentUncheckedUpdateManyWithoutStaffNestedInput
   nextOfKin?: Prisma.NextOfKinUncheckedUpdateManyWithoutStaffNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffUncheckedUpdateManyWithoutBusinessUnitInput = {
@@ -2560,6 +2759,7 @@ export type StaffUpdateWithoutHomeStationInput = {
   employmentHistory?: Prisma.EmploymentHistoryUpdateManyWithoutStaffNestedInput
   stationHistory?: Prisma.StaffStationAssignmentUpdateManyWithoutStaffNestedInput
   nextOfKin?: Prisma.NextOfKinUpdateManyWithoutStaffNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffUncheckedUpdateWithoutHomeStationInput = {
@@ -2592,6 +2792,7 @@ export type StaffUncheckedUpdateWithoutHomeStationInput = {
   employmentHistory?: Prisma.EmploymentHistoryUncheckedUpdateManyWithoutStaffNestedInput
   stationHistory?: Prisma.StaffStationAssignmentUncheckedUpdateManyWithoutStaffNestedInput
   nextOfKin?: Prisma.NextOfKinUncheckedUpdateManyWithoutStaffNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffUncheckedUpdateManyWithoutHomeStationInput = {
@@ -2682,6 +2883,7 @@ export type StaffUpdateWithoutDepartmentInput = {
   employmentHistory?: Prisma.EmploymentHistoryUpdateManyWithoutStaffNestedInput
   stationHistory?: Prisma.StaffStationAssignmentUpdateManyWithoutStaffNestedInput
   nextOfKin?: Prisma.NextOfKinUpdateManyWithoutStaffNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffUncheckedUpdateWithoutDepartmentInput = {
@@ -2714,6 +2916,7 @@ export type StaffUncheckedUpdateWithoutDepartmentInput = {
   employmentHistory?: Prisma.EmploymentHistoryUncheckedUpdateManyWithoutStaffNestedInput
   stationHistory?: Prisma.StaffStationAssignmentUncheckedUpdateManyWithoutStaffNestedInput
   nextOfKin?: Prisma.NextOfKinUncheckedUpdateManyWithoutStaffNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffUncheckedUpdateManyWithoutDepartmentInput = {
@@ -2804,6 +3007,7 @@ export type StaffUpdateWithoutPositionInput = {
   employmentHistory?: Prisma.EmploymentHistoryUpdateManyWithoutStaffNestedInput
   stationHistory?: Prisma.StaffStationAssignmentUpdateManyWithoutStaffNestedInput
   nextOfKin?: Prisma.NextOfKinUpdateManyWithoutStaffNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffUncheckedUpdateWithoutPositionInput = {
@@ -2836,6 +3040,7 @@ export type StaffUncheckedUpdateWithoutPositionInput = {
   employmentHistory?: Prisma.EmploymentHistoryUncheckedUpdateManyWithoutStaffNestedInput
   stationHistory?: Prisma.StaffStationAssignmentUncheckedUpdateManyWithoutStaffNestedInput
   nextOfKin?: Prisma.NextOfKinUncheckedUpdateManyWithoutStaffNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutStaffNestedInput
 }
 
 export type StaffUncheckedUpdateManyWithoutPositionInput = {
@@ -2876,12 +3081,14 @@ export type StaffCountOutputType = {
   employmentHistory: number
   stationHistory: number
   nextOfKin: number
+  attendance: number
 }
 
 export type StaffCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   employmentHistory?: boolean | StaffCountOutputTypeCountEmploymentHistoryArgs
   stationHistory?: boolean | StaffCountOutputTypeCountStationHistoryArgs
   nextOfKin?: boolean | StaffCountOutputTypeCountNextOfKinArgs
+  attendance?: boolean | StaffCountOutputTypeCountAttendanceArgs
 }
 
 /**
@@ -2913,6 +3120,13 @@ export type StaffCountOutputTypeCountStationHistoryArgs<ExtArgs extends runtime.
  */
 export type StaffCountOutputTypeCountNextOfKinArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.NextOfKinWhereInput
+}
+
+/**
+ * StaffCountOutputType without action
+ */
+export type StaffCountOutputTypeCountAttendanceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.StaffAttendanceWhereInput
 }
 
 
@@ -2953,6 +3167,7 @@ export type StaffSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   employmentHistory?: boolean | Prisma.Staff$employmentHistoryArgs<ExtArgs>
   stationHistory?: boolean | Prisma.Staff$stationHistoryArgs<ExtArgs>
   nextOfKin?: boolean | Prisma.Staff$nextOfKinArgs<ExtArgs>
+  attendance?: boolean | Prisma.Staff$attendanceArgs<ExtArgs>
   _count?: boolean | Prisma.StaffCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["staff"]>
 
@@ -3069,6 +3284,7 @@ export type StaffInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   employmentHistory?: boolean | Prisma.Staff$employmentHistoryArgs<ExtArgs>
   stationHistory?: boolean | Prisma.Staff$stationHistoryArgs<ExtArgs>
   nextOfKin?: boolean | Prisma.Staff$nextOfKinArgs<ExtArgs>
+  attendance?: boolean | Prisma.Staff$attendanceArgs<ExtArgs>
   _count?: boolean | Prisma.StaffCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type StaffIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -3100,6 +3316,7 @@ export type $StaffPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     employmentHistory: Prisma.$EmploymentHistoryPayload<ExtArgs>[]
     stationHistory: Prisma.$StaffStationAssignmentPayload<ExtArgs>[]
     nextOfKin: Prisma.$NextOfKinPayload<ExtArgs>[]
+    attendance: Prisma.$StaffAttendancePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -3532,6 +3749,7 @@ export interface Prisma__StaffClient<T, Null = never, ExtArgs extends runtime.Ty
   employmentHistory<T extends Prisma.Staff$employmentHistoryArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Staff$employmentHistoryArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EmploymentHistoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   stationHistory<T extends Prisma.Staff$stationHistoryArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Staff$stationHistoryArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StaffStationAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   nextOfKin<T extends Prisma.Staff$nextOfKinArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Staff$nextOfKinArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NextOfKinPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  attendance<T extends Prisma.Staff$attendanceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Staff$attendanceArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StaffAttendancePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4096,6 +4314,30 @@ export type Staff$nextOfKinArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   distinct?: Prisma.NextOfKinScalarFieldEnum | Prisma.NextOfKinScalarFieldEnum[]
+}
+
+/**
+ * Staff.attendance
+ */
+export type Staff$attendanceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the StaffAttendance
+   */
+  select?: Prisma.StaffAttendanceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the StaffAttendance
+   */
+  omit?: Prisma.StaffAttendanceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StaffAttendanceInclude<ExtArgs> | null
+  where?: Prisma.StaffAttendanceWhereInput
+  orderBy?: Prisma.StaffAttendanceOrderByWithRelationInput | Prisma.StaffAttendanceOrderByWithRelationInput[]
+  cursor?: Prisma.StaffAttendanceWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.StaffAttendanceScalarFieldEnum | Prisma.StaffAttendanceScalarFieldEnum[]
 }
 
 /**

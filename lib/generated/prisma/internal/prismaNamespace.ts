@@ -426,6 +426,7 @@ export const ModelName = {
   Department: 'Department',
   Position: 'Position',
   Staff: 'Staff',
+  StaffAttendance: 'StaffAttendance',
   EmploymentHistory: 'EmploymentHistory',
   StaffStationAssignment: 'StaffStationAssignment',
   NextOfKin: 'NextOfKin',
@@ -485,7 +486,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "company" | "businessUnit" | "station" | "stationBusinessUnit" | "user" | "account" | "session" | "verificationToken" | "role" | "permission" | "rolePermission" | "userRole" | "userStationScope" | "userBusinessUnitScope" | "stationManagerAssignment" | "loginAttempt" | "sequence" | "auditEvent" | "approvalRequest" | "attachment" | "notification" | "notificationPreference" | "systemSetting" | "outboxEvent" | "idempotencyKey" | "paymentMethod" | "department" | "position" | "staff" | "employmentHistory" | "staffStationAssignment" | "nextOfKin" | "customer" | "customerContact" | "customerIdentifier" | "customerMerge" | "productCategory" | "unitOfMeasure" | "supplier" | "product" | "batch" | "inventoryBalance" | "stockMovement" | "purchaseOrder" | "purchaseOrderLine" | "goodsReceipt" | "goodsReceiptLine" | "stockTransfer" | "stockTransferLine" | "inventoryAdjustment" | "inventoryAdjustmentLine" | "pOSSession" | "sale" | "saleLine" | "payment" | "paymentAllocation" | "outstandingPayment" | "refund" | "refundLine" | "cargoShipment" | "cargoStatusEvent" | "agent" | "walletAccount" | "walletEntry" | "financialAccount" | "financialCategory" | "cashbookEntry" | "financialPeriod" | "cashSession" | "reconciliation" | "ticketBooking" | "generatedDocument" | "printEvent"
+    modelProps: "company" | "businessUnit" | "station" | "stationBusinessUnit" | "user" | "account" | "session" | "verificationToken" | "role" | "permission" | "rolePermission" | "userRole" | "userStationScope" | "userBusinessUnitScope" | "stationManagerAssignment" | "loginAttempt" | "sequence" | "auditEvent" | "approvalRequest" | "attachment" | "notification" | "notificationPreference" | "systemSetting" | "outboxEvent" | "idempotencyKey" | "paymentMethod" | "department" | "position" | "staff" | "staffAttendance" | "employmentHistory" | "staffStationAssignment" | "nextOfKin" | "customer" | "customerContact" | "customerIdentifier" | "customerMerge" | "productCategory" | "unitOfMeasure" | "supplier" | "product" | "batch" | "inventoryBalance" | "stockMovement" | "purchaseOrder" | "purchaseOrderLine" | "goodsReceipt" | "goodsReceiptLine" | "stockTransfer" | "stockTransferLine" | "inventoryAdjustment" | "inventoryAdjustmentLine" | "pOSSession" | "sale" | "saleLine" | "payment" | "paymentAllocation" | "outstandingPayment" | "refund" | "refundLine" | "cargoShipment" | "cargoStatusEvent" | "agent" | "walletAccount" | "walletEntry" | "financialAccount" | "financialCategory" | "cashbookEntry" | "financialPeriod" | "cashSession" | "reconciliation" | "ticketBooking" | "generatedDocument" | "printEvent"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2632,6 +2633,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.StaffCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.StaffCountAggregateOutputType> | number
+        }
+      }
+    }
+    StaffAttendance: {
+      payload: Prisma.$StaffAttendancePayload<ExtArgs>
+      fields: Prisma.StaffAttendanceFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.StaffAttendanceFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StaffAttendancePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.StaffAttendanceFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StaffAttendancePayload>
+        }
+        findFirst: {
+          args: Prisma.StaffAttendanceFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StaffAttendancePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.StaffAttendanceFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StaffAttendancePayload>
+        }
+        findMany: {
+          args: Prisma.StaffAttendanceFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StaffAttendancePayload>[]
+        }
+        create: {
+          args: Prisma.StaffAttendanceCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StaffAttendancePayload>
+        }
+        createMany: {
+          args: Prisma.StaffAttendanceCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.StaffAttendanceCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StaffAttendancePayload>[]
+        }
+        delete: {
+          args: Prisma.StaffAttendanceDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StaffAttendancePayload>
+        }
+        update: {
+          args: Prisma.StaffAttendanceUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StaffAttendancePayload>
+        }
+        deleteMany: {
+          args: Prisma.StaffAttendanceDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.StaffAttendanceUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.StaffAttendanceUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StaffAttendancePayload>[]
+        }
+        upsert: {
+          args: Prisma.StaffAttendanceUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StaffAttendancePayload>
+        }
+        aggregate: {
+          args: Prisma.StaffAttendanceAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateStaffAttendance>
+        }
+        groupBy: {
+          args: Prisma.StaffAttendanceGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StaffAttendanceGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.StaffAttendanceCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StaffAttendanceCountAggregateOutputType> | number
         }
       }
     }
@@ -6476,6 +6551,28 @@ export const StaffScalarFieldEnum = {
 export type StaffScalarFieldEnum = (typeof StaffScalarFieldEnum)[keyof typeof StaffScalarFieldEnum]
 
 
+export const StaffAttendanceScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  staffId: 'staffId',
+  date: 'date',
+  clockInAt: 'clockInAt',
+  clockOutAt: 'clockOutAt',
+  clockInLatitude: 'clockInLatitude',
+  clockInLongitude: 'clockInLongitude',
+  clockOutLatitude: 'clockOutLatitude',
+  clockOutLongitude: 'clockOutLongitude',
+  clockInIp: 'clockInIp',
+  clockOutIp: 'clockOutIp',
+  status: 'status',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type StaffAttendanceScalarFieldEnum = (typeof StaffAttendanceScalarFieldEnum)[keyof typeof StaffAttendanceScalarFieldEnum]
+
+
 export const EmploymentHistoryScalarFieldEnum = {
   id: 'id',
   staffId: 'staffId',
@@ -7634,6 +7731,20 @@ export type ListEnumStaffStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$
 
 
 /**
+ * Reference to a field of type 'Float'
+ */
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+/**
+ * Reference to a field of type 'Float[]'
+ */
+export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
+
+/**
  * Reference to a field of type 'CustomerType'
  */
 export type EnumCustomerTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CustomerType'>
@@ -7912,20 +8023,6 @@ export type EnumDocumentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$P
 export type ListEnumDocumentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DocumentStatus[]'>
     
 
-
-/**
- * Reference to a field of type 'Float'
- */
-export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
-    
-
-
-/**
- * Reference to a field of type 'Float[]'
- */
-export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
-    
-
 /**
  * Batch Payload for updateMany & deleteMany & createMany
  */
@@ -8106,6 +8203,7 @@ export type GlobalOmitConfig = {
   department?: Prisma.DepartmentOmit
   position?: Prisma.PositionOmit
   staff?: Prisma.StaffOmit
+  staffAttendance?: Prisma.StaffAttendanceOmit
   employmentHistory?: Prisma.EmploymentHistoryOmit
   staffStationAssignment?: Prisma.StaffStationAssignmentOmit
   nextOfKin?: Prisma.NextOfKinOmit

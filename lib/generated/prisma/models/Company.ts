@@ -348,6 +348,7 @@ export type CompanyWhereInput = {
   departments?: Prisma.DepartmentListRelationFilter
   positions?: Prisma.PositionListRelationFilter
   staff?: Prisma.StaffListRelationFilter
+  attendance?: Prisma.StaffAttendanceListRelationFilter
   customers?: Prisma.CustomerListRelationFilter
   customerMerges?: Prisma.CustomerMergeListRelationFilter
   productCategories?: Prisma.ProductCategoryListRelationFilter
@@ -410,6 +411,7 @@ export type CompanyOrderByWithRelationInput = {
   departments?: Prisma.DepartmentOrderByRelationAggregateInput
   positions?: Prisma.PositionOrderByRelationAggregateInput
   staff?: Prisma.StaffOrderByRelationAggregateInput
+  attendance?: Prisma.StaffAttendanceOrderByRelationAggregateInput
   customers?: Prisma.CustomerOrderByRelationAggregateInput
   customerMerges?: Prisma.CustomerMergeOrderByRelationAggregateInput
   productCategories?: Prisma.ProductCategoryOrderByRelationAggregateInput
@@ -475,6 +477,7 @@ export type CompanyWhereUniqueInput = Prisma.AtLeast<{
   departments?: Prisma.DepartmentListRelationFilter
   positions?: Prisma.PositionListRelationFilter
   staff?: Prisma.StaffListRelationFilter
+  attendance?: Prisma.StaffAttendanceListRelationFilter
   customers?: Prisma.CustomerListRelationFilter
   customerMerges?: Prisma.CustomerMergeListRelationFilter
   productCategories?: Prisma.ProductCategoryListRelationFilter
@@ -589,6 +592,7 @@ export type CompanyCreateInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -651,6 +655,7 @@ export type CompanyUncheckedCreateInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -713,6 +718,7 @@ export type CompanyUpdateInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -775,6 +781,7 @@ export type CompanyUncheckedUpdateInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -1204,6 +1211,20 @@ export type CompanyUpdateOneRequiredWithoutStaffNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.CompanyUpdateToOneWithWhereWithoutStaffInput, Prisma.CompanyUpdateWithoutStaffInput>, Prisma.CompanyUncheckedUpdateWithoutStaffInput>
 }
 
+export type CompanyCreateNestedOneWithoutAttendanceInput = {
+  create?: Prisma.XOR<Prisma.CompanyCreateWithoutAttendanceInput, Prisma.CompanyUncheckedCreateWithoutAttendanceInput>
+  connectOrCreate?: Prisma.CompanyCreateOrConnectWithoutAttendanceInput
+  connect?: Prisma.CompanyWhereUniqueInput
+}
+
+export type CompanyUpdateOneRequiredWithoutAttendanceNestedInput = {
+  create?: Prisma.XOR<Prisma.CompanyCreateWithoutAttendanceInput, Prisma.CompanyUncheckedCreateWithoutAttendanceInput>
+  connectOrCreate?: Prisma.CompanyCreateOrConnectWithoutAttendanceInput
+  upsert?: Prisma.CompanyUpsertWithoutAttendanceInput
+  connect?: Prisma.CompanyWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CompanyUpdateToOneWithWhereWithoutAttendanceInput, Prisma.CompanyUpdateWithoutAttendanceInput>, Prisma.CompanyUncheckedUpdateWithoutAttendanceInput>
+}
+
 export type CompanyCreateNestedOneWithoutCustomersInput = {
   create?: Prisma.XOR<Prisma.CompanyCreateWithoutCustomersInput, Prisma.CompanyUncheckedCreateWithoutCustomersInput>
   connectOrCreate?: Prisma.CompanyCreateOrConnectWithoutCustomersInput
@@ -1575,6 +1596,7 @@ export type CompanyCreateWithoutBusinessUnitsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -1636,6 +1658,7 @@ export type CompanyUncheckedCreateWithoutBusinessUnitsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -1713,6 +1736,7 @@ export type CompanyUpdateWithoutBusinessUnitsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -1774,6 +1798,7 @@ export type CompanyUncheckedUpdateWithoutBusinessUnitsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -1835,6 +1860,7 @@ export type CompanyCreateWithoutStationsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -1896,6 +1922,7 @@ export type CompanyUncheckedCreateWithoutStationsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -1973,6 +2000,7 @@ export type CompanyUpdateWithoutStationsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -2034,6 +2062,7 @@ export type CompanyUncheckedUpdateWithoutStationsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2095,6 +2124,7 @@ export type CompanyCreateWithoutUsersInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -2156,6 +2186,7 @@ export type CompanyUncheckedCreateWithoutUsersInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -2233,6 +2264,7 @@ export type CompanyUpdateWithoutUsersInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -2294,6 +2326,7 @@ export type CompanyUncheckedUpdateWithoutUsersInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2355,6 +2388,7 @@ export type CompanyCreateWithoutRolesInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -2416,6 +2450,7 @@ export type CompanyUncheckedCreateWithoutRolesInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -2493,6 +2528,7 @@ export type CompanyUpdateWithoutRolesInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -2554,6 +2590,7 @@ export type CompanyUncheckedUpdateWithoutRolesInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2615,6 +2652,7 @@ export type CompanyCreateWithoutSequencesInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -2676,6 +2714,7 @@ export type CompanyUncheckedCreateWithoutSequencesInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -2753,6 +2792,7 @@ export type CompanyUpdateWithoutSequencesInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -2814,6 +2854,7 @@ export type CompanyUncheckedUpdateWithoutSequencesInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2875,6 +2916,7 @@ export type CompanyCreateWithoutAuditEventsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -2936,6 +2978,7 @@ export type CompanyUncheckedCreateWithoutAuditEventsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -3013,6 +3056,7 @@ export type CompanyUpdateWithoutAuditEventsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -3074,6 +3118,7 @@ export type CompanyUncheckedUpdateWithoutAuditEventsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3135,6 +3180,7 @@ export type CompanyCreateWithoutApprovalsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -3196,6 +3242,7 @@ export type CompanyUncheckedCreateWithoutApprovalsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -3273,6 +3320,7 @@ export type CompanyUpdateWithoutApprovalsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -3334,6 +3382,7 @@ export type CompanyUncheckedUpdateWithoutApprovalsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3395,6 +3444,7 @@ export type CompanyCreateWithoutAttachmentsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -3456,6 +3506,7 @@ export type CompanyUncheckedCreateWithoutAttachmentsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -3533,6 +3584,7 @@ export type CompanyUpdateWithoutAttachmentsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -3594,6 +3646,7 @@ export type CompanyUncheckedUpdateWithoutAttachmentsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3655,6 +3708,7 @@ export type CompanyCreateWithoutNotificationsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -3716,6 +3770,7 @@ export type CompanyUncheckedCreateWithoutNotificationsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -3793,6 +3848,7 @@ export type CompanyUpdateWithoutNotificationsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -3854,6 +3910,7 @@ export type CompanyUncheckedUpdateWithoutNotificationsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3915,6 +3972,7 @@ export type CompanyCreateWithoutSettingsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -3976,6 +4034,7 @@ export type CompanyUncheckedCreateWithoutSettingsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -4053,6 +4112,7 @@ export type CompanyUpdateWithoutSettingsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -4114,6 +4174,7 @@ export type CompanyUncheckedUpdateWithoutSettingsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4175,6 +4236,7 @@ export type CompanyCreateWithoutOutboxEventsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -4236,6 +4298,7 @@ export type CompanyUncheckedCreateWithoutOutboxEventsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -4313,6 +4376,7 @@ export type CompanyUpdateWithoutOutboxEventsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -4374,6 +4438,7 @@ export type CompanyUncheckedUpdateWithoutOutboxEventsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4435,6 +4500,7 @@ export type CompanyCreateWithoutIdempotencyKeysInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -4496,6 +4562,7 @@ export type CompanyUncheckedCreateWithoutIdempotencyKeysInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -4573,6 +4640,7 @@ export type CompanyUpdateWithoutIdempotencyKeysInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -4634,6 +4702,7 @@ export type CompanyUncheckedUpdateWithoutIdempotencyKeysInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4695,6 +4764,7 @@ export type CompanyCreateWithoutPaymentMethodsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -4756,6 +4826,7 @@ export type CompanyUncheckedCreateWithoutPaymentMethodsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -4833,6 +4904,7 @@ export type CompanyUpdateWithoutPaymentMethodsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -4894,6 +4966,7 @@ export type CompanyUncheckedUpdateWithoutPaymentMethodsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4955,6 +5028,7 @@ export type CompanyCreateWithoutDepartmentsInput = {
   paymentMethods?: Prisma.PaymentMethodCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -5016,6 +5090,7 @@ export type CompanyUncheckedCreateWithoutDepartmentsInput = {
   paymentMethods?: Prisma.PaymentMethodUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -5093,6 +5168,7 @@ export type CompanyUpdateWithoutDepartmentsInput = {
   paymentMethods?: Prisma.PaymentMethodUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -5154,6 +5230,7 @@ export type CompanyUncheckedUpdateWithoutDepartmentsInput = {
   paymentMethods?: Prisma.PaymentMethodUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5215,6 +5292,7 @@ export type CompanyCreateWithoutPositionsInput = {
   paymentMethods?: Prisma.PaymentMethodCreateNestedManyWithoutCompanyInput
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -5276,6 +5354,7 @@ export type CompanyUncheckedCreateWithoutPositionsInput = {
   paymentMethods?: Prisma.PaymentMethodUncheckedCreateNestedManyWithoutCompanyInput
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -5353,6 +5432,7 @@ export type CompanyUpdateWithoutPositionsInput = {
   paymentMethods?: Prisma.PaymentMethodUpdateManyWithoutCompanyNestedInput
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -5414,6 +5494,7 @@ export type CompanyUncheckedUpdateWithoutPositionsInput = {
   paymentMethods?: Prisma.PaymentMethodUncheckedUpdateManyWithoutCompanyNestedInput
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5475,6 +5556,7 @@ export type CompanyCreateWithoutStaffInput = {
   paymentMethods?: Prisma.PaymentMethodCreateNestedManyWithoutCompanyInput
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -5536,6 +5618,7 @@ export type CompanyUncheckedCreateWithoutStaffInput = {
   paymentMethods?: Prisma.PaymentMethodUncheckedCreateNestedManyWithoutCompanyInput
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -5613,6 +5696,7 @@ export type CompanyUpdateWithoutStaffInput = {
   paymentMethods?: Prisma.PaymentMethodUpdateManyWithoutCompanyNestedInput
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -5674,6 +5758,271 @@ export type CompanyUncheckedUpdateWithoutStaffInput = {
   paymentMethods?: Prisma.PaymentMethodUncheckedUpdateManyWithoutCompanyNestedInput
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
+  customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
+  customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
+  productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
+  unitsOfMeasure?: Prisma.UnitOfMeasureUncheckedUpdateManyWithoutCompanyNestedInput
+  suppliers?: Prisma.SupplierUncheckedUpdateManyWithoutCompanyNestedInput
+  products?: Prisma.ProductUncheckedUpdateManyWithoutCompanyNestedInput
+  stockMovements?: Prisma.StockMovementUncheckedUpdateManyWithoutCompanyNestedInput
+  purchaseOrders?: Prisma.PurchaseOrderUncheckedUpdateManyWithoutCompanyNestedInput
+  goodsReceipts?: Prisma.GoodsReceiptUncheckedUpdateManyWithoutCompanyNestedInput
+  stockTransfers?: Prisma.StockTransferUncheckedUpdateManyWithoutCompanyNestedInput
+  inventoryAdjustments?: Prisma.InventoryAdjustmentUncheckedUpdateManyWithoutCompanyNestedInput
+  sales?: Prisma.SaleUncheckedUpdateManyWithoutCompanyNestedInput
+  payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
+  refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
+  walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
+  financialCategories?: Prisma.FinancialCategoryUncheckedUpdateManyWithoutCompanyNestedInput
+  cashbookEntries?: Prisma.CashbookEntryUncheckedUpdateManyWithoutCompanyNestedInput
+  financialPeriods?: Prisma.FinancialPeriodUncheckedUpdateManyWithoutCompanyNestedInput
+  reconciliations?: Prisma.ReconciliationUncheckedUpdateManyWithoutCompanyNestedInput
+  ticketBookings?: Prisma.TicketBookingUncheckedUpdateManyWithoutCompanyNestedInput
+  generatedDocuments?: Prisma.GeneratedDocumentUncheckedUpdateManyWithoutCompanyNestedInput
+}
+
+export type CompanyCreateWithoutAttendanceInput = {
+  id?: string
+  code: string
+  legalName: string
+  displayName: string
+  email?: string | null
+  phone?: string | null
+  address?: string | null
+  logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
+  timezone?: string
+  currencyCode?: string
+  locale?: string
+  taxRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  isActive?: boolean
+  version?: number
+  createdById?: string | null
+  updatedById?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  businessUnits?: Prisma.BusinessUnitCreateNestedManyWithoutCompanyInput
+  stations?: Prisma.StationCreateNestedManyWithoutCompanyInput
+  users?: Prisma.UserCreateNestedManyWithoutCompanyInput
+  roles?: Prisma.RoleCreateNestedManyWithoutCompanyInput
+  sequences?: Prisma.SequenceCreateNestedManyWithoutCompanyInput
+  auditEvents?: Prisma.AuditEventCreateNestedManyWithoutCompanyInput
+  approvals?: Prisma.ApprovalRequestCreateNestedManyWithoutCompanyInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutCompanyInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutCompanyInput
+  settings?: Prisma.SystemSettingCreateNestedManyWithoutCompanyInput
+  outboxEvents?: Prisma.OutboxEventCreateNestedManyWithoutCompanyInput
+  idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutCompanyInput
+  paymentMethods?: Prisma.PaymentMethodCreateNestedManyWithoutCompanyInput
+  departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
+  positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
+  staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
+  customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
+  productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
+  unitsOfMeasure?: Prisma.UnitOfMeasureCreateNestedManyWithoutCompanyInput
+  suppliers?: Prisma.SupplierCreateNestedManyWithoutCompanyInput
+  products?: Prisma.ProductCreateNestedManyWithoutCompanyInput
+  stockMovements?: Prisma.StockMovementCreateNestedManyWithoutCompanyInput
+  purchaseOrders?: Prisma.PurchaseOrderCreateNestedManyWithoutCompanyInput
+  goodsReceipts?: Prisma.GoodsReceiptCreateNestedManyWithoutCompanyInput
+  stockTransfers?: Prisma.StockTransferCreateNestedManyWithoutCompanyInput
+  inventoryAdjustments?: Prisma.InventoryAdjustmentCreateNestedManyWithoutCompanyInput
+  sales?: Prisma.SaleCreateNestedManyWithoutCompanyInput
+  payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
+  refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
+  cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
+  walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
+  financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
+  financialCategories?: Prisma.FinancialCategoryCreateNestedManyWithoutCompanyInput
+  cashbookEntries?: Prisma.CashbookEntryCreateNestedManyWithoutCompanyInput
+  financialPeriods?: Prisma.FinancialPeriodCreateNestedManyWithoutCompanyInput
+  reconciliations?: Prisma.ReconciliationCreateNestedManyWithoutCompanyInput
+  ticketBookings?: Prisma.TicketBookingCreateNestedManyWithoutCompanyInput
+  generatedDocuments?: Prisma.GeneratedDocumentCreateNestedManyWithoutCompanyInput
+}
+
+export type CompanyUncheckedCreateWithoutAttendanceInput = {
+  id?: string
+  code: string
+  legalName: string
+  displayName: string
+  email?: string | null
+  phone?: string | null
+  address?: string | null
+  logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
+  timezone?: string
+  currencyCode?: string
+  locale?: string
+  taxRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  isActive?: boolean
+  version?: number
+  createdById?: string | null
+  updatedById?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  businessUnits?: Prisma.BusinessUnitUncheckedCreateNestedManyWithoutCompanyInput
+  stations?: Prisma.StationUncheckedCreateNestedManyWithoutCompanyInput
+  users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
+  roles?: Prisma.RoleUncheckedCreateNestedManyWithoutCompanyInput
+  sequences?: Prisma.SequenceUncheckedCreateNestedManyWithoutCompanyInput
+  auditEvents?: Prisma.AuditEventUncheckedCreateNestedManyWithoutCompanyInput
+  approvals?: Prisma.ApprovalRequestUncheckedCreateNestedManyWithoutCompanyInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCompanyInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutCompanyInput
+  settings?: Prisma.SystemSettingUncheckedCreateNestedManyWithoutCompanyInput
+  outboxEvents?: Prisma.OutboxEventUncheckedCreateNestedManyWithoutCompanyInput
+  idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutCompanyInput
+  paymentMethods?: Prisma.PaymentMethodUncheckedCreateNestedManyWithoutCompanyInput
+  departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
+  positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
+  staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
+  customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
+  productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
+  unitsOfMeasure?: Prisma.UnitOfMeasureUncheckedCreateNestedManyWithoutCompanyInput
+  suppliers?: Prisma.SupplierUncheckedCreateNestedManyWithoutCompanyInput
+  products?: Prisma.ProductUncheckedCreateNestedManyWithoutCompanyInput
+  stockMovements?: Prisma.StockMovementUncheckedCreateNestedManyWithoutCompanyInput
+  purchaseOrders?: Prisma.PurchaseOrderUncheckedCreateNestedManyWithoutCompanyInput
+  goodsReceipts?: Prisma.GoodsReceiptUncheckedCreateNestedManyWithoutCompanyInput
+  stockTransfers?: Prisma.StockTransferUncheckedCreateNestedManyWithoutCompanyInput
+  inventoryAdjustments?: Prisma.InventoryAdjustmentUncheckedCreateNestedManyWithoutCompanyInput
+  sales?: Prisma.SaleUncheckedCreateNestedManyWithoutCompanyInput
+  payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
+  refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
+  cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
+  walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
+  financialCategories?: Prisma.FinancialCategoryUncheckedCreateNestedManyWithoutCompanyInput
+  cashbookEntries?: Prisma.CashbookEntryUncheckedCreateNestedManyWithoutCompanyInput
+  financialPeriods?: Prisma.FinancialPeriodUncheckedCreateNestedManyWithoutCompanyInput
+  reconciliations?: Prisma.ReconciliationUncheckedCreateNestedManyWithoutCompanyInput
+  ticketBookings?: Prisma.TicketBookingUncheckedCreateNestedManyWithoutCompanyInput
+  generatedDocuments?: Prisma.GeneratedDocumentUncheckedCreateNestedManyWithoutCompanyInput
+}
+
+export type CompanyCreateOrConnectWithoutAttendanceInput = {
+  where: Prisma.CompanyWhereUniqueInput
+  create: Prisma.XOR<Prisma.CompanyCreateWithoutAttendanceInput, Prisma.CompanyUncheckedCreateWithoutAttendanceInput>
+}
+
+export type CompanyUpsertWithoutAttendanceInput = {
+  update: Prisma.XOR<Prisma.CompanyUpdateWithoutAttendanceInput, Prisma.CompanyUncheckedUpdateWithoutAttendanceInput>
+  create: Prisma.XOR<Prisma.CompanyCreateWithoutAttendanceInput, Prisma.CompanyUncheckedCreateWithoutAttendanceInput>
+  where?: Prisma.CompanyWhereInput
+}
+
+export type CompanyUpdateToOneWithWhereWithoutAttendanceInput = {
+  where?: Prisma.CompanyWhereInput
+  data: Prisma.XOR<Prisma.CompanyUpdateWithoutAttendanceInput, Prisma.CompanyUncheckedUpdateWithoutAttendanceInput>
+}
+
+export type CompanyUpdateWithoutAttendanceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.StringFieldUpdateOperationsInput | string
+  legalName?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
+  taxRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  version?: Prisma.IntFieldUpdateOperationsInput | number
+  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  businessUnits?: Prisma.BusinessUnitUpdateManyWithoutCompanyNestedInput
+  stations?: Prisma.StationUpdateManyWithoutCompanyNestedInput
+  users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
+  roles?: Prisma.RoleUpdateManyWithoutCompanyNestedInput
+  sequences?: Prisma.SequenceUpdateManyWithoutCompanyNestedInput
+  auditEvents?: Prisma.AuditEventUpdateManyWithoutCompanyNestedInput
+  approvals?: Prisma.ApprovalRequestUpdateManyWithoutCompanyNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutCompanyNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutCompanyNestedInput
+  settings?: Prisma.SystemSettingUpdateManyWithoutCompanyNestedInput
+  outboxEvents?: Prisma.OutboxEventUpdateManyWithoutCompanyNestedInput
+  idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutCompanyNestedInput
+  paymentMethods?: Prisma.PaymentMethodUpdateManyWithoutCompanyNestedInput
+  departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
+  positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
+  staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
+  customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
+  productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
+  unitsOfMeasure?: Prisma.UnitOfMeasureUpdateManyWithoutCompanyNestedInput
+  suppliers?: Prisma.SupplierUpdateManyWithoutCompanyNestedInput
+  products?: Prisma.ProductUpdateManyWithoutCompanyNestedInput
+  stockMovements?: Prisma.StockMovementUpdateManyWithoutCompanyNestedInput
+  purchaseOrders?: Prisma.PurchaseOrderUpdateManyWithoutCompanyNestedInput
+  goodsReceipts?: Prisma.GoodsReceiptUpdateManyWithoutCompanyNestedInput
+  stockTransfers?: Prisma.StockTransferUpdateManyWithoutCompanyNestedInput
+  inventoryAdjustments?: Prisma.InventoryAdjustmentUpdateManyWithoutCompanyNestedInput
+  sales?: Prisma.SaleUpdateManyWithoutCompanyNestedInput
+  payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
+  refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
+  cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
+  walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
+  financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
+  financialCategories?: Prisma.FinancialCategoryUpdateManyWithoutCompanyNestedInput
+  cashbookEntries?: Prisma.CashbookEntryUpdateManyWithoutCompanyNestedInput
+  financialPeriods?: Prisma.FinancialPeriodUpdateManyWithoutCompanyNestedInput
+  reconciliations?: Prisma.ReconciliationUpdateManyWithoutCompanyNestedInput
+  ticketBookings?: Prisma.TicketBookingUpdateManyWithoutCompanyNestedInput
+  generatedDocuments?: Prisma.GeneratedDocumentUpdateManyWithoutCompanyNestedInput
+}
+
+export type CompanyUncheckedUpdateWithoutAttendanceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.StringFieldUpdateOperationsInput | string
+  legalName?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
+  taxRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  version?: Prisma.IntFieldUpdateOperationsInput | number
+  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  businessUnits?: Prisma.BusinessUnitUncheckedUpdateManyWithoutCompanyNestedInput
+  stations?: Prisma.StationUncheckedUpdateManyWithoutCompanyNestedInput
+  users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
+  roles?: Prisma.RoleUncheckedUpdateManyWithoutCompanyNestedInput
+  sequences?: Prisma.SequenceUncheckedUpdateManyWithoutCompanyNestedInput
+  auditEvents?: Prisma.AuditEventUncheckedUpdateManyWithoutCompanyNestedInput
+  approvals?: Prisma.ApprovalRequestUncheckedUpdateManyWithoutCompanyNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCompanyNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutCompanyNestedInput
+  settings?: Prisma.SystemSettingUncheckedUpdateManyWithoutCompanyNestedInput
+  outboxEvents?: Prisma.OutboxEventUncheckedUpdateManyWithoutCompanyNestedInput
+  idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutCompanyNestedInput
+  paymentMethods?: Prisma.PaymentMethodUncheckedUpdateManyWithoutCompanyNestedInput
+  departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
+  positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
+  staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5736,6 +6085,7 @@ export type CompanyCreateWithoutCustomersInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
   unitsOfMeasure?: Prisma.UnitOfMeasureCreateNestedManyWithoutCompanyInput
@@ -5797,6 +6147,7 @@ export type CompanyUncheckedCreateWithoutCustomersInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
   unitsOfMeasure?: Prisma.UnitOfMeasureUncheckedCreateNestedManyWithoutCompanyInput
@@ -5874,6 +6225,7 @@ export type CompanyUpdateWithoutCustomersInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
   unitsOfMeasure?: Prisma.UnitOfMeasureUpdateManyWithoutCompanyNestedInput
@@ -5935,6 +6287,7 @@ export type CompanyUncheckedUpdateWithoutCustomersInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
   unitsOfMeasure?: Prisma.UnitOfMeasureUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5996,6 +6349,7 @@ export type CompanyCreateWithoutCustomerMergesInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
   unitsOfMeasure?: Prisma.UnitOfMeasureCreateNestedManyWithoutCompanyInput
@@ -6057,6 +6411,7 @@ export type CompanyUncheckedCreateWithoutCustomerMergesInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
   unitsOfMeasure?: Prisma.UnitOfMeasureUncheckedCreateNestedManyWithoutCompanyInput
@@ -6134,6 +6489,7 @@ export type CompanyUpdateWithoutCustomerMergesInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
   unitsOfMeasure?: Prisma.UnitOfMeasureUpdateManyWithoutCompanyNestedInput
@@ -6195,6 +6551,7 @@ export type CompanyUncheckedUpdateWithoutCustomerMergesInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
   unitsOfMeasure?: Prisma.UnitOfMeasureUncheckedUpdateManyWithoutCompanyNestedInput
@@ -6256,6 +6613,7 @@ export type CompanyCreateWithoutProductCategoriesInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   unitsOfMeasure?: Prisma.UnitOfMeasureCreateNestedManyWithoutCompanyInput
@@ -6317,6 +6675,7 @@ export type CompanyUncheckedCreateWithoutProductCategoriesInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   unitsOfMeasure?: Prisma.UnitOfMeasureUncheckedCreateNestedManyWithoutCompanyInput
@@ -6394,6 +6753,7 @@ export type CompanyUpdateWithoutProductCategoriesInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   unitsOfMeasure?: Prisma.UnitOfMeasureUpdateManyWithoutCompanyNestedInput
@@ -6455,6 +6815,7 @@ export type CompanyUncheckedUpdateWithoutProductCategoriesInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   unitsOfMeasure?: Prisma.UnitOfMeasureUncheckedUpdateManyWithoutCompanyNestedInput
@@ -6516,6 +6877,7 @@ export type CompanyCreateWithoutUnitsOfMeasureInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -6577,6 +6939,7 @@ export type CompanyUncheckedCreateWithoutUnitsOfMeasureInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -6654,6 +7017,7 @@ export type CompanyUpdateWithoutUnitsOfMeasureInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -6715,6 +7079,7 @@ export type CompanyUncheckedUpdateWithoutUnitsOfMeasureInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -6776,6 +7141,7 @@ export type CompanyCreateWithoutSuppliersInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -6837,6 +7203,7 @@ export type CompanyUncheckedCreateWithoutSuppliersInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -6914,6 +7281,7 @@ export type CompanyUpdateWithoutSuppliersInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -6975,6 +7343,7 @@ export type CompanyUncheckedUpdateWithoutSuppliersInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -7036,6 +7405,7 @@ export type CompanyCreateWithoutProductsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -7097,6 +7467,7 @@ export type CompanyUncheckedCreateWithoutProductsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -7174,6 +7545,7 @@ export type CompanyUpdateWithoutProductsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -7235,6 +7607,7 @@ export type CompanyUncheckedUpdateWithoutProductsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -7296,6 +7669,7 @@ export type CompanyCreateWithoutStockMovementsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -7357,6 +7731,7 @@ export type CompanyUncheckedCreateWithoutStockMovementsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -7434,6 +7809,7 @@ export type CompanyUpdateWithoutStockMovementsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -7495,6 +7871,7 @@ export type CompanyUncheckedUpdateWithoutStockMovementsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -7556,6 +7933,7 @@ export type CompanyCreateWithoutPurchaseOrdersInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -7617,6 +7995,7 @@ export type CompanyUncheckedCreateWithoutPurchaseOrdersInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -7694,6 +8073,7 @@ export type CompanyUpdateWithoutPurchaseOrdersInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -7755,6 +8135,7 @@ export type CompanyUncheckedUpdateWithoutPurchaseOrdersInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -7816,6 +8197,7 @@ export type CompanyCreateWithoutGoodsReceiptsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -7877,6 +8259,7 @@ export type CompanyUncheckedCreateWithoutGoodsReceiptsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -7954,6 +8337,7 @@ export type CompanyUpdateWithoutGoodsReceiptsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -8015,6 +8399,7 @@ export type CompanyUncheckedUpdateWithoutGoodsReceiptsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -8076,6 +8461,7 @@ export type CompanyCreateWithoutStockTransfersInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -8137,6 +8523,7 @@ export type CompanyUncheckedCreateWithoutStockTransfersInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -8214,6 +8601,7 @@ export type CompanyUpdateWithoutStockTransfersInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -8275,6 +8663,7 @@ export type CompanyUncheckedUpdateWithoutStockTransfersInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -8336,6 +8725,7 @@ export type CompanyCreateWithoutInventoryAdjustmentsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -8397,6 +8787,7 @@ export type CompanyUncheckedCreateWithoutInventoryAdjustmentsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -8474,6 +8865,7 @@ export type CompanyUpdateWithoutInventoryAdjustmentsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -8535,6 +8927,7 @@ export type CompanyUncheckedUpdateWithoutInventoryAdjustmentsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -8596,6 +8989,7 @@ export type CompanyCreateWithoutSalesInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -8657,6 +9051,7 @@ export type CompanyUncheckedCreateWithoutSalesInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -8734,6 +9129,7 @@ export type CompanyUpdateWithoutSalesInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -8795,6 +9191,7 @@ export type CompanyUncheckedUpdateWithoutSalesInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -8856,6 +9253,7 @@ export type CompanyCreateWithoutPaymentsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -8917,6 +9315,7 @@ export type CompanyUncheckedCreateWithoutPaymentsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -8994,6 +9393,7 @@ export type CompanyUpdateWithoutPaymentsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -9055,6 +9455,7 @@ export type CompanyUncheckedUpdateWithoutPaymentsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -9116,6 +9517,7 @@ export type CompanyCreateWithoutRefundsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -9177,6 +9579,7 @@ export type CompanyUncheckedCreateWithoutRefundsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -9254,6 +9657,7 @@ export type CompanyUpdateWithoutRefundsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -9315,6 +9719,7 @@ export type CompanyUncheckedUpdateWithoutRefundsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -9376,6 +9781,7 @@ export type CompanyCreateWithoutCargoShipmentsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -9437,6 +9843,7 @@ export type CompanyUncheckedCreateWithoutCargoShipmentsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -9514,6 +9921,7 @@ export type CompanyUpdateWithoutCargoShipmentsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -9575,6 +9983,7 @@ export type CompanyUncheckedUpdateWithoutCargoShipmentsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -9636,6 +10045,7 @@ export type CompanyCreateWithoutAgentsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -9697,6 +10107,7 @@ export type CompanyUncheckedCreateWithoutAgentsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -9774,6 +10185,7 @@ export type CompanyUpdateWithoutAgentsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -9835,6 +10247,7 @@ export type CompanyUncheckedUpdateWithoutAgentsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -9896,6 +10309,7 @@ export type CompanyCreateWithoutWalletEntriesInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -9957,6 +10371,7 @@ export type CompanyUncheckedCreateWithoutWalletEntriesInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -10034,6 +10449,7 @@ export type CompanyUpdateWithoutWalletEntriesInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -10095,6 +10511,7 @@ export type CompanyUncheckedUpdateWithoutWalletEntriesInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -10156,6 +10573,7 @@ export type CompanyCreateWithoutFinancialAccountsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -10217,6 +10635,7 @@ export type CompanyUncheckedCreateWithoutFinancialAccountsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -10294,6 +10713,7 @@ export type CompanyUpdateWithoutFinancialAccountsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -10355,6 +10775,7 @@ export type CompanyUncheckedUpdateWithoutFinancialAccountsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -10416,6 +10837,7 @@ export type CompanyCreateWithoutFinancialCategoriesInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -10477,6 +10899,7 @@ export type CompanyUncheckedCreateWithoutFinancialCategoriesInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -10554,6 +10977,7 @@ export type CompanyUpdateWithoutFinancialCategoriesInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -10615,6 +11039,7 @@ export type CompanyUncheckedUpdateWithoutFinancialCategoriesInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -10676,6 +11101,7 @@ export type CompanyCreateWithoutCashbookEntriesInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -10737,6 +11163,7 @@ export type CompanyUncheckedCreateWithoutCashbookEntriesInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -10814,6 +11241,7 @@ export type CompanyUpdateWithoutCashbookEntriesInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -10875,6 +11303,7 @@ export type CompanyUncheckedUpdateWithoutCashbookEntriesInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -10936,6 +11365,7 @@ export type CompanyCreateWithoutFinancialPeriodsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -10997,6 +11427,7 @@ export type CompanyUncheckedCreateWithoutFinancialPeriodsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -11074,6 +11505,7 @@ export type CompanyUpdateWithoutFinancialPeriodsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -11135,6 +11567,7 @@ export type CompanyUncheckedUpdateWithoutFinancialPeriodsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -11196,6 +11629,7 @@ export type CompanyCreateWithoutReconciliationsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -11257,6 +11691,7 @@ export type CompanyUncheckedCreateWithoutReconciliationsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -11334,6 +11769,7 @@ export type CompanyUpdateWithoutReconciliationsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -11395,6 +11831,7 @@ export type CompanyUncheckedUpdateWithoutReconciliationsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -11456,6 +11893,7 @@ export type CompanyCreateWithoutTicketBookingsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -11517,6 +11955,7 @@ export type CompanyUncheckedCreateWithoutTicketBookingsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -11594,6 +12033,7 @@ export type CompanyUpdateWithoutTicketBookingsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -11655,6 +12095,7 @@ export type CompanyUncheckedUpdateWithoutTicketBookingsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -11716,6 +12157,7 @@ export type CompanyCreateWithoutGeneratedDocumentsInput = {
   departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
@@ -11777,6 +12219,7 @@ export type CompanyUncheckedCreateWithoutGeneratedDocumentsInput = {
   departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
   positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
   staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
   customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
   customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
   productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -11854,6 +12297,7 @@ export type CompanyUpdateWithoutGeneratedDocumentsInput = {
   departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
@@ -11915,6 +12359,7 @@ export type CompanyUncheckedUpdateWithoutGeneratedDocumentsInput = {
   departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
   positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
   staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
   customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
   customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
   productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -11962,6 +12407,7 @@ export type CompanyCountOutputType = {
   departments: number
   positions: number
   staff: number
+  attendance: number
   customers: number
   customerMerges: number
   productCategories: number
@@ -12005,6 +12451,7 @@ export type CompanyCountOutputTypeSelect<ExtArgs extends runtime.Types.Extension
   departments?: boolean | CompanyCountOutputTypeCountDepartmentsArgs
   positions?: boolean | CompanyCountOutputTypeCountPositionsArgs
   staff?: boolean | CompanyCountOutputTypeCountStaffArgs
+  attendance?: boolean | CompanyCountOutputTypeCountAttendanceArgs
   customers?: boolean | CompanyCountOutputTypeCountCustomersArgs
   customerMerges?: boolean | CompanyCountOutputTypeCountCustomerMergesArgs
   productCategories?: boolean | CompanyCountOutputTypeCountProductCategoriesArgs
@@ -12151,6 +12598,13 @@ export type CompanyCountOutputTypeCountPositionsArgs<ExtArgs extends runtime.Typ
  */
 export type CompanyCountOutputTypeCountStaffArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.StaffWhereInput
+}
+
+/**
+ * CompanyCountOutputType without action
+ */
+export type CompanyCountOutputTypeCountAttendanceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.StaffAttendanceWhereInput
 }
 
 /**
@@ -12358,6 +12812,7 @@ export type CompanySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   departments?: boolean | Prisma.Company$departmentsArgs<ExtArgs>
   positions?: boolean | Prisma.Company$positionsArgs<ExtArgs>
   staff?: boolean | Prisma.Company$staffArgs<ExtArgs>
+  attendance?: boolean | Prisma.Company$attendanceArgs<ExtArgs>
   customers?: boolean | Prisma.Company$customersArgs<ExtArgs>
   customerMerges?: boolean | Prisma.Company$customerMergesArgs<ExtArgs>
   productCategories?: boolean | Prisma.Company$productCategoriesArgs<ExtArgs>
@@ -12469,6 +12924,7 @@ export type CompanyInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs
   departments?: boolean | Prisma.Company$departmentsArgs<ExtArgs>
   positions?: boolean | Prisma.Company$positionsArgs<ExtArgs>
   staff?: boolean | Prisma.Company$staffArgs<ExtArgs>
+  attendance?: boolean | Prisma.Company$attendanceArgs<ExtArgs>
   customers?: boolean | Prisma.Company$customersArgs<ExtArgs>
   customerMerges?: boolean | Prisma.Company$customerMergesArgs<ExtArgs>
   productCategories?: boolean | Prisma.Company$productCategoriesArgs<ExtArgs>
@@ -12517,6 +12973,7 @@ export type $CompanyPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     departments: Prisma.$DepartmentPayload<ExtArgs>[]
     positions: Prisma.$PositionPayload<ExtArgs>[]
     staff: Prisma.$StaffPayload<ExtArgs>[]
+    attendance: Prisma.$StaffAttendancePayload<ExtArgs>[]
     customers: Prisma.$CustomerPayload<ExtArgs>[]
     customerMerges: Prisma.$CustomerMergePayload<ExtArgs>[]
     productCategories: Prisma.$ProductCategoryPayload<ExtArgs>[]
@@ -12972,6 +13429,7 @@ export interface Prisma__CompanyClient<T, Null = never, ExtArgs extends runtime.
   departments<T extends Prisma.Company$departmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$departmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DepartmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   positions<T extends Prisma.Company$positionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$positionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PositionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   staff<T extends Prisma.Company$staffArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$staffArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StaffPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  attendance<T extends Prisma.Company$attendanceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$attendanceArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StaffAttendancePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   customers<T extends Prisma.Company$customersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$customersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   customerMerges<T extends Prisma.Company$customerMergesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$customerMergesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CustomerMergePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   productCategories<T extends Prisma.Company$productCategoriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$productCategoriesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductCategoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -13818,6 +14276,30 @@ export type Company$staffArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   take?: number
   skip?: number
   distinct?: Prisma.StaffScalarFieldEnum | Prisma.StaffScalarFieldEnum[]
+}
+
+/**
+ * Company.attendance
+ */
+export type Company$attendanceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the StaffAttendance
+   */
+  select?: Prisma.StaffAttendanceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the StaffAttendance
+   */
+  omit?: Prisma.StaffAttendanceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StaffAttendanceInclude<ExtArgs> | null
+  where?: Prisma.StaffAttendanceWhereInput
+  orderBy?: Prisma.StaffAttendanceOrderByWithRelationInput | Prisma.StaffAttendanceOrderByWithRelationInput[]
+  cursor?: Prisma.StaffAttendanceWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.StaffAttendanceScalarFieldEnum | Prisma.StaffAttendanceScalarFieldEnum[]
 }
 
 /**

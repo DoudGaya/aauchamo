@@ -80,6 +80,7 @@ export const ModelName = {
   Department: 'Department',
   Position: 'Position',
   Staff: 'Staff',
+  StaffAttendance: 'StaffAttendance',
   EmploymentHistory: 'EmploymentHistory',
   StaffStationAssignment: 'StaffStationAssignment',
   NextOfKin: 'NextOfKin',
@@ -686,6 +687,28 @@ export const StaffScalarFieldEnum = {
 } as const
 
 export type StaffScalarFieldEnum = (typeof StaffScalarFieldEnum)[keyof typeof StaffScalarFieldEnum]
+
+
+export const StaffAttendanceScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  staffId: 'staffId',
+  date: 'date',
+  clockInAt: 'clockInAt',
+  clockOutAt: 'clockOutAt',
+  clockInLatitude: 'clockInLatitude',
+  clockInLongitude: 'clockInLongitude',
+  clockOutLatitude: 'clockOutLatitude',
+  clockOutLongitude: 'clockOutLongitude',
+  clockInIp: 'clockInIp',
+  clockOutIp: 'clockOutIp',
+  status: 'status',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type StaffAttendanceScalarFieldEnum = (typeof StaffAttendanceScalarFieldEnum)[keyof typeof StaffAttendanceScalarFieldEnum]
 
 
 export const EmploymentHistoryScalarFieldEnum = {

@@ -9,6 +9,7 @@ import {
   ChartNoAxesCombined,
   CircleGauge,
   ClipboardCheck,
+  Clock,
   ContactRound,
   FileChartColumn,
   Landmark,
@@ -75,6 +76,7 @@ export const navigation: NavGroup[] = [
       { id: "finance", label: "Finance", icon: Landmark },
       { id: "reports", label: "Reports & analytics", icon: FileChartColumn },
       { id: "staff", label: "Staff & HR", icon: ContactRound },
+      { id: "attendance", label: "Attendance logs", icon: Clock },
       { id: "access", label: "User access", icon: UserCog },
       { id: "audit", label: "Audit trail", icon: SearchCheck },
       { id: "management", label: "Correction tools", icon: ShieldCheck },
@@ -91,6 +93,11 @@ export const navigation: NavGroup[] = [
 ];
 
 export const moduleMeta: Record<string, { eyebrow: string; title: string; description: string }> = {
+  attendance: {
+    eyebrow: "People operations",
+    title: "Attendance logs",
+    description: "Manage employee clock-ins and clock-outs, view location coordinates, and review tracking logs.",
+  },
   overview: {
     eyebrow: "Executive command centre",
     title: "Command centre",

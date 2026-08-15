@@ -138,6 +138,7 @@ type StaffRecord = {
   department: { name: string };
   position: { name: string };
   homeStation: AllowedStation;
+  passportObjectKey?: string | null;
 };
 
 type RoleRecord = {
@@ -281,6 +282,7 @@ const pageActions: Record<string, { label: string; modal?: ModalKind; icon: Luci
   finance: { label: "Record entry", modal: "finance", icon: Plus },
   reports: { label: "Export report", icon: Download },
   staff: { label: "Add staff", modal: "staff", icon: UserPlus },
+  attendance: { label: "Refresh logs", icon: RefreshCcw },
   access: { label: "Invite user", modal: "invite", icon: UserPlus },
   audit: { label: "Export evidence", icon: FileDown },
   management: { label: "Run diagnostics", icon: Gauge },
@@ -833,6 +835,8 @@ function ModuleView({
       return <TicketsView />;
     case "staff":
       return <StaffView onModal={onModal} allowedStations={allowedStations} />;
+    case "attendance":
+      return <AttendanceView allowedStations={allowedStations} onToast={onToast} />;
     case "reports":
       return <ReportsView period={period} onToast={onToast} />;
     case "access":
@@ -2008,7 +2012,15 @@ function StaffDetailModal({
   const [employmentType, setEmploymentType] = useState<any>("PERMANENT");
   const [departmentId, setDepartmentId] = useState("");
   const [positionId, setPositionId] = useState("");
+  const [passportPhoto, setPassportPhoto] = useState("");
   const [reason, setReason] = useState("");
+
+  // Next of kin
+  const [nokName, setNokName] = useState("");
+  const [nokRelationship, setNokRelationship] = useState("");
+  const [nokPhone, setNokPhone] = useState("");
+  const [nokEmail, setNokEmail] = useState("");
+  const [nokAddress, setNokAddress] = useState("");
 
   const detail = detailApi.data;
 
@@ -2026,13 +2038,360 @@ function StaffDetailModal({
     setEmploymentType(detail.employmentType ?? "PERMANENT");
     setDepartmentId(detail.departmentId ?? "");
     setPositionId(detail.positionId ?? "");
+    setPassportPhoto(detail.passportPhotoUrl || detail.passportObjectKey || "");
+    
+    if (detail.nextOfKin && detail.nextOfKin[0]) {
+      const nok = detail.nextOfKin[0];
+      setNokName(nok.name ?? "");
+      setNokRelationship(nok.relationship ?? "");
+      setNokPhone(nok.phone ?? "");
+      setNokEmail(nok.email ?? "");
+      setNokAddress(nok.address ?? "");
+    } else {
+      setNokName("");
+      setNokRelationship("");
+      setNokPhone("");
+      setNokEmail("");
+      setNokAddress("");
+    }
   }, [detail]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setPassportPhoto(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const printIDCard = () => {
+    if (!detail) return;
+    const printWindow = window.open("", "_blank", "width=600,height=800");
+    if (!printWindow) return;
+    const name = [detail.firstName, detail.middleName, detail.lastName].filter(Boolean).join(" ");
+    const passport = passportPhoto || "";
+    
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print ID Card - ${detail.staffNumber}</title>
+          <style>
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+              margin: 0;
+              background: #f3f4f6;
+            }
+            .id-card {
+              width: 250px;
+              height: 380px;
+              background: white;
+              border-radius: 12px;
+              box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+              overflow: hidden;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              border: 1px solid #e5e7eb;
+              position: relative;
+            }
+            .card-header {
+              width: 100%;
+              height: 80px;
+              background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              color: white;
+              font-weight: bold;
+              font-size: 16px;
+              letter-spacing: 1px;
+              text-transform: uppercase;
+            }
+            .photo-container {
+              width: 100px;
+              height: 100px;
+              border-radius: 50%;
+              border: 3px solid white;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+              background: #e5e7eb;
+              margin-top: -40px;
+              z-index: 10;
+              overflow: hidden;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+            }
+            .photo-container img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+            }
+            .photo-placeholder {
+              font-size: 32px;
+              color: #9ca3af;
+            }
+            .details {
+              margin-top: 16px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              text-align: center;
+              padding: 0 16px;
+              flex: 1;
+            }
+            .name {
+              font-size: 16px;
+              font-weight: bold;
+              color: #111827;
+              margin-bottom: 2px;
+            }
+            .number {
+              font-size: 11px;
+              color: #3b82f6;
+              font-weight: 600;
+              letter-spacing: 0.5px;
+              margin-bottom: 12px;
+            }
+            .info-group {
+              margin-bottom: 8px;
+              text-align: center;
+            }
+            .info-label {
+              font-size: 9px;
+              text-transform: uppercase;
+              color: #9ca3af;
+              letter-spacing: 0.5px;
+              margin-bottom: 1px;
+            }
+            .info-value {
+              font-size: 12px;
+              font-weight: 600;
+              color: #374151;
+            }
+            .card-footer {
+              width: 100%;
+              height: 35px;
+              background: #f9fafb;
+              border-top: 1px solid #f3f4f6;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              font-size: 9px;
+              color: #6b7280;
+              font-weight: 500;
+            }
+            @media print {
+              body { background: white; }
+              .id-card { box-shadow: none; border: 1px solid #d1d5db; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="id-card">
+            <div class="card-header">AAU CHAMO</div>
+            <div class="photo-container">
+              ${passport ? `<img src="${passport}" alt="Photo" />` : `<div class="photo-placeholder">👤</div>`}
+            </div>
+            <div class="details">
+              <div class="name">${name}</div>
+              <div class="number">${detail.staffNumber}</div>
+              <div class="info-group">
+                <div class="info-label">Department</div>
+                <div class="info-value">${detail.department?.name || "HR"}</div>
+              </div>
+              <div class="info-group">
+                <div class="info-label">Position</div>
+                <div class="info-value">${detail.position?.name || "Staff"}</div>
+              </div>
+              <div class="info-group">
+                <div class="info-label">Home Station</div>
+                <div class="info-value">${detail.homeStation?.name || "Lagos"}</div>
+              </div>
+            </div>
+            <div class="card-footer">
+              SECURITY ACCESS CARD
+            </div>
+          </div>
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                window.close();
+              }, 300);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  const printEmploymentLetter = () => {
+    if (!detail) return;
+    const printWindow = window.open("", "_blank", "width=800,height=1000");
+    if (!printWindow) return;
+    const name = [detail.firstName, detail.middleName, detail.lastName].filter(Boolean).join(" ");
+    const dateStr = new Date(detail.employmentDate).toLocaleDateString("en-NG", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    const salaryFormatted = salary
+      ? new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(Number(salary))
+      : "₦[Negotiated]";
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Employment Letter - ${detail.staffNumber}</title>
+          <style>
+            body {
+              font-family: 'Times New Roman', Times, serif;
+              padding: 40px;
+              color: #111827;
+              line-height: 1.6;
+              font-size: 15px;
+            }
+            .letterhead {
+              text-align: center;
+              border-bottom: 2px solid #111827;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .letterhead h1 {
+              font-size: 26px;
+              margin: 0 0 5px;
+              letter-spacing: 1px;
+              text-transform: uppercase;
+              font-family: 'Segoe UI', Arial, sans-serif;
+              color: #1e3a8a;
+            }
+            .letterhead p {
+              margin: 2px 0;
+              font-size: 12px;
+              color: #4b5563;
+            }
+            .date {
+              margin-bottom: 20px;
+              font-weight: bold;
+            }
+            .recipient {
+              margin-bottom: 30px;
+            }
+            .subject {
+              text-align: center;
+              font-weight: bold;
+              text-transform: uppercase;
+              margin-bottom: 25px;
+              text-decoration: underline;
+            }
+            .content p {
+              margin-bottom: 16px;
+              text-align: justify;
+            }
+            .signature-section {
+              margin-top: 50px;
+              display: flex;
+              justify-content: space-between;
+            }
+            .signature-box {
+              width: 200px;
+            }
+            .signature-line {
+              border-top: 1px solid #111827;
+              margin-top: 40px;
+              padding-top: 5px;
+              text-align: center;
+              font-size: 13px;
+            }
+            @media print {
+              body { padding: 20px; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="letterhead">
+            <h1>AAU CHAMO GROUPS</h1>
+            <p>Headquarters: Lagos, Nigeria | Tel: +234 (0) 1 234 5678 | Email: hr@aauchamo.com</p>
+            <p>www.aauchamo.com</p>
+          </div>
+          
+          <div class="date">${dateStr}</div>
+          
+          <div class="recipient">
+            <strong>To:</strong><br />
+            ${name}<br />
+            Ref: ${detail.staffNumber}<br />
+            ${detail.address || "Nigeria"}
+          </div>
+          
+          <div class="subject">Letter of Appointment</div>
+          
+          <div class="content">
+            <p>Dear ${detail.firstName},</p>
+            
+            <p>On behalf of AAU Chamo, we are pleased to offer you the position of <strong>${detail.position?.name || "Staff"}</strong> in the <strong>${detail.department?.name || "HR"}</strong> department, effective from <strong>${dateStr}</strong>. Your primary assignment will be base-stationed at <strong>${detail.homeStation?.name || "Lagos Station"}</strong>.</p>
+            
+            <p><strong>Remuneration & Type:</strong> Your employment status will be classified as <strong>${detail.employmentType}</strong>. You will receive a base salary of <strong>${salaryFormatted}</strong> per month, subject to standard statutory tax deductions and compliance requirements.</p>
+            
+            <p><strong>Responsibilities:</strong> As a ${detail.position?.name || "Staff member"}, you will report directly to the department head or assigned supervisor. Your specific duties, performance standards, and operational guidelines will be aligned with company standard operating procedures.</p>
+            
+            <p>Please review and sign the duplicate copy of this letter to confirm your acceptance of this offer and return it to the Human Resources department.</p>
+            
+            <p>We welcome you to AAU Chamo and look forward to working together to achieve outstanding professional milestones.</p>
+            
+            <p>Sincerely,</p>
+          </div>
+          
+          <div class="signature-section">
+            <div class="signature-box">
+              <div class="signature-line">
+                <strong>Human Resources</strong><br />
+                AAU Chamo Groups
+              </div>
+            </div>
+            <div class="signature-box">
+              <div class="signature-line">
+                <strong>Employee Signature</strong><br />
+                Acceptance Signature
+              </div>
+            </div>
+          </div>
+          
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                window.close();
+              }, 300);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!detail) return;
     setError(null); setBusy(true);
     try {
+      const nextOfKin = nokName ? [{
+        name: nokName,
+        relationship: nokRelationship,
+        phone: nokPhone,
+        email: nokEmail || undefined,
+        address: nokAddress || undefined,
+        isPrimary: true
+      }] : [];
+
       await workflowPost(`/api/staff/${staff.id}`, {
         version: detail.version,
         firstName,
@@ -2047,6 +2406,8 @@ function StaffDetailModal({
         employmentType,
         departmentId,
         positionId,
+        passportPhoto: passportPhoto || null,
+        nextOfKin,
         reason
       }, "PATCH");
       onComplete("Staff updated", `${detail.firstName} ${detail.lastName} details were updated.`);
@@ -2093,6 +2454,28 @@ function StaffDetailModal({
         </div>
         <form onSubmit={handleSubmit}>
           <div className="workflow-body">
+            <div style={{ display: "flex", gap: "20px", marginBottom: "20px", alignItems: "center" }}>
+              <div style={{ position: "relative", width: "100px", height: "100px", borderRadius: "8px", border: "2px dashed var(--border-color)", display: "flex", justifyContent: "center", alignItems: "center", overflow: "hidden", background: "var(--field-bg)" }}>
+                {passportPhoto ? (
+                  <img src={passportPhoto} alt="Passport" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <span style={{ fontSize: "12px", color: "var(--text-muted)", textAlign: "center", padding: "4px" }}>No Photo</span>
+                )}
+              </div>
+              <div>
+                <label className="secondary-button" style={{ cursor: "pointer", display: "inline-block", padding: "8px 12px", fontSize: "12px" }}>
+                  Upload Passport Photo
+                  <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: "none" }} />
+                </label>
+                {passportPhoto && (
+                  <button type="button" className="text-action" onClick={() => setPassportPhoto("")} style={{ marginLeft: "12px", fontSize: "12px", color: "#ef4444" }}>
+                    Remove
+                  </button>
+                )}
+                <span style={{ display: "block", fontSize: "11px", color: "var(--text-muted)", marginTop: "4px" }}>PNG, JPEG or WebP up to 2MB.</span>
+              </div>
+            </div>
+
             <div className="form-grid">
               <Field label="First name"><input className="field-input" value={firstName} onChange={e => setFirstName(e.target.value)} required /></Field>
               <Field label="Middle name"><input className="field-input" value={middleName} onChange={e => setMiddleName(e.target.value)} /></Field>
@@ -2138,6 +2521,21 @@ function StaffDetailModal({
               </Field>
 
               <Field label="Address" full><textarea className="field-input" value={address} onChange={e => setAddress(e.target.value)} /></Field>
+              
+              <div style={{ gridColumn: "1 / -1", margin: "10px 0", borderTop: "1px dashed var(--border-color)", paddingTop: "15px" }}>
+                <h4 style={{ margin: "0 0 10px 0", fontSize: "14px", fontWeight: "600", color: "var(--text-primary)" }}>Next of Kin Details</h4>
+              </div>
+              
+              <Field label="Full Name"><input className="field-input" value={nokName} onChange={e => setNokName(e.target.value)} /></Field>
+              <Field label="Relationship"><input className="field-input" value={nokRelationship} onChange={e => setNokRelationship(e.target.value)} /></Field>
+              <Field label="Phone"><input className="field-input" value={nokPhone} onChange={e => setNokPhone(e.target.value)} /></Field>
+              <Field label="Email"><input className="field-input" type="email" value={nokEmail} onChange={e => setNokEmail(e.target.value)} /></Field>
+              <Field label="Address" full><textarea className="field-input" value={nokAddress} onChange={e => setNokAddress(e.target.value)} /></Field>
+              
+              <div style={{ gridColumn: "1 / -1", margin: "10px 0", borderTop: "1px dashed var(--border-color)", paddingTop: "15px" }}>
+                <h4 style={{ margin: "0 0 10px 0", fontSize: "14px", fontWeight: "600", color: "var(--text-primary)" }}>Audit trail log reason</h4>
+              </div>
+
               <Field label="Reason for change (min. 5 characters)" full>
                 <input
                   className="field-input"
@@ -2152,16 +2550,36 @@ function StaffDetailModal({
             {error && <div className="form-note"><AlertTriangle size={16} /><span>{error}</span></div>}
           </div>
           <div className="workflow-footer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <button
-              type="button"
-              className="danger-ghost"
-              onClick={handleDelete}
-              disabled={deleteBusy}
-              style={{ display: "flex", alignItems: "center", gap: "6px" }}
-            >
-              <Trash2 size={15} />
-              <span>{deleteBusy ? "Deleting..." : "Delete staff"}</span>
-            </button>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                type="button"
+                className="danger-ghost"
+                onClick={handleDelete}
+                disabled={deleteBusy}
+                style={{ display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                <Trash2 size={15} />
+                <span>{deleteBusy ? "Deleting..." : "Delete"}</span>
+              </button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={printIDCard}
+                style={{ display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                <Printer size={15} />
+                <span>Print ID Card</span>
+              </button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={printEmploymentLetter}
+                style={{ display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                <Printer size={15} />
+                <span>Print Letter</span>
+              </button>
+            </div>
             <div style={{ display: "flex", gap: "8px" }}>
               <button type="button" className="secondary-button" onClick={onClose}>
                 Cancel
@@ -2243,7 +2661,11 @@ function StaffView({
                     <tr key={person.id} onClick={() => setEditingStaff(person)} style={{ cursor: "pointer" }} title="Click to view and edit details">
                       <td>
                         <div className="agent-cell staff">
-                          <span>{name.split(" ").map((part) => part[0]).join("").slice(0, 2)}</span>
+                          {person.passportObjectKey ? (
+                            <img src={person.passportObjectKey} alt={name} style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover" }} />
+                          ) : (
+                            <span>{name.split(" ").map((part) => part[0]).join("").slice(0, 2)}</span>
+                          )}
                           <div>
                             <strong>{name}</strong>
                             <small>{person.staffNumber}</small>
@@ -2284,6 +2706,246 @@ function StaffView({
           }}
         />
       )}
+    </div>
+  );
+}
+
+function AttendanceView({
+  allowedStations,
+  onToast,
+}: {
+  allowedStations: AllowedStation[];
+  onToast: (toast: Toast) => void;
+}) {
+  const [tab, setTab] = useState("Clock portal");
+  const [notes, setNotes] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [gpsError, setGpsError] = useState<string | null>(null);
+  const [time, setTime] = useState("");
+
+  const logsApi = useApiData<any>("/api/staff/attendance?pageSize=100");
+  
+  // Update time clock every second
+  useEffect(() => {
+    const updateTime = () => {
+      setTime(new Date().toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Capture Geolocation coordinates
+  const refreshLocation = () => {
+    if (!navigator.geolocation) {
+      setGpsError("Geolocation is not supported by your browser.");
+      return;
+    }
+    setGpsError("Acquiring GPS location...");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCoords({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+        setGpsError(null);
+      },
+      (err) => {
+        setCoords(null);
+        setGpsError("GPS location access denied. Please allow location permissions in browser settings.");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  useEffect(() => {
+    refreshLocation();
+  }, []);
+
+  const latestLog = logsApi.data?.[0];
+  const todayStr = new Date().toDateString();
+  const isClockedInToday = latestLog && new Date(latestLog.date).toDateString() === todayStr;
+  const isClockedOutToday = isClockedInToday && latestLog.clockOutAt != null;
+
+  const handleClock = async (action: "in" | "out") => {
+    if (!coords && !gpsError) {
+      alert("Please wait for GPS location coordinates to be captured.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const response = await fetch("/api/staff/attendance", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action,
+          latitude: coords?.latitude,
+          longitude: coords?.longitude,
+          notes: notes || undefined,
+        }),
+      });
+      const body = await response.json();
+      if (!response.ok || !body.ok) throw new Error(body.error?.message ?? `Clock ${action} failed`);
+      onToast({
+        title: `Clock ${action === "in" ? "In" : "Out"} Successful`,
+        detail: `Timestamp and coordinates were captured successfully.`,
+      });
+      setNotes("");
+      logsApi.reload();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to record attendance.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const mapLink = (lat?: number | null, lon?: number | null) => {
+    if (lat == null || lon == null) return <span style={{ color: "var(--text-muted)", fontSize: "11px" }}>No GPS</span>;
+    return (
+      <a
+        href={`https://www.google.com/maps?q=${lat},${lon}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ color: "#3b82f6", display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: "600" }}
+      >
+        <Fingerprint size={12} />
+        <span>{lat.toFixed(4)}, {lon.toFixed(4)}</span>
+      </a>
+    );
+  };
+
+  return (
+    <div className="content-stack">
+      <Panel>
+        <TableToolbar
+          tabs={["Clock portal", "Attendance logs"]}
+          activeTab={tab}
+          onTab={(value) => {
+            setTab(value);
+            if (value === "Attendance logs") logsApi.reload();
+          }}
+          placeholder="Search logs..."
+          search=""
+          onSearch={() => {}}
+        />
+
+        {tab === "Clock portal" ? (
+          <div style={{ maxWidth: "500px", margin: "40px auto", padding: "20px" }}>
+            <div style={{ textAlign: "center", marginBottom: "30px" }}>
+              <div style={{ fontSize: "14px", textTransform: "uppercase", letterSpacing: "1px", color: "var(--text-secondary)" }}>
+                {new Date().toLocaleDateString("en-NG", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+              </div>
+              <div style={{ fontSize: "42px", fontWeight: "bold", fontFamily: "monospace", margin: "10px 0", color: "var(--text-primary)" }}>
+                {time}
+              </div>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "var(--field-bg)", padding: "8px 16px", borderRadius: "20px", fontSize: "12px" }}>
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: coords ? "#10b981" : "#ef4444" }} />
+                <span style={{ color: "var(--text-secondary)" }}>
+                  {coords ? `GPS Connected: ${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}` : gpsError || "Initializing GPS..."}
+                </span>
+                {!coords && (
+                  <button type="button" className="text-action" onClick={refreshLocation} style={{ marginLeft: "6px", fontSize: "11px" }}>
+                    Retry
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div style={{ background: "var(--field-bg)", padding: "20px", borderRadius: "8px", border: "1px solid var(--border-color)", marginBottom: "20px" }}>
+              <h3 style={{ margin: "0 0 12px", fontSize: "14px", fontWeight: "bold" }}>Attendance Status</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "13px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "var(--text-muted)" }}>Clock In:</span>
+                  <strong>{isClockedInToday ? new Date(latestLog.clockInAt).toLocaleTimeString("en-NG") : "Not Clocked In"}</strong>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "var(--text-muted)" }}>Clock Out:</span>
+                  <strong>{isClockedOutToday ? new Date(latestLog.clockOutAt).toLocaleTimeString("en-NG") : "Not Clocked Out"}</strong>
+                </div>
+              </div>
+            </div>
+
+            {!isClockedOutToday && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <textarea
+                  className="field-input"
+                  style={{ minHeight: "60px", resize: "none" }}
+                  placeholder="Add optional notes (e.g. Remote work, field assignment)..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  disabled={busy}
+                />
+                
+                {!isClockedInToday ? (
+                  <button
+                    type="button"
+                    className="primary-button"
+                    style={{ height: "46px", fontSize: "15px", justifyContent: "center", background: "#10b981", color: "white" }}
+                    onClick={() => handleClock("in")}
+                    disabled={busy || !coords}
+                  >
+                    <span>{busy ? "Clocking In..." : "Clock In"}</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="primary-button"
+                    style={{ height: "46px", fontSize: "15px", justifyContent: "center", background: "#f59e0b", color: "white" }}
+                    onClick={() => handleClock("out")}
+                    disabled={busy || !coords}
+                  >
+                    <span>{busy ? "Clocking Out..." : "Clock Out"}</span>
+                  </button>
+                )}
+              </div>
+            )}
+
+            {isClockedOutToday && (
+              <div style={{ textAlign: "center", color: "#10b981", fontWeight: "bold", fontSize: "14px", background: "rgba(16, 185, 129, 0.1)", padding: "12px", borderRadius: "6px" }}>
+                ✓ You have successfully completed your attendance for today.
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="table-wrap" style={{ marginTop: "12px" }}>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Staff Member</th>
+                  <th>Date</th>
+                  <th>Clock In</th>
+                  <th>In Coordinates</th>
+                  <th>Clock Out</th>
+                  <th>Out Coordinates</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(logsApi.data ?? []).map((log: any) => {
+                  const name = [log.staff.firstName, log.staff.middleName, log.staff.lastName].filter(Boolean).join(" ");
+                  return (
+                    <tr key={log.id}>
+                      <td>
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                          <strong>{name}</strong>
+                          <small style={{ color: "var(--text-muted)", fontSize: "11px" }}>{log.staff.staffNumber} · {log.staff.position?.name}</small>
+                        </div>
+                      </td>
+                      <td>{formatDate(log.date)}</td>
+                      <td>{new Date(log.clockInAt).toLocaleTimeString("en-NG")}</td>
+                      <td>{mapLink(log.clockInLatitude, log.clockInLongitude)}</td>
+                      <td>{log.clockOutAt ? new Date(log.clockOutAt).toLocaleTimeString("en-NG") : <span style={{ color: "var(--text-muted)" }}>--</span>}</td>
+                      <td>{mapLink(log.clockOutLatitude, log.clockOutLongitude)}</td>
+                      <td style={{ fontSize: "11px", maxWidth: "200px", whiteSpace: "normal" }}>{log.notes || "--"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Panel>
     </div>
   );
 }
@@ -3411,10 +4073,187 @@ function FinanceForm({ onComplete, onClose, allowedStations }: { onComplete: (ti
   return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="Entry type"><select value={direction} onChange={(event) => setDirection(event.target.value as "CREDIT" | "DEBIT")}><option value="CREDIT">Income / credit</option><option value="DEBIT">Expense / debit</option></select></Field><Field label="Station"><select name="stationId" required defaultValue={allowedStations[0]?.id}>{allowedStations.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select></Field><Field label="Account"><select name="accountId" required defaultValue=""><option value="" disabled>Select account</option>{api.data?.accounts.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field><Field label="Category"><select name="categoryId" required key={direction} defaultValue=""><option value="" disabled>Select category</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field><Field label="Payment method"><select name="paymentMethodId" defaultValue=""><option value="">Not applicable</option>{api.data?.paymentMethods.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field><Field label="Amount"><div className="money-input"><span>₦</span><input name="amount" type="number" step="0.01" min="0.01" required /></div></Field><Field label="Description" full><input name="description" required /></Field><Field label="External reference" full><input name="externalReference" /></Field></div>{(error || api.error) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? api.error}</span></div>}<div className="form-note"><ShieldCheck size={16} /><span>Large expenses are routed to maker-checker approval automatically.</span></div></div><ModalFooter onClose={onClose} submitLabel={busy ? "Posting…" : "Record entry"} icon={Banknote} disabled={busy || api.loading || !allowedStations.length} /></form>;
 }
 
-function StaffForm({ onComplete, onClose, allowedStations }: { onComplete: (title: string, detail: string) => void; onClose: () => void; allowedStations: AllowedStation[] }) {
-  const api = useApiData<HrSetup>("/api/hr/catalogue"); const [busy, setBusy] = useState(false); const [error, setError] = useState<string | null>(null);
-  const submit = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setBusy(true); setError(null); const form = new FormData(event.currentTarget); try { const data = await workflowPost<{ staffNumber: string; firstName: string; lastName: string }>("/api/staff", { firstName: String(form.get("firstName")), middleName: String(form.get("middleName") || "") || undefined, lastName: String(form.get("lastName")), phone: String(form.get("phone")), email: String(form.get("email") || "") || undefined, address: String(form.get("address") || "") || undefined, nationalId: String(form.get("nationalId") || "") || undefined, salary: String(form.get("salary") || "") || undefined, employmentDate: String(form.get("employmentDate")), employmentType: String(form.get("employmentType")), departmentId: String(form.get("departmentId")), positionId: String(form.get("positionId")), homeStationId: String(form.get("homeStationId")), nextOfKin: [] }); onComplete("Staff member created", `${data.staffNumber} · ${data.firstName} ${data.lastName} was added to the protected HR register.`); } catch (reason) { setError(reason instanceof Error ? reason.message : "Staff record could not be created."); } finally { setBusy(false); } };
-  return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="First name"><input name="firstName" required /></Field><Field label="Middle name"><input name="middleName" /></Field><Field label="Last name"><input name="lastName" required /></Field><Field label="Phone"><input name="phone" required /></Field><Field label="Email"><input name="email" type="email" /></Field><Field label="National ID"><input name="nationalId" /></Field><Field label="Home station"><select name="homeStationId" required defaultValue={allowedStations[0]?.id}>{allowedStations.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field><Field label="Employment date"><input name="employmentDate" type="date" required /></Field><Field label="Employment type"><select name="employmentType"><option value="PERMANENT">Permanent</option><option value="CONTRACT">Contract</option><option value="TEMPORARY">Temporary</option><option value="INTERN">Intern</option><option value="CONSULTANT">Consultant</option></select></Field><Field label="Department"><select name="departmentId" required defaultValue=""><option value="" disabled>Select department</option>{api.data?.departments.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field><Field label="Position"><select name="positionId" required defaultValue=""><option value="" disabled>Select position</option>{api.data?.positions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field><Field label="Salary"><div className="money-input"><span>₦</span><input name="salary" type="number" step="0.01" min="0" /></div></Field><Field label="Address" full><textarea name="address" /></Field></div>{(error || api.error) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? api.error}</span></div>}</div><ModalFooter onClose={onClose} submitLabel={busy ? "Creating…" : "Add staff member"} icon={UserPlus} disabled={busy || api.loading || !allowedStations.length} /></form>;
+function StaffForm({
+  onComplete,
+  onClose,
+  allowedStations,
+}: {
+  onComplete: (title: string, detail: string) => void;
+  onClose: () => void;
+  allowedStations: AllowedStation[];
+}) {
+  const api = useApiData<HrSetup>("/api/hr/catalogue");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [passportPhoto, setPassportPhoto] = useState("");
+  
+  // Next of kin
+  const [nokName, setNokName] = useState("");
+  const [nokRelationship, setNokRelationship] = useState("");
+  const [nokPhone, setNokPhone] = useState("");
+  const [nokEmail, setNokEmail] = useState("");
+  const [nokAddress, setNokAddress] = useState("");
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setPassportPhoto(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setBusy(true);
+    setError(null);
+    const form = new FormData(event.currentTarget);
+    try {
+      const nextOfKin = nokName ? [{
+        name: nokName,
+        relationship: nokRelationship,
+        phone: nokPhone,
+        email: nokEmail || undefined,
+        address: nokAddress || undefined,
+        isPrimary: true
+      }] : [];
+
+      const data = await workflowPost<{ staffNumber: string; firstName: string; lastName: string }>("/api/staff", {
+        firstName: String(form.get("firstName")),
+        middleName: String(form.get("middleName") || "") || undefined,
+        lastName: String(form.get("lastName")),
+        preferredName: String(form.get("preferredName") || "") || undefined,
+        phone: String(form.get("phone")),
+        email: String(form.get("email") || "") || undefined,
+        address: String(form.get("address") || "") || undefined,
+        nationalId: String(form.get("nationalId") || "") || undefined,
+        salary: String(form.get("salary") || "") || undefined,
+        employmentDate: String(form.get("employmentDate")),
+        employmentType: String(form.get("employmentType")),
+        departmentId: String(form.get("departmentId")),
+        positionId: String(form.get("positionId")),
+        homeStationId: String(form.get("homeStationId")),
+        passportPhoto: passportPhoto || undefined,
+        nextOfKin,
+      });
+      onComplete(
+        "Staff member created",
+        `${data.staffNumber} · ${data.firstName} ${data.lastName} was added to the protected HR register.`
+      );
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Staff record could not be created.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit}>
+      <div className="workflow-body">
+        <div style={{ display: "flex", gap: "20px", marginBottom: "20px", alignItems: "center" }}>
+          <div style={{ position: "relative", width: "100px", height: "100px", borderRadius: "8px", border: "2px dashed var(--border-color)", display: "flex", justifyContent: "center", alignItems: "center", overflow: "hidden", background: "var(--field-bg)" }}>
+            {passportPhoto ? (
+              <img src={passportPhoto} alt="Passport" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              <span style={{ fontSize: "12px", color: "var(--text-muted)", textAlign: "center", padding: "4px" }}>No Photo</span>
+            )}
+          </div>
+          <div>
+            <label className="secondary-button" style={{ cursor: "pointer", display: "inline-block", padding: "8px 12px", fontSize: "12px" }}>
+              Upload Passport Photo
+              <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: "none" }} />
+            </label>
+            {passportPhoto && (
+              <button type="button" className="text-action" onClick={() => setPassportPhoto("")} style={{ marginLeft: "12px", fontSize: "12px", color: "#ef4444" }}>
+                Remove
+              </button>
+            )}
+            <span style={{ display: "block", fontSize: "11px", color: "var(--text-muted)", marginTop: "4px" }}>PNG, JPEG or WebP up to 2MB.</span>
+          </div>
+        </div>
+
+        <div className="form-grid">
+          <Field label="First name"><input name="firstName" required className="field-input" /></Field>
+          <Field label="Middle name"><input name="middleName" className="field-input" /></Field>
+          <Field label="Last name"><input name="lastName" required className="field-input" /></Field>
+          <Field label="Preferred name"><input name="preferredName" className="field-input" /></Field>
+          <Field label="Phone"><input name="phone" required className="field-input" /></Field>
+          <Field label="Email"><input name="email" type="email" className="field-input" /></Field>
+          <Field label="National ID"><input name="nationalId" className="field-input" /></Field>
+          
+          <Field label="Home station">
+            <select name="homeStationId" required className="field-input" defaultValue={allowedStations[0]?.id}>
+              {allowedStations.map((item) => (
+                <option key={item.id} value={item.id}>{item.name}</option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Employment date"><input name="employmentDate" type="date" required className="field-input" /></Field>
+          
+          <Field label="Employment type">
+            <select name="employmentType" className="field-input">
+              <option value="PERMANENT">Permanent</option>
+              <option value="CONTRACT">Contract</option>
+              <option value="TEMPORARY">Temporary</option>
+              <option value="INTERN">Intern</option>
+              <option value="CONSULTANT">Consultant</option>
+            </select>
+          </Field>
+
+          <Field label="Department">
+            <select name="departmentId" required className="field-input" defaultValue="">
+              <option value="" disabled>Select department</option>
+              {api.data?.departments.map((item) => (
+                <option key={item.id} value={item.id}>{item.name}</option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Position">
+            <select name="positionId" required className="field-input" defaultValue="">
+              <option value="" disabled>Select position</option>
+              {api.data?.positions.map((item) => (
+                <option key={item.id} value={item.id}>{item.name}</option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Salary">
+            <div className="money-input">
+              <span>₦</span>
+              <input name="salary" type="number" step="0.01" min="0" className="field-input" />
+            </div>
+          </Field>
+
+          <Field label="Address" full><textarea name="address" className="field-input" /></Field>
+
+          <div style={{ gridColumn: "1 / -1", margin: "10px 0", borderTop: "1px dashed var(--border-color)", paddingTop: "15px" }}>
+            <h4 style={{ margin: "0 0 10px 0", fontSize: "14px", fontWeight: "600", color: "var(--text-primary)" }}>Next of Kin Details</h4>
+          </div>
+
+          <Field label="Full Name"><input className="field-input" value={nokName} onChange={e => setNokName(e.target.value)} /></Field>
+          <Field label="Relationship"><input className="field-input" value={nokRelationship} onChange={e => setNokRelationship(e.target.value)} /></Field>
+          <Field label="Phone"><input className="field-input" value={nokPhone} onChange={e => setNokPhone(e.target.value)} /></Field>
+          <Field label="Email"><input className="field-input" type="email" value={nokEmail} onChange={e => setNokEmail(e.target.value)} /></Field>
+          <Field label="Address" full><textarea className="field-input" value={nokAddress} onChange={e => setNokAddress(e.target.value)} /></Field>
+        </div>
+        {(error || api.error) && (
+          <div className="form-note">
+            <AlertTriangle size={16} />
+            <span>{error ?? api.error}</span>
+          </div>
+        )}
+      </div>
+      <ModalFooter
+        onClose={onClose}
+        submitLabel={busy ? "Creating..." : "Add staff member"}
+        icon={UserPlus}
+        disabled={busy || api.loading || !allowedStations.length}
+      />
+    </form>
+  );
 }
 
 function StationForm({ onComplete, onClose }: { onComplete: (title: string, detail: string) => void; onClose: () => void }) {
