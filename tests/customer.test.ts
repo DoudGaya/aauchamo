@@ -36,6 +36,30 @@ beforeAll(async () => {
   if (!station) throw new Error("Seed data missing station");
   hqStationId = station.id;
 
+  // Clean up any stale records from previous runs
+  const testCustomers = await db.customer.findMany({
+    where: {
+      customerNumber: { in: ["CUST-SRC-9999", "CUST-TGT-9999"] }
+    },
+    select: { id: true }
+  });
+  const testIds = testCustomers.map((c) => c.id);
+  if (testIds.length > 0) {
+    await db.customerMerge.deleteMany({
+      where: {
+        OR: [
+          { sourceCustomerId: { in: testIds } },
+          { targetCustomerId: { in: testIds } }
+        ]
+      }
+    });
+    await db.customer.deleteMany({
+      where: {
+        id: { in: testIds }
+      }
+    });
+  }
+
   // Create two customers
   const c1 = await db.customer.create({
     data: {

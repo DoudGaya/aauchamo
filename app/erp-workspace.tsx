@@ -179,7 +179,8 @@ type UserRecord = { id: string; name: string | null; firstName: string; lastName
 type PermissionRecord = { id: string; key: string; module: string; action: string; description: string; elevated: boolean };
 type SessionRecord = { id: string; expires: string; ipAddress: string | null; userAgent: string | null; lastSeenAt: string; revokedAt: string | null; user: { id: string; name: string | null; username: string; email: string | null } };
 type MovementRecord = { id: string; movementType: string; quantityDelta: string; balanceAfter: string; referenceType: string; referenceId: string; reason: string | null; occurredAt: string; product: { id: string; code: string; name: string }; station: AllowedStation };
-type TransferRecord = { id: string; transferNumber: string; status: string; reason: string; requestedAt: string; originStation: AllowedStation; destinationStation: AllowedStation; lines: Array<{ id: string; quantityRequested: string; quantityDispatched: string; quantityReceived: string; product: { id: string; code: string; name: string } }> };
+type TransferRecord = { id: string; transferNumber: string; status: string; reason: string; requestedAt: string; version: number; originStation: AllowedStation; destinationStation: AllowedStation; lines: Array<{ id: string; quantityRequested: string; quantityDispatched: string; quantityReceived: string; product: { id: string; code: string; name: string } }> };
+type AdjustmentRecord = { id: string; adjustmentNumber: string; status: string; reason: string; requestedAt: string; station: AllowedStation; version: number; lines: Array<{ id: string; expectedQuantity: string; countedQuantity: string; quantityDelta: string; product: { id: string; code: string; name: string } }> };
 type SaleDetailRecord = { id: string; saleNumber: string; status: string; lines: Array<{ id: string; productName: string; quantity: string; quantityRefunded: string }>; allocations: Array<{ payment: { paymentMethod: { id: string; name: string; requiresReference: boolean } } }> };
 
 function useApiData<T>(url: string | null) {
@@ -486,6 +487,7 @@ export default function ERPWorkspace({
             onModal={setModal}
             onToast={setToast}
             allowedStations={allowedStations}
+            identity={identity}
           />
         </main>
 
@@ -798,6 +800,7 @@ function ModuleView({
   onModal,
   onToast,
   allowedStations,
+  identity,
 }: {
   active: string;
   station: string;
@@ -806,6 +809,7 @@ function ModuleView({
   onModal: (modal: ModalKind) => void;
   onToast: (toast: Toast) => void;
   allowedStations: AllowedStation[];
+  identity: WorkspaceIdentity;
 }) {
   switch (active) {
     case "overview":
@@ -820,7 +824,7 @@ function ModuleView({
       return <SalesView station={station} allowedStations={allowedStations} />;
     case "inventory":
     case "purchases":
-      return <InventoryView purchases={active === "purchases"} onModal={onModal} />;
+      return <InventoryView purchases={active === "purchases"} onModal={onModal} allowedStations={allowedStations} identity={identity} />;
     case "cargo":
       return <CargoView onModal={onModal} onToast={onToast} />;
     case "agents":
@@ -1349,31 +1353,1188 @@ function SalesView({ station, allowedStations }: { station: string; allowedStati
   );
 }
 
-function InventoryView({ purchases, onModal }: { purchases: boolean; onModal: (modal: ModalKind) => void }) {
+function TransferCreateModal({
+  allowedStations,
+  onClose,
+  onComplete,
+}: {
+  allowedStations: AllowedStation[];
+  onClose: () => void;
+  onComplete: (title: string, detail: string) => void;
+}) {
+  const productApi = useApiData<ProductRecord[]>("/api/inventory/catalogue?pageSize=100");
+  const [originStationId, setOriginStationId] = useState(allowedStations[0]?.id || "");
+  const [destinationStationId, setDestinationStationId] = useState(allowedStations[1]?.id || "");
+  const [reason, setReason] = useState("");
+  const [notes, setNotes] = useState("");
+  const [lines, setLines] = useState<Array<{ productId: string; quantity: string }>>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const addLine = () => {
+    const nextProd = productApi.data?.find((p) => !lines.some((l) => l.productId === p.id));
+    if (!nextProd) return;
+    setLines([...lines, { productId: nextProd.id, quantity: "1" }]);
+  };
+
+  const removeLine = (idx: number) => {
+    setLines(lines.filter((_, i) => i !== idx));
+  };
+
+  const updateLineProduct = (idx: number, productId: string) => {
+    const updated = [...lines];
+    updated[idx].productId = productId;
+    setLines(updated);
+  };
+
+  const updateLineQuantity = (idx: number, quantity: string) => {
+    const updated = [...lines];
+    updated[idx].quantity = quantity;
+    setLines(updated);
+  };
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (originStationId === destinationStationId) {
+      setError("Origin and destination stations must differ.");
+      return;
+    }
+    if (lines.length === 0) {
+      setError("At least one product line is required.");
+      return;
+    }
+    setError(null);
+    setBusy(true);
+    try {
+      const response = await fetch("/api/inventory/transfers", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          originStationId,
+          destinationStationId,
+          reason,
+          notes: notes || undefined,
+          lines,
+        }),
+      });
+      const body = await response.json();
+      if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Failed to create transfer.");
+      onComplete("Stock transfer requested", `Transfer ${body.data.transferNumber} raised successfully.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create transfer.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="workflow-dialog" style={{ maxWidth: "700px" }}>
+        <div className="workflow-header">
+          <div>
+            <span>Stock operations</span>
+            <h2>Create stock transfer</h2>
+            <p>Raise a stock transfer request between operating stations.</p>
+          </div>
+          <button onClick={onClose}><X size={19} /></button>
+        </div>
+
+        <form onSubmit={submit}>
+          <div className="workflow-body" style={{ maxHeight: "60vh", overflowY: "auto" }}>
+            <div className="form-grid">
+              <Field label="Origin Station">
+                <select className="field-input" value={originStationId} onChange={(e) => setOriginStationId(e.target.value)} required>
+                  {allowedStations.map((st) => (
+                    <option key={st.id} value={st.id}>{st.code} · {st.name}</option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Destination Station">
+                <select className="field-input" value={destinationStationId} onChange={(e) => setDestinationStationId(e.target.value)} required>
+                  {allowedStations.map((st) => (
+                    <option key={st.id} value={st.id}>{st.code} · {st.name}</option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Reason (min. 3 characters)" full>
+                <input className="field-input" value={reason} onChange={(e) => setReason(e.target.value)} required minLength={3} placeholder="e.g. Replenishing branch rice inventory" />
+              </Field>
+
+              <Field label="Notes" full>
+                <input className="field-input" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional shipping or tracking notes" />
+              </Field>
+            </div>
+
+            <div style={{ marginTop: "24px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px" }}>
+                <h3 style={{ fontSize: "14px", fontWeight: "bold" }}>Transfer Lines</h3>
+                <button type="button" className="secondary-button" onClick={addLine} disabled={productApi.loading || !productApi.data?.length} style={{ height: "30px", padding: "0 10px", fontSize: "12px" }}>
+                  Add Line
+                </button>
+              </div>
+
+              {lines.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "20px", color: "var(--text-muted)", fontSize: "13px" }}>
+                  No transfer lines added. Click "Add Line" above.
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {lines.map((line, idx) => (
+                    <div key={idx} style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                      <select
+                        className="field-input"
+                        style={{ flex: 1 }}
+                        value={line.productId}
+                        onChange={(e) => updateLineProduct(idx, e.target.value)}
+                        required
+                      >
+                        {productApi.data?.map((p) => (
+                          <option key={p.id} value={p.id}>{p.code} · {p.name}</option>
+                        ))}
+                      </select>
+                      <input
+                        className="field-input"
+                        type="number"
+                        step="0.001"
+                        min="0.001"
+                        style={{ width: "120px" }}
+                        value={line.quantity}
+                        onChange={(e) => updateLineQuantity(idx, e.target.value)}
+                        required
+                      />
+                      <button type="button" className="danger-button-subtle" onClick={() => removeLine(idx)} style={{ padding: "8px 10px", margin: 0 }}>
+                        <X size={15} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {error && <div className="form-note"><AlertTriangle size={16} /><span>{error}</span></div>}
+          </div>
+
+          <div className="workflow-footer">
+            <span><ShieldCheck size={14} /> Station scopes verified</span>
+            <div>
+              <button type="button" className="secondary-button" onClick={onClose}>Cancel</button>
+              <button type="submit" className="primary-button" disabled={busy || lines.length === 0}><ArrowLeftRight size={16} />{busy ? "Submitting..." : "Submit Request"}</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function TransferDispatchModal({
+  transfer,
+  onClose,
+  onComplete,
+}: {
+  transfer: TransferRecord;
+  onClose: () => void;
+  onComplete: (title: string, detail: string) => void;
+}) {
+  const [quantities, setQuantities] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const initial: Record<string, string> = {};
+    transfer.lines.forEach((line) => {
+      initial[line.id] = line.quantityRequested;
+    });
+    setQuantities(initial);
+  }, [transfer]);
+
+  const updateQuantity = (lineId: string, val: string) => {
+    setQuantities({ ...quantities, [lineId]: val });
+  };
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setBusy(true);
+
+    const lines = transfer.lines.map((line) => ({
+      lineId: line.id,
+      quantity: quantities[line.id] || "0",
+    }));
+
+    // Verify quantities do not exceed requested or go negative
+    for (const line of lines) {
+      const original = transfer.lines.find((item) => item.id === line.lineId);
+      if (!original) continue;
+      const val = Number(line.quantity);
+      if (isNaN(val) || val <= 0 || val > Number(original.quantityRequested)) {
+        setError(`Dispatch quantity for ${original.product.name} must be greater than 0 and cannot exceed the requested ${original.quantityRequested}.`);
+        setBusy(false);
+        return;
+      }
+    }
+
+    try {
+      const response = await fetch(`/api/inventory/transfers/${transfer.id}/dispatch`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          version: transfer.version,
+          lines,
+        }),
+      });
+      const body = await response.json();
+      if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Failed to dispatch transfer.");
+      onComplete("Stock transfer dispatched", `Transfer ${transfer.transferNumber} dispatched successfully.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to dispatch transfer.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="workflow-dialog" style={{ maxWidth: "600px" }}>
+        <div className="workflow-header">
+          <div>
+            <span>Stock operations</span>
+            <h2>Dispatch Transfer: {transfer.transferNumber}</h2>
+            <p>From {transfer.originStation.name} to {transfer.destinationStation.name}</p>
+          </div>
+          <button onClick={onClose}><X size={19} /></button>
+        </div>
+
+        <form onSubmit={submit}>
+          <div className="workflow-body">
+            <div style={{ marginBottom: "16px", background: "var(--field-bg)", padding: "12px", borderRadius: "6px" }}>
+              <div style={{ fontSize: "13px", color: "var(--text-secondary)" }}>Reason: {transfer.reason}</div>
+            </div>
+
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Requested</th>
+                    <th>Count Dispatch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transfer.lines.map((line) => (
+                    <tr key={line.id}>
+                      <td><strong>{line.product.name}</strong><br /><small>{line.product.code}</small></td>
+                      <td>{line.quantityRequested}</td>
+                      <td>
+                        <input
+                          className="field-input"
+                          type="number"
+                          step="0.001"
+                          min="0.001"
+                          max={Number(line.quantityRequested)}
+                          value={quantities[line.id] || ""}
+                          onChange={(e) => updateQuantity(line.id, e.target.value)}
+                          required
+                          style={{ width: "120px" }}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {error && <div className="form-note"><AlertTriangle size={16} /><span>{error}</span></div>}
+          </div>
+
+          <div className="workflow-footer">
+            <span><ShieldCheck size={14} /> Origin station verified</span>
+            <div>
+              <button type="button" className="secondary-button" onClick={onClose}>Cancel</button>
+              <button type="submit" className="primary-button" disabled={busy}><Plane size={16} />{busy ? "Processing..." : "Confirm Dispatch"}</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function TransferReceiveModal({
+  transfer,
+  onClose,
+  onComplete,
+}: {
+  transfer: TransferRecord;
+  onClose: () => void;
+  onComplete: (title: string, detail: string) => void;
+}) {
+  const [quantities, setQuantities] = useState<Record<string, string>>({});
+  const [notes, setNotes] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const initial: Record<string, string> = {};
+    transfer.lines.forEach((line) => {
+      initial[line.id] = line.quantityDispatched;
+    });
+    setQuantities(initial);
+  }, [transfer]);
+
+  const updateQuantity = (lineId: string, val: string) => {
+    setQuantities({ ...quantities, [lineId]: val });
+  };
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setBusy(true);
+
+    const lines = transfer.lines.map((line) => ({
+      lineId: line.id,
+      quantity: quantities[line.id] || "0",
+    }));
+
+    // Verify quantities do not exceed dispatched or go negative
+    for (const line of lines) {
+      const original = transfer.lines.find((item) => item.id === line.lineId);
+      if (!original) continue;
+      const val = Number(line.quantity);
+      if (isNaN(val) || val < 0 || val > Number(original.quantityDispatched)) {
+        setError(`Received quantity for ${original.product.name} must be 0 or greater, and cannot exceed dispatched ${original.quantityDispatched}.`);
+        setBusy(false);
+        return;
+      }
+    }
+
+    try {
+      const response = await fetch(`/api/inventory/transfers/${transfer.id}/receive`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          version: transfer.version,
+          lines,
+          notes: notes || undefined,
+        }),
+      });
+      const body = await response.json();
+      if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Failed to receive transfer.");
+      onComplete("Stock transfer received", `Transfer ${transfer.transferNumber} received successfully.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to receive transfer.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="workflow-dialog" style={{ maxWidth: "600px" }}>
+        <div className="workflow-header">
+          <div>
+            <span>Stock operations</span>
+            <h2>Receive Transfer: {transfer.transferNumber}</h2>
+            <p>At {transfer.destinationStation.name} from {transfer.originStation.name}</p>
+          </div>
+          <button onClick={onClose}><X size={19} /></button>
+        </div>
+
+        <form onSubmit={submit}>
+          <div className="workflow-body">
+            <div className="form-grid" style={{ marginBottom: "16px" }}>
+              <Field label="Receipt Notes" full>
+                <input className="field-input" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. All items arrived intact, no discrepancy" />
+              </Field>
+            </div>
+
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Dispatched</th>
+                    <th>Count Received</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transfer.lines.map((line) => (
+                    <tr key={line.id}>
+                      <td><strong>{line.product.name}</strong><br /><small>{line.product.code}</small></td>
+                      <td>{line.quantityDispatched}</td>
+                      <td>
+                        <input
+                          className="field-input"
+                          type="number"
+                          step="0.001"
+                          min="0"
+                          max={Number(line.quantityDispatched)}
+                          value={quantities[line.id] || ""}
+                          onChange={(e) => updateQuantity(line.id, e.target.value)}
+                          required
+                          style={{ width: "120px" }}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {error && <div className="form-note"><AlertTriangle size={16} /><span>{error}</span></div>}
+          </div>
+
+          <div className="workflow-footer">
+            <span><ShieldCheck size={14} /> Destination station verified</span>
+            <div>
+              <button type="button" className="secondary-button" onClick={onClose}>Cancel</button>
+              <button type="submit" className="primary-button" disabled={busy}><PackageCheck size={16} />{busy ? "Processing..." : "Confirm Receipt"}</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function AdjustmentCreateModal({
+  allowedStations,
+  onClose,
+  onComplete,
+}: {
+  allowedStations: AllowedStation[];
+  onClose: () => void;
+  onComplete: (title: string, detail: string) => void;
+}) {
+  const productApi = useApiData<ProductRecord[]>("/api/inventory/catalogue?pageSize=100");
+  const [stationId, setStationId] = useState(allowedStations[0]?.id || "");
+  const [reason, setReason] = useState("");
+  const [lines, setLines] = useState<Array<{ productId: string; countedQuantity: string }>>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const getExpectedQty = (productId: string) => {
+    const prod = productApi.data?.find((p) => p.id === productId);
+    if (!prod) return "0";
+    const balance = prod.balances.find((b) => b.station.id === stationId);
+    return balance ? balance.quantity : "0";
+  };
+
+  const addLine = () => {
+    const nextProd = productApi.data?.find((p) => !lines.some((l) => l.productId === p.id));
+    if (!nextProd) return;
+    setLines([...lines, { productId: nextProd.id, countedQuantity: getExpectedQty(nextProd.id) }]);
+  };
+
+  const removeLine = (idx: number) => {
+    setLines(lines.filter((_, i) => i !== idx));
+  };
+
+  const updateLineProduct = (idx: number, productId: string) => {
+    const updated = [...lines];
+    updated[idx].productId = productId;
+    updated[idx].countedQuantity = getExpectedQty(productId);
+    setLines(updated);
+  };
+
+  const updateLineQuantity = (idx: number, val: string) => {
+    const updated = [...lines];
+    updated[idx].countedQuantity = val;
+    setLines(updated);
+  };
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (lines.length === 0) {
+      setError("At least one product line is required.");
+      return;
+    }
+    setError(null);
+    setBusy(true);
+    try {
+      const response = await fetch("/api/inventory/adjustments", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          stationId,
+          reason,
+          lines,
+        }),
+      });
+      const body = await response.json();
+      if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Failed to request adjustment.");
+      onComplete("Adjustment request posted", `Adjustment ${body.data.adjustmentNumber} submitted for supervisor approval.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to request adjustment.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="workflow-dialog" style={{ maxWidth: "700px" }}>
+        <div className="workflow-header">
+          <div>
+            <span>Stock operations</span>
+            <h2>Request stock adjustment</h2>
+            <p>Perform a stock count audit. Discrepancies require supervisor approval.</p>
+          </div>
+          <button onClick={onClose}><X size={19} /></button>
+        </div>
+
+        <form onSubmit={submit}>
+          <div className="workflow-body" style={{ maxHeight: "60vh", overflowY: "auto" }}>
+            <div className="form-grid">
+              <Field label="Audited Station">
+                <select className="field-input" value={stationId} onChange={(e) => { setStationId(e.target.value); setLines([]); }} required>
+                  {allowedStations.map((st) => (
+                    <option key={st.id} value={st.id}>{st.code} · {st.name}</option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Audit Reason (min. 5 characters)" full>
+                <input className="field-input" value={reason} onChange={(e) => setReason(e.target.value)} required minLength={5} placeholder="e.g. Month-end physical stock audit discrepancy resolution" />
+              </Field>
+            </div>
+
+            <div style={{ marginTop: "24px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px" }}>
+                <h3 style={{ fontSize: "14px", fontWeight: "bold" }}>Audited Products</h3>
+                <button type="button" className="secondary-button" onClick={addLine} disabled={productApi.loading || !productApi.data?.length} style={{ height: "30px", padding: "0 10px", fontSize: "12px" }}>
+                  Add Item
+                </button>
+              </div>
+
+              {lines.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "20px", color: "var(--text-muted)", fontSize: "13px" }}>
+                  No lines added. Click "Add Item" to record a physical stock count.
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {lines.map((line, idx) => {
+                    const expected = Number(getExpectedQty(line.productId));
+                    const counted = Number(line.countedQuantity) || 0;
+                    const diff = counted - expected;
+                    return (
+                      <div key={idx} style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                        <select
+                          className="field-input"
+                          style={{ flex: 1 }}
+                          value={line.productId}
+                          onChange={(e) => updateLineProduct(idx, e.target.value)}
+                          required
+                        >
+                          {productApi.data?.map((p) => (
+                            <option key={p.id} value={p.id}>{p.code} · {p.name}</option>
+                          ))}
+                        </select>
+                        <div style={{ width: "90px", fontSize: "12px", color: "var(--text-muted)", textAlign: "center" }}>
+                          Ledger: {expected}
+                        </div>
+                        <input
+                          className="field-input"
+                          type="number"
+                          step="0.001"
+                          min="0"
+                          style={{ width: "110px" }}
+                          value={line.countedQuantity}
+                          onChange={(e) => updateLineQuantity(idx, e.target.value)}
+                          required
+                        />
+                        <div style={{ width: "80px", fontSize: "13px", fontWeight: "bold", textAlign: "right", color: diff === 0 ? "var(--text-muted)" : diff > 0 ? "#16a34a" : "#dc2626" }}>
+                          {diff === 0 ? "0" : diff > 0 ? `+${diff}` : diff}
+                        </div>
+                        <button type="button" className="danger-button-subtle" onClick={() => removeLine(idx)} style={{ padding: "8px 10px", margin: 0 }}>
+                          <X size={15} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {error && <div className="form-note"><AlertTriangle size={16} /><span>{error}</span></div>}
+          </div>
+
+          <div className="workflow-footer">
+            <span><ShieldCheck size={14} /> Maker-checker scope applied</span>
+            <div>
+              <button type="button" className="secondary-button" onClick={onClose}>Cancel</button>
+              <button type="submit" className="primary-button" disabled={busy || lines.length === 0}><ShieldCheck size={16} />{busy ? "Posting Request..." : "Request Adjustment"}</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function AdjustmentDecideModal({
+  adjustment,
+  onClose,
+  onComplete,
+}: {
+  adjustment: any;
+  onClose: () => void;
+  onComplete: (title: string, detail: string) => void;
+}) {
+  const [decision, setDecision] = useState<"APPROVED" | "REJECTED">("APPROVED");
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setBusy(true);
+    try {
+      const response = await fetch(`/api/inventory/adjustments/${adjustment.id}/approve`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          decision,
+          reason,
+          version: adjustment.version,
+        }),
+      });
+      const body = await response.json();
+      if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Failed to decide adjustment.");
+      onComplete(`Adjustment ${decision.toLowerCase()}`, `Adjustment ${adjustment.adjustmentNumber} was decided successfully.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to decide adjustment.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="workflow-dialog" style={{ maxWidth: "600px" }}>
+        <div className="workflow-header">
+          <div>
+            <span>Supervisor maker-checker decision</span>
+            <h2>Decide Adjustment: {adjustment.adjustmentNumber}</h2>
+            <p>Station: {adjustment.station.name}</p>
+          </div>
+          <button onClick={onClose}><X size={19} /></button>
+        </div>
+
+        <form onSubmit={submit}>
+          <div className="workflow-body" style={{ maxHeight: "60vh", overflowY: "auto" }}>
+            <div style={{ marginBottom: "16px", background: "var(--field-bg)", padding: "12px", borderRadius: "6px", fontSize: "13px" }}>
+              <strong>Request reason:</strong> {adjustment.reason}
+            </div>
+
+            <div className="table-wrap" style={{ marginBottom: "20px" }}>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Expected</th>
+                    <th>Counted</th>
+                    <th>Difference</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {adjustment.lines.map((line: any) => {
+                    const diff = Number(line.quantityDelta);
+                    return (
+                      <tr key={line.id}>
+                        <td><strong>{line.product.name}</strong><br /><small>{line.product.code}</small></td>
+                        <td>{line.expectedQuantity}</td>
+                        <td>{line.countedQuantity}</td>
+                        <td style={{ fontWeight: "bold", color: diff === 0 ? "var(--text-muted)" : diff > 0 ? "#16a34a" : "#dc2626" }}>
+                          {diff === 0 ? "0" : diff > 0 ? `+${diff}` : diff}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="form-grid">
+              <Field label="Action Decision">
+                <select className="field-input" value={decision} onChange={(e) => setDecision(e.target.value as any)} required>
+                  <option value="APPROVED">Approve & Adjust Inventory</option>
+                  <option value="REJECTED">Reject Request</option>
+                </select>
+              </Field>
+
+              <Field label="Decision Reason (min. 3 characters)" full>
+                <input className="field-input" value={reason} onChange={(e) => setReason(e.target.value)} required minLength={3} placeholder="e.g. Verified physical delta during cycle count audit" />
+              </Field>
+            </div>
+
+            {error && <div className="form-note"><AlertTriangle size={16} /><span>{error}</span></div>}
+          </div>
+
+          <div className="workflow-footer">
+            <span><ShieldCheck size={14} /> Supervisor credentials required</span>
+            <div>
+              <button type="button" className="secondary-button" onClick={onClose}>Cancel</button>
+              <button type="submit" className="primary-button" style={{ background: decision === "APPROVED" ? "#16a34a" : "#dc2626", color: "white" }} disabled={busy}>
+                <ShieldCheck size={16} />
+                {busy ? "Posting Decision..." : `Confirm ${decision === "APPROVED" ? "Approval" : "Rejection"}`}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function InventoryView({
+  purchases,
+  onModal,
+  allowedStations,
+  identity,
+}: {
+  purchases: boolean;
+  onModal: (modal: ModalKind) => void;
+  allowedStations: AllowedStation[];
+  identity: WorkspaceIdentity;
+}) {
   const [tab, setTab] = useState(purchases ? "Purchase orders" : "All products");
   const [referenceNow] = useState(() => Date.now());
   const productApi = useApiData<ProductRecord[]>("/api/inventory/catalogue?pageSize=100");
   const purchaseApi = useApiData<PurchaseRecord[]>("/api/purchases?pageSize=100");
   const movementApi = useApiData<MovementRecord[]>("/api/inventory/movements?pageSize=100");
   const transferApi = useApiData<TransferRecord[]>("/api/inventory/transfers?pageSize=100");
-  const approvePurchase = async (order: PurchaseRecord) => { if (!window.confirm(`Approve ${order.orderNumber}?`)) return; await workflowPost(`/api/purchases/${order.id}/approve`, {}); purchaseApi.reload(); };
-  const receivePurchase = async (order: PurchaseRecord) => { const supplierRef = window.prompt("Supplier delivery reference") ?? undefined; const lines = order.lines.map((line) => { const remaining = Number(line.quantityOrdered) - Number(line.quantityReceived); const batchCode = line.product.trackBatches ? window.prompt(`Batch code for ${line.product.name}`)?.trim() : undefined; return { purchaseOrderLineId: line.id, quantity: remaining.toString(), batchCode: batchCode || undefined }; }); if (lines.some((line) => Number(line.quantity) <= 0) || lines.some((line, index) => order.lines[index].product.trackBatches && !line.batchCode)) return; await workflowPost(`/api/purchases/${order.id}/receipts`, { supplierRef, lines }); purchaseApi.reload(); movementApi.reload(); productApi.reload(); };
+  const adjustmentApi = useApiData<AdjustmentRecord[]>("/api/inventory/adjustments?pageSize=100");
+
+  // Transfer state hooks
+  const [transferToDispatch, setTransferToDispatch] = useState<TransferRecord | null>(null);
+  const [transferToReceive, setTransferToReceive] = useState<TransferRecord | null>(null);
+  const [showCreateTransfer, setShowCreateTransfer] = useState(false);
+
+  // Adjustment state hooks
+  const [adjustmentToDecide, setAdjustmentToDecide] = useState<any | null>(null);
+  const [showCreateAdjustment, setShowCreateAdjustment] = useState(false);
+
+  const approvePurchase = async (order: PurchaseRecord) => {
+    if (!window.confirm(`Approve ${order.orderNumber}?`)) return;
+    await workflowPost(`/api/purchases/${order.id}/approve`, {});
+    purchaseApi.reload();
+  };
+
+  const receivePurchase = async (order: PurchaseRecord) => {
+    const supplierRef = window.prompt("Supplier delivery reference") ?? undefined;
+    const lines = order.lines.map((line) => {
+      const remaining = Number(line.quantityOrdered) - Number(line.quantityReceived);
+      const batchCode = line.product.trackBatches ? window.prompt(`Batch code for ${line.product.name}`)?.trim() : undefined;
+      return { purchaseOrderLineId: line.id, quantity: remaining.toString(), batchCode: batchCode || undefined };
+    });
+    if (lines.some((line) => Number(line.quantity) <= 0) || lines.some((line, index) => order.lines[index].product.trackBatches && !line.batchCode)) return;
+    await workflowPost(`/api/purchases/${order.id}/receipts`, { supplierRef, lines });
+    purchaseApi.reload();
+    movementApi.reload();
+    productApi.reload();
+  };
+
   const orders = purchaseApi.data ?? [];
   const purchaseTable = useTableControls(orders, (order, q) => `${order.orderNumber} ${order.supplier.name} ${order.station.name} ${order.status}`.toLowerCase().includes(q));
   const movementTable = useTableControls(movementApi.data ?? [], (item, q) => `${item.product.name} ${item.product.code} ${item.station.name} ${item.movementType} ${item.referenceType} ${item.reason ?? ""}`.toLowerCase().includes(q));
   const transferTable = useTableControls(transferApi.data ?? [], (item, q) => `${item.transferNumber} ${item.originStation.code} ${item.destinationStation.code} ${item.reason} ${item.status}`.toLowerCase().includes(q));
-  const rows = (productApi.data ?? []).map((product) => ({ product, available: product.balances.reduce((sum, balance) => sum + Number(balance.quantity), 0) }));
+  const adjustmentTable = useTableControls(adjustmentApi.data ?? [], (item, q) => `${item.adjustmentNumber} ${item.station.name} ${item.status} ${item.reason}`.toLowerCase().includes(q));
+
+  const rows = (productApi.data ?? []).map((product) => ({
+    product,
+    available: product.balances.reduce((sum, balance) => sum + Number(balance.quantity), 0),
+  }));
   const productSource = tab === "Low stock" ? rows.filter(({ product, available }) => available <= Number(product.reorderLevel)) : rows;
   const productTable = useTableControls(productSource, ({ product }, q) => `${product.name} ${product.code} ${product.category.name} ${product.barcode ?? ""}`.toLowerCase().includes(q));
-  const onTab = (value: string) => { setTab(value); purchaseTable.resetPage(); movementTable.resetPage(); transferTable.resetPage(); productTable.resetPage(); };
+
+  const onTab = (value: string) => {
+    setTab(value);
+    purchaseTable.resetPage();
+    movementTable.resetPage();
+    transferTable.resetPage();
+    productTable.resetPage();
+    adjustmentTable.resetPage();
+  };
+
+  const tabs = purchases
+    ? ["Purchase orders", "Suppliers", "Goods received"]
+    : ["All products", "Low stock", "Movements", "Transfers", "Adjustments"];
+
   if (purchases) {
-    const open = orders.filter((order) => !["RECEIVED", "CANCELLED"].includes(order.status)); const openValue = open.reduce((sum, order) => sum + Number(order.total), 0); const due = open.filter((order) => order.expectedDate && new Date(order.expectedDate).getTime() <= referenceNow + 7 * 86_400_000).length;
-    return <div className="content-stack"><section className="summary-strip"><SummaryItem label="Open orders" value={open.length.toString()} icon={PackageOpen} tone="info" /><SummaryItem label="Open value" value={formatNaira(openValue)} icon={ArrowDownLeft} tone="success" /><SummaryItem label="Due this week" value={due.toString()} icon={CalendarDays} tone="warning" /><SummaryItem label="Order records" value={purchaseApi.total.toString()} icon={FileCheck2} tone="info" /></section><Panel><TableToolbar tabs={["Purchase orders", "Suppliers", "Goods received"]} activeTab={tab} onTab={onTab} placeholder="Search PO, supplier or station" search={purchaseTable.search} onSearch={purchaseTable.setSearch} />{purchaseApi.error ? <EmptyState icon={AlertTriangle} title="Purchases could not be loaded" detail={purchaseApi.error} /> : purchaseApi.loading ? <EmptyState icon={RefreshCcw} title="Loading purchase orders" detail="Retrieving supplier orders and receipt progress." compact /> : purchaseTable.filtered.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>Purchase order</th><th>Supplier</th><th>Items</th><th>Total</th><th>Expected</th><th>Destination</th><th>Status</th><th /></tr></thead><tbody>{purchaseTable.pageRows.map((order) => <tr key={order.id}><td><div className="primary-cell"><strong>{order.orderNumber}</strong><span>Raised {formatDate(order.createdAt)}</span></div></td><td>{order.supplier.name}</td><td>{order.lines.length}</td><td className="number-cell">{formatNaira(Number(order.total))}</td><td>{order.expectedDate ? formatDate(order.expectedDate) : "—"}</td><td>{order.station.name}</td><td><StatusPill value={order.status.replaceAll("_", " ")} /></td><td><div className="row-actions">{["DRAFT", "SUBMITTED"].includes(order.status) && <button className="row-button" onClick={() => approvePurchase(order)}>Approve</button>}{["APPROVED", "PARTIALLY_RECEIVED"].includes(order.status) && <button className="row-button" onClick={() => receivePurchase(order)}>Receive</button>}</div></td></tr>)}</tbody></table></div> : <EmptyState icon={PackageOpen} title={purchaseTable.search ? "No matching orders" : "No purchase orders"} detail={purchaseTable.search ? "Try a different PO, supplier or station." : "Create a purchase order to begin controlled supplier receiving."} />}<Pagination total={purchaseTable.total} page={purchaseTable.page} pageSize={purchaseTable.pageSize} onPage={purchaseTable.setPage} /></Panel></div>;
+    const open = orders.filter((order) => !["RECEIVED", "CANCELLED"].includes(order.status));
+    const openValue = open.reduce((sum, order) => sum + Number(order.total), 0);
+    const due = open.filter((order) => order.expectedDate && new Date(order.expectedDate).getTime() <= referenceNow + 7 * 86_400_000).length;
+    return (
+      <div className="content-stack">
+        <section className="summary-strip">
+          <SummaryItem label="Open orders" value={open.length.toString()} icon={PackageOpen} tone="info" />
+          <SummaryItem label="Open value" value={formatNaira(openValue)} icon={ArrowDownLeft} tone="success" />
+          <SummaryItem label="Due this week" value={due.toString()} icon={CalendarDays} tone="warning" />
+          <SummaryItem label="Order records" value={purchaseApi.total.toString()} icon={FileCheck2} tone="info" />
+        </section>
+        <Panel>
+          <TableToolbar tabs={tabs} activeTab={tab} onTab={onTab} placeholder="Search PO, supplier or station" search={purchaseTable.search} onSearch={purchaseTable.setSearch} />
+          {purchaseApi.error ? (
+            <EmptyState icon={AlertTriangle} title="Purchases could not be loaded" detail={purchaseApi.error} />
+          ) : purchaseApi.loading ? (
+            <EmptyState icon={RefreshCcw} title="Loading purchase orders" detail="Retrieving supplier orders and receipt progress." compact />
+          ) : purchaseTable.filtered.length ? (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Purchase order</th>
+                    <th>Supplier</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Expected</th>
+                    <th>Destination</th>
+                    <th>Status</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {purchaseTable.pageRows.map((order) => (
+                    <tr key={order.id}>
+                      <td><div className="primary-cell"><strong>{order.orderNumber}</strong><span>Raised {formatDate(order.createdAt)}</span></div></td>
+                      <td>{order.supplier.name}</td>
+                      <td>{order.lines.length}</td>
+                      <td className="number-cell">{formatNaira(Number(order.total))}</td>
+                      <td>{order.expectedDate ? formatDate(order.expectedDate) : "—"}</td>
+                      <td>{order.station.name}</td>
+                      <td><StatusPill value={order.status.replaceAll("_", " ")} /></td>
+                      <td>
+                        <div className="row-actions">
+                          {["DRAFT", "SUBMITTED"].includes(order.status) && <button className="row-button" onClick={() => approvePurchase(order)}>Approve</button>}
+                          {["APPROVED", "PARTIALLY_RECEIVED"].includes(order.status) && <button className="row-button" onClick={() => receivePurchase(order)}>Receive</button>}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState icon={PackageOpen} title={purchaseTable.search ? "No matching orders" : "No purchase orders"} detail={purchaseTable.search ? "Try a different PO, supplier or station." : "Create a purchase order to begin controlled supplier receiving."} />
+          )}
+          <Pagination total={purchaseTable.total} page={purchaseTable.page} pageSize={purchaseTable.pageSize} onPage={purchaseTable.setPage} />
+        </Panel>
+      </div>
+    );
   }
-  if (tab === "Movements") return <div className="content-stack"><section className="summary-strip"><SummaryItem label="Movement records" value={movementApi.total.toString()} icon={History} tone="info" /><SummaryItem label="Stock in" value={(movementApi.data ?? []).filter((item) => Number(item.quantityDelta) > 0).length.toString()} icon={ArrowDownLeft} tone="success" /><SummaryItem label="Stock out" value={(movementApi.data ?? []).filter((item) => Number(item.quantityDelta) < 0).length.toString()} icon={ArrowUpRight} tone="warning" /><SummaryItem label="Ledger" value="Append-only" icon={ShieldCheck} tone="success" /></section><Panel><TableToolbar tabs={["All products", "Low stock", "Movements", "Transfers"]} activeTab={tab} onTab={onTab} placeholder="Search product, station, movement or reference" search={movementTable.search} onSearch={movementTable.setSearch} />{movementApi.error ? <EmptyState icon={AlertTriangle} title="Movements could not be loaded" detail={movementApi.error} /> : movementApi.loading ? <EmptyState icon={RefreshCcw} title="Loading stock ledger" detail="Retrieving immutable balance movements." compact /> : movementTable.filtered.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>Occurred</th><th>Product</th><th>Station</th><th>Movement</th><th>Quantity</th><th>Balance after</th><th>Reference</th><th>Reason</th></tr></thead><tbody>{movementTable.pageRows.map((item) => <tr key={item.id}><td>{new Date(item.occurredAt).toLocaleString("en-NG")}</td><td><div className="primary-cell"><strong>{item.product.name}</strong><span>{item.product.code}</span></div></td><td>{item.station.name}</td><td><StatusPill value={item.movementType.replaceAll("_", " ")} /></td><td className={classNames("number-cell", Number(item.quantityDelta) < 0 && "negative-number")}>{Number(item.quantityDelta) > 0 ? "+" : ""}{item.quantityDelta}</td><td className="number-cell">{item.balanceAfter}</td><td><code>{item.referenceType}:{item.referenceId.slice(0, 8)}</code></td><td>{item.reason ?? "—"}</td></tr>)}</tbody></table></div> : <EmptyState icon={History} title={movementTable.search ? "No matching movements" : "No stock movements"} detail={movementTable.search ? "Try a different product, station or reference." : "Stock-in, sale, transfer and adjustment movements appear here."} />}<Pagination total={movementTable.total} page={movementTable.page} pageSize={movementTable.pageSize} onPage={movementTable.setPage} /></Panel></div>;
-  if (tab === "Transfers") return <div className="content-stack"><section className="summary-strip"><SummaryItem label="Transfer records" value={transferApi.total.toString()} icon={ArrowLeftRight} tone="info" /><SummaryItem label="Awaiting dispatch" value={(transferApi.data ?? []).filter((item) => item.status === "REQUESTED").length.toString()} icon={Clock3} tone="warning" /><SummaryItem label="In transit" value={(transferApi.data ?? []).filter((item) => item.status === "DISPATCHED").length.toString()} icon={Plane} tone="info" /><SummaryItem label="Received" value={(transferApi.data ?? []).filter((item) => item.status === "RECEIVED").length.toString()} icon={PackageCheck} tone="success" /></section><Panel><TableToolbar tabs={["All products", "Low stock", "Movements", "Transfers"]} activeTab={tab} onTab={onTab} placeholder="Search transfer number or route" search={transferTable.search} onSearch={transferTable.setSearch} />{transferApi.error ? <EmptyState icon={AlertTriangle} title="Transfers could not be loaded" detail={transferApi.error} /> : transferApi.loading ? <EmptyState icon={RefreshCcw} title="Loading transfers" detail="Retrieving dispatch and receipt progress." compact /> : transferTable.filtered.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>Transfer</th><th>Route</th><th>Items</th><th>Requested</th><th>Dispatched</th><th>Received</th><th>Reason</th><th>Status</th></tr></thead><tbody>{transferTable.pageRows.map((item) => <tr key={item.id}><td><div className="primary-cell"><strong>{item.transferNumber}</strong><span>{formatDate(item.requestedAt)}</span></div></td><td>{item.originStation.code} → {item.destinationStation.code}</td><td>{item.lines.length}</td><td>{item.lines.reduce((sum, line) => sum + Number(line.quantityRequested), 0)}</td><td>{item.lines.reduce((sum, line) => sum + Number(line.quantityDispatched), 0)}</td><td>{item.lines.reduce((sum, line) => sum + Number(line.quantityReceived), 0)}</td><td>{item.reason}</td><td><StatusPill value={item.status} /></td></tr>)}</tbody></table></div> : <EmptyState icon={ArrowLeftRight} title={transferTable.search ? "No matching transfers" : "No transfers"} detail={transferTable.search ? "Try a different transfer number or route." : "Inter-station stock transfers appear here."} />}<Pagination total={transferTable.total} page={transferTable.page} pageSize={transferTable.pageSize} onPage={transferTable.setPage} /></Panel></div>;
-  const units = rows.reduce((sum, row) => sum + row.available, 0); const value = rows.reduce((sum, row) => sum + row.available * Number(row.product.purchasePrice ?? 0), 0); const low = rows.filter(({ product, available }) => available > 0 && available <= Number(product.reorderLevel)).length; const empty = rows.filter(({ available }) => available <= 0).length;
-  return <div className="content-stack"><section className="summary-strip"><SummaryItem label="Stock value" value={formatNaira(value)} detail={`${units.toLocaleString()} units`} icon={Boxes} tone="info" /><SummaryItem label="Low stock" value={low.toString()} detail="At or below reorder" icon={AlertTriangle} tone="warning" /><SummaryItem label="Out of stock" value={empty.toString()} detail="Reorder immediately" icon={PackageOpen} tone="danger" /><SummaryItem label="Catalogue" value={productApi.total.toString()} detail="Active and inactive" icon={PackageCheck} tone="success" /></section><Panel><TableToolbar tabs={["All products", "Low stock", "Movements", "Transfers"]} activeTab={tab} onTab={onTab} placeholder="Search product, code or barcode" search={productTable.search} onSearch={productTable.setSearch} />{productApi.error ? <EmptyState icon={AlertTriangle} title="Inventory could not be loaded" detail={productApi.error} /> : productApi.loading ? <EmptyState icon={RefreshCcw} title="Loading inventory" detail="Reconciling product balances by station." compact /> : productTable.filtered.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>Product</th><th>Category</th><th>Stations</th><th>Available</th><th>Reorder level</th><th>Selling price</th><th>Stock status</th><th /></tr></thead><tbody>{productTable.pageRows.map(({ product, available }) => <tr key={product.id}><td><div className="product-cell"><span><PackageOpen size={17} /></span><div><strong>{product.name}</strong><small>{product.code} · {product.unit.code}</small></div></div></td><td>{product.category.name}</td><td>{product.balances.map((balance) => balance.station.code).join(", ") || "—"}</td><td className="number-cell strong-number">{available}</td><td>{product.reorderLevel}</td><td className="number-cell">{formatNaira(Number(product.sellingPrice))}</td><td><StatusPill value={available <= 0 ? "Out of stock" : available <= Number(product.reorderLevel) ? "Low stock" : "In stock"} /></td><td><button className="icon-ghost" onClick={() => onModal("product")}><MoreHorizontal size={17} /></button></td></tr>)}</tbody></table></div> : <EmptyState icon={Boxes} title={productTable.search ? "No matching products" : "No products found"} detail={productTable.search ? "Try a different product, code or barcode." : "Create the first catalogue product and opening station balance."} />}<Pagination total={productTable.total} page={productTable.page} pageSize={productTable.pageSize} onPage={productTable.setPage} /></Panel></div>;
+
+  if (tab === "Movements") {
+    return (
+      <div className="content-stack">
+        <section className="summary-strip">
+          <SummaryItem label="Movement records" value={movementApi.total.toString()} icon={History} tone="info" />
+          <SummaryItem label="Stock in" value={(movementApi.data ?? []).filter((item) => Number(item.quantityDelta) > 0).length.toString()} icon={ArrowDownLeft} tone="success" />
+          <SummaryItem label="Stock out" value={(movementApi.data ?? []).filter((item) => Number(item.quantityDelta) < 0).length.toString()} icon={ArrowUpRight} tone="warning" />
+          <SummaryItem label="Ledger" value="Append-only" icon={ShieldCheck} tone="success" />
+        </section>
+        <Panel>
+          <TableToolbar tabs={tabs} activeTab={tab} onTab={onTab} placeholder="Search product, station, movement or reference" search={movementTable.search} onSearch={movementTable.setSearch} />
+          {movementApi.error ? (
+            <EmptyState icon={AlertTriangle} title="Movements could not be loaded" detail={movementApi.error} />
+          ) : movementApi.loading ? (
+            <EmptyState icon={RefreshCcw} title="Loading stock ledger" detail="Retrieving immutable balance movements." compact />
+          ) : movementTable.filtered.length ? (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Occurred</th>
+                    <th>Product</th>
+                    <th>Station</th>
+                    <th>Movement</th>
+                    <th>Quantity</th>
+                    <th>Balance after</th>
+                    <th>Reference</th>
+                    <th>Reason</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {movementTable.pageRows.map((item) => (
+                    <tr key={item.id}>
+                      <td>{new Date(item.occurredAt).toLocaleString("en-NG")}</td>
+                      <td><div className="primary-cell"><strong>{item.product.name}</strong><span>{item.product.code}</span></div></td>
+                      <td>{item.station.name}</td>
+                      <td><StatusPill value={item.movementType.replaceAll("_", " ")} /></td>
+                      <td className={classNames("number-cell", Number(item.quantityDelta) < 0 && "negative-number")}>{Number(item.quantityDelta) > 0 ? "+" : ""}{item.quantityDelta}</td>
+                      <td className="number-cell">{item.balanceAfter}</td>
+                      <td><code>{item.referenceType}:{item.referenceId.slice(0, 8)}</code></td>
+                      <td>{item.reason ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState icon={History} title={movementTable.search ? "No matching movements" : "No stock movements"} detail={movementTable.search ? "Try a different product, station or reference." : "Stock-in, sale, transfer and adjustment movements appear here."} />
+          )}
+          <Pagination total={movementTable.total} page={movementTable.page} pageSize={movementTable.pageSize} onPage={movementTable.setPage} />
+        </Panel>
+      </div>
+    );
+  }
+
+  if (tab === "Transfers") {
+    return (
+      <div className="content-stack">
+        <section className="summary-strip">
+          <SummaryItem label="Transfer records" value={transferApi.total.toString()} icon={ArrowLeftRight} tone="info" />
+          <SummaryItem label="Awaiting dispatch" value={(transferApi.data ?? []).filter((item) => item.status === "REQUESTED").length.toString()} icon={Clock3} tone="warning" />
+          <SummaryItem label="In transit" value={(transferApi.data ?? []).filter((item) => item.status === "DISPATCHED").length.toString()} icon={Plane} tone="info" />
+          <SummaryItem label="Received" value={(transferApi.data ?? []).filter((item) => item.status === "RECEIVED").length.toString()} icon={PackageCheck} tone="success" />
+        </section>
+        <Panel>
+          <TableToolbar tabs={tabs} activeTab={tab} onTab={onTab} placeholder="Search transfer number or route" search={transferTable.search} onSearch={transferTable.setSearch} />
+          {transferApi.error ? (
+            <EmptyState icon={AlertTriangle} title="Transfers could not be loaded" detail={transferApi.error} />
+          ) : transferApi.loading ? (
+            <EmptyState icon={RefreshCcw} title="Loading transfers" detail="Retrieving dispatch and receipt progress." compact />
+          ) : transferTable.filtered.length ? (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Transfer</th>
+                    <th>Route</th>
+                    <th>Items</th>
+                    <th>Requested</th>
+                    <th>Dispatched</th>
+                    <th>Received</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {transferTable.pageRows.map((item) => (
+                    <tr key={item.id}>
+                      <td><div className="primary-cell"><strong>{item.transferNumber}</strong><span>{formatDate(item.requestedAt)}</span></div></td>
+                      <td>{item.originStation.code} → {item.destinationStation.code}</td>
+                      <td>{item.lines.length}</td>
+                      <td>{item.lines.reduce((sum, line) => sum + Number(line.quantityRequested), 0)}</td>
+                      <td>{item.lines.reduce((sum, line) => sum + Number(line.quantityDispatched), 0)}</td>
+                      <td>{item.lines.reduce((sum, line) => sum + Number(line.quantityReceived), 0)}</td>
+                      <td>{item.reason}</td>
+                      <td><StatusPill value={item.status} /></td>
+                      <td>
+                        <div className="row-actions">
+                          {item.status === "REQUESTED" && (
+                            <button className="row-button" onClick={() => setTransferToDispatch(item)}>Dispatch</button>
+                          )}
+                          {item.status === "DISPATCHED" && (
+                            <button className="row-button" onClick={() => setTransferToReceive(item)}>Receive</button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState icon={ArrowLeftRight} title={transferTable.search ? "No matching transfers" : "No transfers"} detail={transferTable.search ? "Try a different transfer number or route." : "Inter-station stock transfers appear here."} />
+          )}
+          <div className="table-callout">
+            <div><ArrowLeftRight size={18} /><span><strong>Inter-station transfers</strong> Coordinate stock dispatches and receipts.</span></div>
+            <button onClick={() => setShowCreateTransfer(true)}>Add transfer</button>
+          </div>
+          <Pagination total={transferTable.total} page={transferTable.page} pageSize={transferTable.pageSize} onPage={transferTable.setPage} />
+        </Panel>
+
+        {showCreateTransfer && (
+          <TransferCreateModal
+            allowedStations={allowedStations}
+            onClose={() => setShowCreateTransfer(false)}
+            onComplete={(title, detail) => {
+              setShowCreateTransfer(false);
+              transferApi.reload();
+              productApi.reload();
+            }}
+          />
+        )}
+
+        {transferToDispatch && (
+          <TransferDispatchModal
+            transfer={transferToDispatch}
+            onClose={() => setTransferToDispatch(null)}
+            onComplete={(title, detail) => {
+              setTransferToDispatch(null);
+              transferApi.reload();
+              movementApi.reload();
+              productApi.reload();
+            }}
+          />
+        )}
+
+        {transferToReceive && (
+          <TransferReceiveModal
+            transfer={transferToReceive}
+            onClose={() => setTransferToReceive(null)}
+            onComplete={(title, detail) => {
+              setTransferToReceive(null);
+              transferApi.reload();
+              movementApi.reload();
+              productApi.reload();
+            }}
+          />
+        )}
+      </div>
+    );
+  }
+
+  if (tab === "Adjustments") {
+    const isApprover = identity.permissions.includes("inventory.approve_adjustment");
+    return (
+      <div className="content-stack">
+        <section className="summary-strip">
+          <SummaryItem label="Audit logs" value={adjustmentApi.total.toString()} icon={History} tone="info" />
+          <SummaryItem label="Pending decision" value={(adjustmentApi.data ?? []).filter((item: any) => item.status === "PENDING_APPROVAL").length.toString()} icon={Clock3} tone="warning" />
+          <SummaryItem label="Approved adjustments" value={(adjustmentApi.data ?? []).filter((item: any) => item.status === "POSTED").length.toString()} icon={PackageCheck} tone="success" />
+          <SummaryItem label="Rejected audits" value={(adjustmentApi.data ?? []).filter((item: any) => item.status === "REJECTED").length.toString()} icon={X} tone="danger" />
+        </section>
+        <Panel>
+          <TableToolbar tabs={tabs} activeTab={tab} onTab={onTab} placeholder="Search adjustments..." search={adjustmentTable.search} onSearch={adjustmentTable.setSearch} />
+          {adjustmentApi.error ? (
+            <EmptyState icon={AlertTriangle} title="Adjustments could not be loaded" detail={adjustmentApi.error} />
+          ) : adjustmentApi.loading ? (
+            <EmptyState icon={RefreshCcw} title="Loading adjustments" detail="Retrieving count audits and pending approvals." compact />
+          ) : adjustmentTable.filtered.length ? (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Ref Number</th>
+                    <th>Audited Date</th>
+                    <th>Station</th>
+                    <th>Items</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {adjustmentTable.pageRows.map((item: any) => (
+                    <tr key={item.id}>
+                      <td><div className="primary-cell"><strong>{item.adjustmentNumber}</strong><span>Raised {formatDate(item.requestedAt)}</span></div></td>
+                      <td>{new Date(item.requestedAt).toLocaleString("en-NG")}</td>
+                      <td>{item.station.name}</td>
+                      <td>{item.lines.length} items</td>
+                      <td>{item.reason}</td>
+                      <td><StatusPill value={item.status.replaceAll("_", " ")} /></td>
+                      <td>
+                        <div className="row-actions">
+                          {item.status === "PENDING_APPROVAL" && isApprover && (
+                            <button className="row-button" onClick={() => setAdjustmentToDecide(item)}>Decide</button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState icon={History} title={adjustmentTable.search ? "No matching adjustments" : "No adjustments"} detail={adjustmentTable.search ? "Try a different reference number or reason." : "Physical count audits appear here."} />
+          )}
+          <div className="table-callout">
+            <div><History size={18} /><span><strong>Maker-checker audits</strong> Request and approve stock balance adjustments.</span></div>
+            <button onClick={() => setShowCreateAdjustment(true)}>Add adjustment</button>
+          </div>
+          <Pagination total={adjustmentTable.total} page={adjustmentTable.page} pageSize={adjustmentTable.pageSize} onPage={adjustmentTable.setPage} />
+        </Panel>
+
+        {showCreateAdjustment && (
+          <AdjustmentCreateModal
+            allowedStations={allowedStations}
+            onClose={() => setShowCreateAdjustment(false)}
+            onComplete={(title, detail) => {
+              setShowCreateAdjustment(false);
+              adjustmentApi.reload();
+            }}
+          />
+        )}
+
+        {adjustmentToDecide && (
+          <AdjustmentDecideModal
+            adjustment={adjustmentToDecide}
+            onClose={() => setAdjustmentToDecide(null)}
+            onComplete={(title, detail) => {
+              setAdjustmentToDecide(null);
+              adjustmentApi.reload();
+              productApi.reload();
+              movementApi.reload();
+            }}
+          />
+        )}
+      </div>
+    );
+  }
+
+  const units = rows.reduce((sum, row) => sum + row.available, 0);
+  const value = rows.reduce((sum, row) => sum + row.available * Number(row.product.purchasePrice ?? 0), 0);
+  const low = rows.filter(({ product, available }) => available > 0 && available <= Number(product.reorderLevel)).length;
+  const empty = rows.filter(({ available }) => available <= 0).length;
+
+  return (
+    <div className="content-stack">
+      <section className="summary-strip">
+        <SummaryItem label="Stock value" value={formatNaira(value)} detail={`${units.toLocaleString()} units`} icon={Boxes} tone="info" />
+        <SummaryItem label="Low stock" value={low.toString()} detail="At or below reorder" icon={AlertTriangle} tone="warning" />
+        <SummaryItem label="Out of stock" value={empty.toString()} detail="Reorder immediately" icon={PackageOpen} tone="danger" />
+        <SummaryItem label="Catalogue" value={productApi.total.toString()} detail="Active and inactive" icon={PackageCheck} tone="success" />
+      </section>
+      <Panel>
+        <TableToolbar tabs={tabs} activeTab={tab} onTab={onTab} placeholder="Search product, code or barcode" search={productTable.search} onSearch={productTable.setSearch} />
+        {productApi.error ? (
+          <EmptyState icon={AlertTriangle} title="Inventory could not be loaded" detail={productApi.error} />
+        ) : productApi.loading ? (
+          <EmptyState icon={RefreshCcw} title="Loading inventory" detail="Reconciling product balances by station." compact />
+        ) : productTable.filtered.length ? (
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Category</th>
+                  <th>Stations</th>
+                  <th>Available</th>
+                  <th>Reorder level</th>
+                  <th>Selling price</th>
+                  <th>Stock status</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {productTable.pageRows.map(({ product, available }) => (
+                  <tr key={product.id}>
+                    <td><div className="product-cell"><span><PackageOpen size={17} /></span><div><strong>{product.name}</strong><small>{product.code} · {product.unit.code}</small></div></div></td>
+                    <td>{product.category.name}</td>
+                    <td>{product.balances.map((balance) => balance.station.code).join(", ") || "—"}</td>
+                    <td className="number-cell strong-number">{available}</td>
+                    <td>{product.reorderLevel}</td>
+                    <td className="number-cell">{formatNaira(Number(product.sellingPrice))}</td>
+                    <td><StatusPill value={available <= 0 ? "Out of stock" : available <= Number(product.reorderLevel) ? "Low stock" : "In stock"} /></td>
+                    <td><button className="icon-ghost" onClick={() => onModal("product")}><MoreHorizontal size={17} /></button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState icon={Boxes} title={productTable.search ? "No matching products" : "No products found"} detail={productTable.search ? "Try a different product, code or barcode." : "Create the first catalogue product and opening station balance."} />
+        )}
+        <Pagination total={productTable.total} page={productTable.page} pageSize={productTable.pageSize} onPage={productTable.setPage} />
+      </Panel>
+    </div>
+  );
 }
 
 function CargoView({ onModal, onToast }: { onModal: (modal: ModalKind) => void; onToast: (toast: Toast) => void }) {

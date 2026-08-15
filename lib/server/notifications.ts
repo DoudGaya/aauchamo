@@ -23,11 +23,10 @@ export async function dispatchNotification(
   const users = await dbOrTx.user.findMany({
     where: {
       companyId: payload.companyId,
-      isActive: true, // Assuming isActive exists, wait, let's remove isActive if it doesn't, let's just use status: "ACTIVE"
       status: "ACTIVE",
       roleAssignments: {
         some: {
-          role: { key: { in: payload.targetRoles } },
+          role: { code: { in: payload.targetRoles } },
           // If stationId is given, they must either have this station scope, or the role is company wide
           ...(payload.stationId ? {
             OR: [

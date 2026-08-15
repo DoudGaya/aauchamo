@@ -36,7 +36,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ pur
       await enqueueOutbox(tx, { companyId: access.companyId, aggregateType: "GoodsReceipt", aggregateId: posted.id, eventType: "inventory.goods_received", payload: { receiptNumber, purchaseOrderId: order.id, stationId: order.stationId } });
       await writeAudit(tx, { companyId: access.companyId, actorId: access.userId, stationId: order.stationId, action: "goods_receipt.posted", entityType: "GoodsReceipt", entityId: posted.id, requestId, after: posted });
       return posted;
-    }, { isolationLevel: "Serializable" });
+    }, { isolationLevel: "Serializable", timeout: 30000, maxWait: 15000 });
     return apiSuccess(receipt, requestId, { created: true });
   } catch (error) { return apiFailure(error, requestId); }
 }
