@@ -161,7 +161,7 @@ type CargoRecord = { id: string; awbNumber: string; senderName: string; receiver
 type AgentRecord = { id: string; agentNumber: string; name: string; contactName: string; phone: string; creditLimit: string; status: string; homeStation: AllowedStation; wallet: { balance: string } | null; _count: { sales: number; bookings: number } };
 type FinanceRecord = { id: string; entryNumber: string; direction: string; amount: string; description: string; status: string; createdAt: string; account: { name: string }; category: { name: string }; station: AllowedStation };
 type TicketRecord = { id: string; bookingNumber: string; pnr: string; passengerName: string; origin: string; destination: string; airline: string; travelDate: string; fare: string; sellingPrice: string; profit: string; status: string; station: AllowedStation };
-type POSBootstrap = { products: Array<{ id: string; code: string; name: string; sellingPrice: string; available: number; unit: { code: string } }>; customers: Array<{ id: string; customerNumber: string; displayName: string; primaryPhone: string }>; paymentMethods: Array<{ id: string; name: string; type: string; requiresReference: boolean; requiresTerminal: boolean }>; businessUnits: Array<{ id: string; code: string; name: string }>; agents: Array<{ id: string; name: string; agentNumber: string; wallet: { balance: string } | null }> };
+type POSBootstrap = { permissions: string[]; products: Array<{ id: string; code: string; name: string; sellingPrice: string; available: number; unit: { code: string } }>; customers: Array<{ id: string; customerNumber: string; displayName: string; primaryPhone: string }>; paymentMethods: Array<{ id: string; name: string; type: string; requiresReference: boolean; requiresTerminal: boolean }>; businessUnits: Array<{ id: string; code: string; name: string }>; agents: Array<{ id: string; name: string; agentNumber: string; wallet: { balance: string } | null }> };
 type InventorySetup = { categories: Array<{ id: string; code: string; name: string }>; units: Array<{ id: string; code: string; name: string }>; suppliers: Array<{ id: string; supplierNumber: string; name: string }> };
 type FinanceSetup = { accounts: Array<{ id: string; code: string; name: string }>; categories: Array<{ id: string; code: string; name: string; type: string }>; paymentMethods: Array<{ id: string; name: string; type: string }> };
 type DashboardSummary = { sales: { grossRevenue: string; refunds: string; netRevenue: string; transactions: number; outstanding: string }; inventory: { quantity: string; balanceRows: number; outOfStock: number; value?: string }; entities: { customers: number; agents: number; staff: number; stations: number }; cargo: Record<string, number>; approvals: { pending: number }; receivables: { count: number; amount: string }; financialVisible?: boolean; businessUnits?: Array<{ id: string; code: string; name: string }> };
@@ -1309,17 +1309,1032 @@ function ApprovalsView({ onToast }: { onToast: (toast: Toast) => void }) {
   );
 }
 
-function POSView({ allowedStations, selectedStation, onModal, onToast }: { allowedStations: AllowedStation[]; selectedStation: string; onModal: (modal: ModalKind) => void; onToast: (toast: Toast) => void }) {
+function POSReceiptModal({
+  saleId,
+  onClose,
+}: {
+  saleId: string;
+  onClose: () => void;
+}) {
+  const [printFormat, setPrintFormat] = useState<"thermal" | "a4">("thermal");
+  const { data, loading, error } = useApiData<any>(`/api/sales/${saleId}`);
+
+  if (loading) {
+    return (
+      <div className="modal-layer" role="dialog" aria-modal="true">
+        <div className="workflow-dialog" style={{ maxWidth: "400px", textAlign: "center", padding: "40px" }}>
+          <RefreshCcw className="spinning-icon" size={30} />
+          <p style={{ marginTop: "12px" }}>Loading receipt details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+        <div className="workflow-dialog" style={{ maxWidth: "400px", padding: "20px" }}>
+          <div className="form-note"><AlertTriangle size={16} /><span>Failed to load receipt: {error || "No data"}</span></div>
+          <button className="primary-button" onClick={onClose} style={{ marginTop: "12px" }}>Close</button>
+        </div>
+      </div>
+    );
+  }
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  return (
+    <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()} style={{ overflowY: "auto" }}>
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .print-container, .print-container * {
+            visibility: visible;
+          }
+          .print-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            box-shadow: none !important;
+            background: white !important;
+            color: black !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+        }
+      `}</style>
+      <div className="workflow-dialog print-container" style={{ maxWidth: printFormat === "thermal" ? "400px" : "800px", width: "100%", margin: "40px auto" }}>
+        <div className="workflow-header no-print">
+          <div>
+            <span>Document Preview</span>
+            <h2>Print Receipt / Invoice</h2>
+            <p>Select format and print the reproducible snapshot.</p>
+          </div>
+          <button onClick={onClose}><X size={19} /></button>
+        </div>
+
+        <div className="no-print" style={{ display: "flex", gap: "10px", padding: "10px 16px", borderBottom: "1px solid var(--border-color)", background: "var(--field-bg)" }}>
+          <button type="button" className={classNames("secondary-button", printFormat === "thermal" && "active-tab")} onClick={() => setPrintFormat("thermal")}>
+            Thermal (80mm)
+          </button>
+          <button type="button" className={classNames("secondary-button", printFormat === "a4" && "active-tab")} onClick={() => setPrintFormat("a4")}>
+            A4 Standard
+          </button>
+          <button type="button" className="primary-button" onClick={handlePrint} style={{ marginLeft: "auto" }}>
+            <Printer size={16} /> Print
+          </button>
+        </div>
+
+        <div className="receipt-scroll-area" style={{ padding: "24px", background: "white", color: "black", fontFamily: "monospace" }}>
+          {printFormat === "thermal" ? (
+            <div className="thermal-receipt" style={{ width: "100%", margin: "0 auto", fontSize: "12px", lineHeight: "1.4" }}>
+              <div style={{ textAlign: "center", marginBottom: "16px" }}>
+                <h3 style={{ fontSize: "16px", fontWeight: "bold", margin: "0 0 4px 0" }}>{data.company?.displayName || "AAU Chamo Agency"}</h3>
+                <p style={{ margin: "2px 0" }}>{data.company?.address || "Nigeria"}</p>
+                <p style={{ margin: "2px 0" }}>Tel: {data.company?.phone || ""}</p>
+                <div style={{ borderBottom: "1px dashed black", margin: "12px 0" }}></div>
+                <h4 style={{ fontSize: "13px", fontWeight: "bold", margin: "4px 0" }}>SALES RECEIPT</h4>
+                <p style={{ margin: "2px 0" }}>{data.saleNumber}</p>
+              </div>
+
+              <div style={{ marginBottom: "12px", fontSize: "11px" }}>
+                <div>Date: {new Date(data.postedAt).toLocaleString("en-NG")}</div>
+                <div>Customer: {data.customer.displayName} ({data.customer.primaryPhone})</div>
+                <div>Station: {data.station.name}</div>
+                {data.businessUnit && <div>Unit: {data.businessUnit.name}</div>}
+              </div>
+
+              <div style={{ borderBottom: "1px dashed black", marginBottom: "8px" }}></div>
+
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px", marginBottom: "12px" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px dashed black" }}>
+                    <th style={{ textAlign: "left", paddingBottom: "4px" }}>Item</th>
+                    <th style={{ textAlign: "center", paddingBottom: "4px" }}>Qty</th>
+                    <th style={{ textAlign: "right", paddingBottom: "4px" }}>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.lines.map((line: any) => (
+                    <tr key={line.id}>
+                      <td style={{ paddingTop: "4px", verticalAlign: "top" }}>{line.productName}<br /><small>{line.productCode} · @{Number(line.unitPrice).toFixed(2)}</small></td>
+                      <td style={{ paddingTop: "4px", textAlign: "center", verticalAlign: "top" }}>{line.quantity}</td>
+                      <td style={{ paddingTop: "4px", textAlign: "right", verticalAlign: "top" }}>{Number(line.lineTotal).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <div style={{ borderBottom: "1px dashed black", marginBottom: "8px" }}></div>
+
+              <div style={{ display: "flex", justifyContent: "space-between", margin: "2px 0" }}>
+                <span>Subtotal:</span>
+                <span>{Number(data.subtotal).toFixed(2)}</span>
+              </div>
+              {Number(data.discountTotal) > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", margin: "2px 0" }}>
+                  <span>Discount:</span>
+                  <span>-{Number(data.discountTotal).toFixed(2)}</span>
+                </div>
+              )}
+              {Number(data.taxTotal) > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", margin: "2px 0" }}>
+                  <span>Tax:</span>
+                  <span>+{Number(data.taxTotal).toFixed(2)}</span>
+                </div>
+              )}
+              <div style={{ display: "flex", justifyContent: "space-between", margin: "4px 0", fontSize: "14px", fontWeight: "bold" }}>
+                <span>TOTAL:</span>
+                <span>{Number(data.total).toFixed(2)} NGN</span>
+              </div>
+
+              <div style={{ borderBottom: "1px dashed black", margin: "12px 0" }}></div>
+
+              <div style={{ fontSize: "11px", marginBottom: "8px" }}>
+                <strong style={{ display: "block", marginBottom: "4px" }}>Payment Details:</strong>
+                {data.allocations.map((alloc: any) => (
+                  <div key={alloc.id} style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>{alloc.payment.paymentMethod.name}</span>
+                    <span>{Number(alloc.amount).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ borderBottom: "1px dashed black", margin: "12px 0" }}></div>
+              <div style={{ textAlign: "center", fontSize: "11px", marginTop: "16px" }}>
+                <p style={{ margin: "2px 0" }}>Thank you for your patronage!</p>
+                <p style={{ margin: "2px 0" }}>AAU Chamo Agency Services</p>
+              </div>
+            </div>
+          ) : (
+            <div className="a4-receipt" style={{ width: "100%", fontSize: "14px", color: "#333", lineHeight: "1.5" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "30px", borderBottom: "2px solid #333", paddingBottom: "20px" }}>
+                <div>
+                  <h1 style={{ fontSize: "24px", fontWeight: "bold", margin: "0 0 6px 0", color: "#000" }}>{data.company?.displayName || "AAU Chamo Agency"}</h1>
+                  <p style={{ margin: "2px 0" }}>{data.company?.address || "Nigeria"}</p>
+                  <p style={{ margin: "2px 0" }}>Phone: {data.company?.phone || ""}</p>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <h2 style={{ fontSize: "20px", fontWeight: "bold", margin: "0 0 6px 0", color: "#666" }}>INVOICE / RECEIPT</h2>
+                  <p style={{ margin: "2px 0" }}><strong>Invoice #:</strong> {data.saleNumber}</p>
+                  <p style={{ margin: "2px 0" }}><strong>Date:</strong> {new Date(data.postedAt).toLocaleString("en-NG")}</p>
+                  <p style={{ margin: "2px 0" }}><strong>Status:</strong> {data.status}</p>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "30px" }}>
+                <div>
+                  <h3 style={{ fontSize: "14px", fontWeight: "bold", margin: "0 0 6px 0" }}>BILLED TO:</h3>
+                  <p style={{ margin: "2px 0" }}><strong>{data.customer.displayName}</strong></p>
+                  <p style={{ margin: "2px 0" }}>Phone: {data.customer.primaryPhone}</p>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <h3 style={{ fontSize: "14px", fontWeight: "bold", margin: "0 0 6px 0" }}>STATION DETAILS:</h3>
+                  <p style={{ margin: "2px 0" }}>{data.station.name} ({data.station.code})</p>
+                  {data.businessUnit && <p style={{ margin: "2px 0" }}>Business Unit: {data.businessUnit.name}</p>}
+                </div>
+              </div>
+
+              <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "30px" }}>
+                <thead>
+                  <tr style={{ background: "#f2f2f2", borderBottom: "2px solid #ccc" }}>
+                    <th style={{ textAlign: "left", padding: "10px", fontSize: "13px" }}>Code</th>
+                    <th style={{ textAlign: "left", padding: "10px", fontSize: "13px" }}>Product Description</th>
+                    <th style={{ textAlign: "center", padding: "10px", fontSize: "13px" }}>Qty</th>
+                    <th style={{ textAlign: "right", padding: "10px", fontSize: "13px" }}>Unit Price</th>
+                    <th style={{ textAlign: "right", padding: "10px", fontSize: "13px" }}>Discount</th>
+                    <th style={{ textAlign: "right", padding: "10px", fontSize: "13px" }}>Tax</th>
+                    <th style={{ textAlign: "right", padding: "10px", fontSize: "13px" }}>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.lines.map((line: any) => (
+                    <tr key={line.id} style={{ borderBottom: "1px solid #eee" }}>
+                      <td style={{ padding: "10px" }}>{line.productCode}</td>
+                      <td style={{ padding: "10px" }}>{line.productName}</td>
+                      <td style={{ padding: "10px", textAlign: "center" }}>{line.quantity}</td>
+                      <td style={{ padding: "10px", textAlign: "right" }}>{Number(line.unitPrice).toFixed(2)}</td>
+                      <td style={{ padding: "10px", textAlign: "right" }}>{Number(line.discountAmount).toFixed(2)}</td>
+                      <td style={{ padding: "10px", textAlign: "right" }}>{Number(line.taxAmount).toFixed(2)}</td>
+                      <td style={{ padding: "10px", textAlign: "right", fontWeight: "bold" }}>{Number(line.lineTotal).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <div style={{ width: "300px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #eee" }}>
+                    <span>Subtotal</span>
+                    <span>{Number(data.subtotal).toFixed(2)} NGN</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #eee" }}>
+                    <span>Discount</span>
+                    <span>-{Number(data.discountTotal).toFixed(2)} NGN</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #eee" }}>
+                    <span>Tax</span>
+                    <span>+{Number(data.taxTotal).toFixed(2)} NGN</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", fontSize: "16px", fontWeight: "bold", borderBottom: "2px solid #333" }}>
+                    <span>Amount Due</span>
+                    <span>{Number(data.total).toFixed(2)} NGN</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginTop: "40px", borderTop: "1px solid #ccc", paddingTop: "20px" }}>
+                <h4 style={{ fontSize: "14px", fontWeight: "bold", margin: "0 0 6px 0" }}>Payments Received:</h4>
+                <table style={{ width: "100%", fontSize: "13px" }}>
+                  <tbody>
+                    {data.allocations.map((alloc: any) => (
+                      <tr key={alloc.id}>
+                        <td>{alloc.payment.paymentMethod.name} (Ref: {alloc.payment.reference || "N/A"})</td>
+                        <td style={{ textAlign: "right", fontWeight: "bold" }}>{Number(alloc.amount).toFixed(2)} NGN</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="workflow-footer no-print">
+          <span><ShieldCheck size={14} /> Reproducible snapshot confirmed</span>
+          <button type="button" className="secondary-button" onClick={onClose}>Close</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function POSSessionOpenModal({
+  stationId,
+  onClose,
+  onComplete,
+}: {
+  stationId: string;
+  onClose: () => void;
+  onComplete: () => void;
+}) {
+  const [openingCash, setOpeningCash] = useState("0");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setBusy(true);
+    try {
+      const response = await fetch("/api/pos/sessions", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ stationId, openingCash }),
+      });
+      const body = await response.json();
+      if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Failed to open session.");
+      onComplete();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to open session.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="workflow-dialog" style={{ maxWidth: "450px" }}>
+        <div className="workflow-header">
+          <div>
+            <span>POS Operations</span>
+            <h2>Open POS Cash Session</h2>
+            <p>Initialize the cash drawer float for the day.</p>
+          </div>
+          <button onClick={onClose}><X size={19} /></button>
+        </div>
+
+        <form onSubmit={submit}>
+          <div className="workflow-body">
+            <Field label="Opening Cash Float (NGN)">
+              <input
+                className="field-input"
+                type="number"
+                step="0.01"
+                min="0"
+                value={openingCash}
+                onChange={(e) => setOpeningCash(e.target.value)}
+                required
+              />
+            </Field>
+
+            {error && <div className="form-note"><AlertTriangle size={16} /><span>{error}</span></div>}
+          </div>
+
+          <div className="workflow-footer">
+            <span><ShieldCheck size={14} /> Cashbook entry registered</span>
+            <div>
+              <button type="button" className="secondary-button" onClick={onClose}>Cancel</button>
+              <button type="submit" className="primary-button" disabled={busy}>Open Drawer</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function POSSessionCloseModal({
+  session,
+  onClose,
+  onComplete,
+}: {
+  session: any;
+  onClose: () => void;
+  onComplete: () => void;
+}) {
+  const [countedCash, setCountedCash] = useState("");
+  const [expectedCash, setExpectedCash] = useState<number | null>(null);
+  const [loadingExpected, setLoadingExpected] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchExpected = async () => {
+      try {
+        const salesRes = await fetch(`/api/sales?pageSize=100&stationId=${session.stationId}`);
+        const salesBody = await salesRes.json();
+        if (salesBody.ok) {
+          const sessionSales = (salesBody.data as any[]).filter(s => s.posSessionId === session.id);
+          let cashSum = 0;
+          for (const s of sessionSales) {
+            for (const alloc of s.allocations || []) {
+              if (alloc.payment.paymentMethod.type === "CASH") {
+                cashSum += Number(alloc.amount);
+              }
+            }
+          }
+          setExpectedCash(Number(session.openingCash) + cashSum);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingExpected(false);
+      }
+    };
+    fetchExpected();
+  }, [session]);
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setBusy(true);
+    try {
+      const response = await fetch(`/api/pos/sessions/${session.id}/close`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ countedCash }),
+      });
+      const body = await response.json();
+      if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Failed to close session.");
+      onComplete();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to close session.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const expectedVal = expectedCash ?? 0;
+  const countedVal = Number(countedCash) || 0;
+  const variance = countedVal - expectedVal;
+
+  return (
+    <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="workflow-dialog" style={{ maxWidth: "450px" }}>
+        <div className="workflow-header">
+          <div>
+            <span>POS Operations</span>
+            <h2>Close POS Session</h2>
+            <p>Reconcile cash drawer and calculate variance.</p>
+          </div>
+          <button onClick={onClose}><X size={19} /></button>
+        </div>
+
+        <form onSubmit={submit}>
+          <div className="workflow-body">
+            <div style={{ background: "var(--field-bg)", padding: "16px", borderRadius: "6px", marginBottom: "20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                <span>Opening Cash:</span>
+                <strong>{formatNaira(Number(session.openingCash))}</strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                <span>Expected Drawer Cash:</span>
+                <strong>{loadingExpected ? "Loading..." : formatNaira(expectedVal)}</strong>
+              </div>
+            </div>
+
+            <Field label="Physically Counted Cash (NGN)">
+              <input
+                className="field-input"
+                type="number"
+                step="0.01"
+                min="0"
+                value={countedCash}
+                onChange={(e) => setCountedCash(e.target.value)}
+                required
+                placeholder="e.g. 150000"
+              />
+            </Field>
+
+            {!loadingExpected && countedCash && (
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: "16px", padding: "12px", borderRadius: "6px", background: variance === 0 ? "#f4f4f5" : variance > 0 ? "#f0fdf4" : "#fef2f2" }}>
+                <span>Drawer Variance:</span>
+                <strong style={{ color: variance === 0 ? "black" : variance > 0 ? "#16a34a" : "#dc2626" }}>
+                  {variance === 0 ? "Reconciled (0)" : variance > 0 ? `+${formatNaira(variance)} (Overage)` : `${formatNaira(variance)} (Shortage)`}
+                </strong>
+              </div>
+            )}
+
+            {error && <div className="form-note"><AlertTriangle size={16} /><span>{error}</span></div>}
+          </div>
+
+          <div className="workflow-footer">
+            <span><ShieldCheck size={14} /> Variance logs recorded</span>
+            <div>
+              <button type="button" className="secondary-button" onClick={onClose}>Cancel</button>
+              <button type="submit" className="primary-button" disabled={busy || loadingExpected} style={{ background: "#dc2626", color: "white" }}>
+                Close Session
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function POSView({
+  allowedStations,
+  selectedStation,
+  onModal,
+  onToast,
+}: {
+  allowedStations: AllowedStation[];
+  selectedStation: string;
+  onModal: (modal: ModalKind) => void;
+  onToast: (toast: Toast) => void;
+}) {
   const station = allowedStations.find((item) => item.name === selectedStation) ?? allowedStations[0];
   const { data, loading, error, reload } = useApiData<POSBootstrap>(station ? `/api/pos/bootstrap?stationId=${station.id}` : "/api/pos/bootstrap");
   const [cart, setCart] = useState<Array<POSBootstrap["products"][number] & { quantity: number }>>([]);
-  const [query, setQuery] = useState(""); const [customerId, setCustomerId] = useState(""); const [businessUnitId, setBusinessUnitId] = useState(""); const [paymentMethodId, setPaymentMethodId] = useState(""); const [agentId, setAgentId] = useState(""); const [reference, setReference] = useState(""); const [terminalId, setTerminalId] = useState(""); const [busy, setBusy] = useState(false); const [checkoutError, setCheckoutError] = useState<string | null>(null);
-  const selectedCustomerId = customerId || data?.customers[0]?.id || ""; const selectedBusinessUnitId = businessUnitId || data?.businessUnits[0]?.id || ""; const selectedPaymentMethodId = paymentMethodId || data?.paymentMethods[0]?.id || ""; const selectedMethod = data?.paymentMethods.find((item) => item.id === selectedPaymentMethodId);
-  const products = (data?.products ?? []).filter((product) => !query.trim() || `${product.code} ${product.name}`.toLowerCase().includes(query.toLowerCase())); const subtotal = cart.reduce((sum, item) => sum + Number(item.sellingPrice) * item.quantity, 0);
-  const updateQuantity = (id: string, delta: number) => setCart((current) => current.map((item) => item.id === id ? { ...item, quantity: Math.max(1, Math.min(item.available, item.quantity + delta)) } : item));
-  const checkout = async () => { if (!station || !selectedCustomerId || !selectedBusinessUnitId || !selectedPaymentMethodId || !cart.length) return; setBusy(true); setCheckoutError(null); try { const response = await fetch("/api/sales", { method: "POST", headers: { "content-type": "application/json", accept: "application/json", "idempotency-key": crypto.randomUUID() }, body: JSON.stringify({ stationId: station.id, businessUnitId: selectedBusinessUnitId, customerId: selectedCustomerId, agentId: selectedMethod?.type === "WALLET" ? agentId || undefined : undefined, lines: cart.map((item) => ({ productId: item.id, quantity: String(item.quantity) })), payments: [{ paymentMethodId: selectedPaymentMethodId, amount: subtotal.toFixed(2), reference: reference || undefined, terminalId: terminalId || undefined }] }) }); const body = await response.json() as ApiEnvelope<{ saleNumber: string; total: string }>; if (!response.ok || !body.ok || !body.data) throw new Error(body.error?.message || "The sale could not be posted."); setCart([]); setReference(""); setTerminalId(""); reload(); window.dispatchEvent(new Event("erp-data-changed")); onToast({ title: "Sale completed", detail: `${body.data.saleNumber} posted for ${formatNaira(Number(body.data.total))}.` }); } catch (reason) { setCheckoutError(reason instanceof Error ? reason.message : "The sale could not be posted."); } finally { setBusy(false); } };
+  const [query, setQuery] = useState("");
+  const [customerId, setCustomerId] = useState("");
+  const [businessUnitId, setBusinessUnitId] = useState("");
+  const [agentId, setAgentId] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  // POS Session state hooks
+  const sessionApi = useApiData<any>(station ? `/api/pos/sessions?active=true&stationId=${station.id}` : null);
+  const [showOpenSession, setShowOpenSession] = useState(false);
+  const [showCloseSession, setShowCloseSession] = useState(false);
+
+  // Split payments state hooks
+  const [paymentAllocations, setPaymentAllocations] = useState<Array<{ paymentMethodId: string; amount: string; reference: string; terminalId: string }>>([]);
+
+  // Line discounts state hooks
+  const [discounts, setDiscounts] = useState<Record<string, string>>({}); // productId -> discountAmount string
+
+  // Held carts state hooks
+  const [heldCarts, setHeldCarts] = useState<Array<{ id: string; label: string; cart: typeof cart; discounts: typeof discounts; customerId: string }>>([]);
+
+  // Receipt modal state hooks
+  const [completedSaleId, setCompletedSaleId] = useState<string | null>(null);
+
+  const selectedCustomerId = customerId || data?.customers[0]?.id || "";
+  const selectedBusinessUnitId = businessUnitId || data?.businessUnits[0]?.id || "";
+
+  // Compute cart totals
+  const subtotal = cart.reduce((sum, item) => sum + Number(item.sellingPrice) * item.quantity, 0);
+  const discountSum = cart.reduce((sum, item) => sum + (Number(discounts[item.id]) || 0), 0);
+  const dueTotal = Math.max(0, subtotal - discountSum);
+
+  const hasDiscountPermission = data?.permissions?.includes("sales.discount");
+
+  // Sync split payments state automatically for single payments
+  useEffect(() => {
+    if (data?.paymentMethods[0] && paymentAllocations.length === 0) {
+      setPaymentAllocations([{ paymentMethodId: data.paymentMethods[0].id, amount: dueTotal.toFixed(2), reference: "", terminalId: "" }]);
+    } else if (paymentAllocations.length === 1) {
+      setPaymentAllocations([{ ...paymentAllocations[0], amount: dueTotal.toFixed(2) }]);
+    }
+  }, [dueTotal, data, paymentAllocations.length]);
+
+  // Keyboard/scanner shortcuts
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "F2") {
+        e.preventDefault();
+        const searchInput = document.querySelector(".large-search input") as HTMLInputElement;
+        searchInput?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
+
+  const updateQuantity = (id: string, delta: number) => {
+    setCart((current) =>
+      current.map((item) =>
+        item.id === id ? { ...item, quantity: Math.max(1, Math.min(item.available, item.quantity + delta)) } : item
+      )
+    );
+  };
+
+  const updateDiscount = (productId: string, val: string) => {
+    setDiscounts({ ...discounts, [productId]: val });
+  };
+
+  const addPaymentAllocation = () => {
+    if (!data?.paymentMethods[0]) return;
+    setPaymentAllocations([...paymentAllocations, { paymentMethodId: data.paymentMethods[0].id, amount: "0", reference: "", terminalId: "" }]);
+  };
+
+  const removePaymentAllocation = (idx: number) => {
+    setPaymentAllocations(paymentAllocations.filter((_, i) => i !== idx));
+  };
+
+  const updateAllocationField = (idx: number, field: string, val: string) => {
+    const updated = [...paymentAllocations];
+    updated[idx] = { ...updated[idx], [field]: val };
+    setPaymentAllocations(updated);
+  };
+
+  const holdCart = () => {
+    if (cart.length === 0) return;
+    const label = window.prompt("Enter a label to hold this cart:", `Cart ${new Date().toLocaleTimeString()}`) || "";
+    if (!label.trim()) return;
+    setHeldCarts([...heldCarts, { id: crypto.randomUUID(), label, cart, discounts, customerId: selectedCustomerId }]);
+    setCart([]);
+    setDiscounts({});
+    setPaymentAllocations([]);
+  };
+
+  const resumeCart = (id: string) => {
+    const target = heldCarts.find(h => h.id === id);
+    if (!target) return;
+    setCart(target.cart);
+    setDiscounts(target.discounts);
+    setCustomerId(target.customerId);
+    setHeldCarts(heldCarts.filter(h => h.id !== id));
+  };
+
+  const checkout = async () => {
+    if (!station || !selectedCustomerId || !selectedBusinessUnitId || !cart.length) return;
+    const activeSession = sessionApi.data;
+    if (!activeSession) {
+      setCheckoutError("No active POS session. Open the drawer session first.");
+      return;
+    }
+
+    // Validate split payment allocations
+    const sumAlloc = paymentAllocations.reduce((sum, p) => sum + Number(p.amount), 0);
+    if (Math.abs(sumAlloc - dueTotal) > 0.01) {
+      setCheckoutError(`Payment split sum (${formatNaira(sumAlloc)}) must match amount due (${formatNaira(dueTotal)}).`);
+      return;
+    }
+
+    // Reference and terminal ID validation
+    for (const alloc of paymentAllocations) {
+      const method = data?.paymentMethods.find((item) => item.id === alloc.paymentMethodId);
+      if (method?.requiresReference && !alloc.reference.trim()) {
+        setCheckoutError(`${method.name} payment requires a reference.`);
+        return;
+      }
+      if (method?.requiresTerminal && !alloc.terminalId.trim()) {
+        setCheckoutError(`${method.name} payment requires a terminal ID.`);
+        return;
+      }
+    }
+
+    setBusy(true);
+    setCheckoutError(null);
+    try {
+      const response = await fetch("/api/sales", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+          "idempotency-key": crypto.randomUUID(),
+        },
+        body: JSON.stringify({
+          stationId: station.id,
+          businessUnitId: selectedBusinessUnitId,
+          customerId: selectedCustomerId,
+          posSessionId: activeSession.id,
+          agentId: paymentAllocations.some(p => data?.paymentMethods.find(m => m.id === p.paymentMethodId)?.type === "WALLET") ? agentId || undefined : undefined,
+          lines: cart.map((item) => ({
+            productId: item.id,
+            quantity: String(item.quantity),
+            discountAmount: discounts[item.id] ? Number(discounts[item.id]).toFixed(2) : undefined,
+          })),
+          payments: paymentAllocations.map((p) => ({
+            paymentMethodId: p.paymentMethodId,
+            amount: Number(p.amount).toFixed(2),
+            reference: p.reference || undefined,
+            terminalId: p.terminalId || undefined,
+          })),
+        }),
+      });
+
+      const body = (await response.json()) as ApiEnvelope<{ id: string; saleNumber: string; total: string }>;
+      if (!response.ok || !body.ok || !body.data) throw new Error(body.error?.message || "The sale could not be posted.");
+
+      setCart([]);
+      setDiscounts({});
+      setPaymentAllocations([]);
+      reload();
+      sessionApi.reload();
+      window.dispatchEvent(new Event("erp-data-changed"));
+      onToast({
+        title: "Sale completed",
+        detail: `${body.data.saleNumber} posted for ${formatNaira(Number(body.data.total))}.`,
+      });
+      // Show printable receipt modal immediately
+      setCompletedSaleId(body.data.id);
+    } catch (reason) {
+      setCheckoutError(reason instanceof Error ? reason.message : "The sale could not be posted.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   if (!station) return <EmptyState icon={Store} title="No operating station" detail="Assign an operating station to this account before using POS." />;
-  return <div className="pos-layout"><section className="pos-catalogue panel"><div className="pos-search-row"><label className="large-search"><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Scan barcode or search products" autoFocus /><kbd>F2</kbd></label><button className="secondary-button" onClick={reload}><RefreshCcw size={16} /> Refresh</button></div>{error ? <EmptyState icon={AlertTriangle} title="POS catalogue unavailable" detail={error} /> : loading ? <EmptyState icon={RefreshCcw} title="Loading POS catalogue" detail="Checking current prices and station stock." compact /> : <div className="product-grid">{products.map((product) => <button key={product.id} className={classNames("product-tile", product.available <= 0 && "disabled")} disabled={product.available <= 0} onClick={() => setCart((current) => { const existing = current.find((item) => item.id === product.id); return existing ? current.map((item) => item.id === product.id ? { ...item, quantity: Math.min(item.available, item.quantity + 1) } : item) : [...current, { ...product, quantity: 1 }]; })}><span className="product-visual"><PackageOpen size={25} /></span><span className="product-code">{product.code}</span><strong>{product.name}</strong><span className="product-tile-bottom"><b>{formatNaira(Number(product.sellingPrice))}</b><em>{product.available <= 0 ? "Out of stock" : `${product.available} available`}</em></span></button>)}</div>}</section><aside className="pos-cart panel"><div className="cart-header"><div><span>Current sale</span><strong>{station.code} · Server priced</strong></div><button className="icon-ghost" onClick={() => setCart([])}><Trash2 size={16} /></button></div><div className="settings-form"><Field label="Customer"><select value={selectedCustomerId} onChange={(event) => setCustomerId(event.target.value)}>{data?.customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.displayName} · {customer.primaryPhone}</option>)}</select></Field><button className="customer-selector" onClick={() => onModal("customer")}><span className="customer-icon"><UserPlus size={17} /></span><div><span>Customer missing?</span><strong>Register customer</strong></div><ChevronRight size={15} /></button><Field label="Business unit"><select value={selectedBusinessUnitId} onChange={(event) => setBusinessUnitId(event.target.value)}>{data?.businessUnits.map((unit) => <option key={unit.id} value={unit.id}>{unit.name}</option>)}</select></Field></div><div className="cart-items">{cart.map((item) => <div className="cart-item" key={item.id}><div><strong>{item.name}</strong><span>{formatNaira(Number(item.sellingPrice))} each</span></div><div className="quantity-stepper"><button onClick={() => updateQuantity(item.id, -1)}><Minus size={13} /></button><span>{item.quantity}</span><button onClick={() => updateQuantity(item.id, 1)}><Plus size={13} /></button></div><b>{formatNaira(Number(item.sellingPrice) * item.quantity)}</b></div>)}{!cart.length && <EmptyState icon={ShoppingCart} title="Cart is empty" detail="Select a product or scan its barcode to start." compact />}</div><div className="settings-form"><Field label="Payment method"><select value={selectedPaymentMethodId} onChange={(event) => setPaymentMethodId(event.target.value)}>{data?.paymentMethods.map((method) => <option key={method.id} value={method.id}>{method.name}</option>)}</select></Field>{selectedMethod?.type === "WALLET" && <Field label="Agent"><select value={agentId} onChange={(event) => setAgentId(event.target.value)}><option value="">Select agent</option>{data?.agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.name} · {formatNaira(Number(agent.wallet?.balance ?? 0))}</option>)}</select></Field>}{selectedMethod?.requiresReference && <Field label="Payment reference"><input value={reference} onChange={(event) => setReference(event.target.value)} /></Field>}{selectedMethod?.requiresTerminal && <Field label="Terminal ID"><input value={terminalId} onChange={(event) => setTerminalId(event.target.value)} /></Field>}</div><div className="cart-totals"><div><span>Subtotal</span><strong>{formatNaira(subtotal)}</strong></div><div><span>Tax and discounts</span><strong>Server verified</strong></div><div className="grand-total"><span>Amount due</span><strong>{formatNaira(subtotal)}</strong></div></div>{checkoutError && <div className="form-note"><AlertTriangle size={15} /><span>{checkoutError}</span></div>}<button className="checkout-button" disabled={busy || !cart.length || !selectedCustomerId || !selectedBusinessUnitId || !selectedPaymentMethodId || Boolean(selectedMethod?.requiresReference && !reference) || Boolean(selectedMethod?.requiresTerminal && !terminalId) || Boolean(selectedMethod?.type === "WALLET" && !agentId)} onClick={checkout}><span><LockKeyhole size={16} />{busy ? "Posting…" : "Post sale & payment"}</span><strong>{formatNaira(subtotal)}</strong></button><div className="cart-shortcuts"><span><ShieldCheck size={13} /> Atomic stock, payment and finance posting</span></div></aside></div>;
+
+  const activeSession = sessionApi.data;
+  const products = (data?.products ?? []).filter(
+    (product) => !query.trim() || `${product.code} ${product.name}`.toLowerCase().includes(query.toLowerCase())
+  );
+
+  return (
+    <div className="pos-layout">
+      <section className="pos-catalogue panel">
+        {/* POS Session Header Bar */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: activeSession ? "#f0fdf4" : "#fef2f2", borderBottom: "1px solid var(--border-color)", margin: "-16px -16px 16px -16px", borderRadius: "6px 6px 0 0" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: activeSession ? "#22c55e" : "#ef4444" }}></span>
+            <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+              {activeSession ? `Drawer Session Open (Float: ${formatNaira(Number(activeSession.openingCash))})` : "POS Drawer Closed"}
+            </span>
+          </div>
+          <div>
+            {activeSession ? (
+              <button type="button" className="secondary-button" onClick={() => setShowCloseSession(true)} style={{ height: "28px", padding: "0 12px", fontSize: "12px", background: "#fecaca", color: "#991b1b" }}>
+                Close Drawer
+              </button>
+            ) : (
+              <button type="button" className="primary-button" onClick={() => setShowOpenSession(true)} style={{ height: "28px", padding: "0 12px", fontSize: "12px" }}>
+                Open Drawer
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="pos-search-row">
+          <label className="large-search">
+            <Search size={18} />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Scan barcode or search products"
+              autoFocus
+            />
+            <kbd>F2</kbd>
+          </label>
+          <button className="secondary-button" onClick={reload}>
+            <RefreshCcw size={16} /> Refresh
+          </button>
+        </div>
+
+        {error ? (
+          <EmptyState icon={AlertTriangle} title="POS catalogue unavailable" detail={error} />
+        ) : loading ? (
+          <EmptyState icon={RefreshCcw} title="Loading POS catalogue" detail="Checking current prices and station stock." compact />
+        ) : (
+          <div className="product-grid">
+            {products.map((product) => (
+              <button
+                key={product.id}
+                className={classNames("product-tile", (product.available <= 0 || !activeSession) && "disabled")}
+                disabled={product.available <= 0 || !activeSession}
+                onClick={() =>
+                  setCart((current) => {
+                    const existing = current.find((item) => item.id === product.id);
+                    return existing
+                      ? current.map((item) =>
+                          item.id === product.id ? { ...item, quantity: Math.min(item.available, item.quantity + 1) } : item
+                        )
+                      : [...current, { ...product, quantity: 1 }];
+                  })
+                }
+              >
+                <span className="product-visual"><PackageOpen size={25} /></span>
+                <span className="product-code">{product.code}</span>
+                <strong>{product.name}</strong>
+                <span className="product-tile-bottom">
+                  <b>{formatNaira(Number(product.sellingPrice))}</b>
+                  <em>{product.available <= 0 ? "Out of stock" : `${product.available} available`}</em>
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <aside className="pos-cart panel">
+        <div className="cart-header">
+          <div>
+            <span>Current sale</span>
+            <strong>{station.code} · Server priced</strong>
+          </div>
+          <button className="icon-ghost" onClick={() => { setCart([]); setDiscounts({}); }}><Trash2 size={16} /></button>
+        </div>
+
+        <div className="settings-form">
+          <Field label="Customer">
+            <select value={selectedCustomerId} onChange={(event) => setCustomerId(event.target.value)}>
+              {data?.customers.map((customer) => (
+                <option key={customer.id} value={customer.id}>
+                  {customer.displayName} · {customer.primaryPhone}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <button className="customer-selector" onClick={() => onModal("customer")}>
+            <span className="customer-icon"><UserPlus size={17} /></span>
+            <div>
+              <span>Customer missing?</span>
+              <strong>Register customer</strong>
+            </div>
+            <ChevronRight size={15} />
+          </button>
+          <Field label="Business unit">
+            <select value={selectedBusinessUnitId} onChange={(event) => setBusinessUnitId(event.target.value)}>
+              {data?.businessUnits.map((unit) => (
+                <option key={unit.id} value={unit.id}>{unit.name}</option>
+              ))}
+            </select>
+          </Field>
+        </div>
+
+        {/* Held Carts Panel */}
+        {heldCarts.length > 0 && (
+          <div style={{ padding: "8px 12px", background: "var(--field-bg)", borderRadius: "6px", marginBottom: "12px", border: "1px solid var(--border-color)" }}>
+            <span style={{ fontSize: "11px", fontWeight: "bold", textTransform: "uppercase", color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>
+              Held Carts ({heldCarts.length})
+            </span>
+            <div style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "4px" }}>
+              {heldCarts.map((hc) => (
+                <button key={hc.id} className="secondary-button" onClick={() => resumeCart(hc.id)} style={{ height: "24px", padding: "0 8px", fontSize: "11px", whiteSpace: "nowrap" }}>
+                  {hc.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="cart-items">
+          {cart.map((item) => {
+            const discVal = Number(discounts[item.id]) || 0;
+            const lineTotal = Number(item.sellingPrice) * item.quantity - discVal;
+            return (
+              <div className="cart-item-row" key={item.id} style={{ display: "flex", flexDirection: "column", borderBottom: "1px solid var(--border-color)", paddingBottom: "10px", marginBottom: "10px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <strong>{item.name}</strong>
+                    <span style={{ display: "block", fontSize: "12px", color: "var(--text-secondary)" }}>
+                      {formatNaira(Number(item.sellingPrice))} each
+                    </span>
+                  </div>
+                  <div className="quantity-stepper">
+                    <button onClick={() => updateQuantity(item.id, -1)}><Minus size={13} /></button>
+                    <span>{item.quantity}</span>
+                    <button onClick={() => updateQuantity(item.id, 1)}><Plus size={13} /></button>
+                  </div>
+                  <b>{formatNaira(lineTotal)}</b>
+                </div>
+
+                {/* Line discount amount input if allowed */}
+                {hasDiscountPermission && (
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px" }}>
+                    <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>Line Discount (NGN):</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max={Number(item.sellingPrice) * item.quantity}
+                      style={{ width: "80px", height: "24px", fontSize: "11px", padding: "2px 6px", border: "1px solid var(--border-color)", borderRadius: "4px" }}
+                      value={discounts[item.id] || ""}
+                      onChange={(e) => updateDiscount(item.id, e.target.value)}
+                      placeholder="0.00"
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {!cart.length && <EmptyState icon={ShoppingCart} title="Cart is empty" detail="Select a product or scan its barcode to start." compact />}
+        </div>
+
+        {/* Split Payments Form */}
+        <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "12px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+            <span style={{ fontSize: "13px", fontWeight: "bold" }}>Payment splits</span>
+            <button type="button" className="secondary-button" onClick={addPaymentAllocation} disabled={!cart.length} style={{ height: "26px", padding: "0 8px", fontSize: "11px" }}>
+              + Split Method
+            </button>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {paymentAllocations.map((alloc, idx) => {
+              const selectedAllocMethod = data?.paymentMethods.find((item) => item.id === alloc.paymentMethodId);
+              return (
+                <div key={idx} style={{ display: "flex", flexDirection: "column", padding: "10px", background: "var(--field-bg)", borderRadius: "6px", border: "1px solid var(--border-color)" }}>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    <select
+                      className="field-input"
+                      style={{ flex: 1, height: "30px", fontSize: "12px" }}
+                      value={alloc.paymentMethodId}
+                      onChange={(e) => updateAllocationField(idx, "paymentMethodId", e.target.value)}
+                    >
+                      {data?.paymentMethods.map((method) => (
+                        <option key={method.id} value={method.id}>{method.name}</option>
+                      ))}
+                    </select>
+
+                    <input
+                      className="field-input"
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      style={{ width: "90px", height: "30px", fontSize: "12px" }}
+                      value={alloc.amount}
+                      onChange={(e) => updateAllocationField(idx, "amount", e.target.value)}
+                      required
+                    />
+
+                    {paymentAllocations.length > 1 && (
+                      <button type="button" className="danger-button-subtle" onClick={() => removePaymentAllocation(idx)} style={{ padding: "6px", margin: 0 }}>
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+
+                  {selectedAllocMethod?.type === "WALLET" && (
+                    <div style={{ marginTop: "6px" }}>
+                      <select
+                        className="field-input"
+                        style={{ height: "30px", fontSize: "12px" }}
+                        value={agentId}
+                        onChange={(e) => setAgentId(e.target.value)}
+                        required
+                      >
+                        <option value="">Select agent</option>
+                        {data?.agents.map((agent) => (
+                          <option key={agent.id} value={agent.id}>
+                            {agent.name} · {formatNaira(Number(agent.wallet?.balance ?? 0))}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {selectedAllocMethod?.requiresReference && (
+                    <div style={{ marginTop: "6px" }}>
+                      <input
+                        className="field-input"
+                        style={{ height: "30px", fontSize: "12px" }}
+                        value={alloc.reference}
+                        onChange={(e) => updateAllocationField(idx, "reference", e.target.value)}
+                        placeholder="Payment reference"
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {selectedAllocMethod?.requiresTerminal && (
+                    <div style={{ marginTop: "6px" }}>
+                      <input
+                        className="field-input"
+                        style={{ height: "30px", fontSize: "12px" }}
+                        value={alloc.terminalId}
+                        onChange={(e) => updateAllocationField(idx, "terminalId", e.target.value)}
+                        placeholder="Terminal ID"
+                        required
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="cart-totals" style={{ marginTop: "16px" }}>
+          <div>
+            <span>Subtotal</span>
+            <strong>{formatNaira(subtotal)}</strong>
+          </div>
+          {discountSum > 0 && (
+            <div style={{ color: "#dc2626" }}>
+              <span>Discounts applied</span>
+              <strong>-{formatNaira(discountSum)}</strong>
+            </div>
+          )}
+          <div className="grand-total">
+            <span>Amount due</span>
+            <strong>{formatNaira(dueTotal)}</strong>
+          </div>
+        </div>
+
+        {checkoutError && (
+          <div className="form-note"><AlertTriangle size={15} /><span>{checkoutError}</span></div>
+        )}
+
+        <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+          <button
+            type="button"
+            className="secondary-button"
+            style={{ flex: 1, height: "40px" }}
+            disabled={cart.length === 0}
+            onClick={holdCart}
+          >
+            Hold Cart
+          </button>
+
+          <button
+            type="button"
+            className="checkout-button"
+            style={{ flex: 2, height: "40px", margin: 0 }}
+            disabled={
+              busy ||
+              !cart.length ||
+              !selectedCustomerId ||
+              !selectedBusinessUnitId ||
+              !activeSession
+            }
+            onClick={checkout}
+          >
+            <span><LockKeyhole size={16} />{busy ? "Posting…" : "Post sale"}</span>
+            <strong>{formatNaira(dueTotal)}</strong>
+          </button>
+        </div>
+
+        <div className="cart-shortcuts">
+          <span><ShieldCheck size={13} /> Atomic stock, payment and finance posting</span>
+        </div>
+      </aside>
+
+      {/* MODALS */}
+      {showOpenSession && (
+        <POSSessionOpenModal
+          stationId={station.id}
+          onClose={() => setShowOpenSession(false)}
+          onComplete={() => {
+            setShowOpenSession(false);
+            sessionApi.reload();
+          }}
+        />
+      )}
+
+      {showCloseSession && (
+        <POSSessionCloseModal
+          session={activeSession}
+          onClose={() => setShowCloseSession(false)}
+          onComplete={() => {
+            setShowCloseSession(false);
+            sessionApi.reload();
+          }}
+        />
+      )}
+
+      {completedSaleId && (
+        <POSReceiptModal
+          saleId={completedSaleId}
+          onClose={() => setCompletedSaleId(null)}
+        />
+      )}
+    </div>
+  );
 }
 
 function SalesView({ station, allowedStations }: { station: string; allowedStations: AllowedStation[] }) {
