@@ -836,7 +836,7 @@ function ModuleView({
     case "reports":
       return <ReportsView period={period} onToast={onToast} />;
     case "access":
-      return <AccessView onToast={onToast} />;
+      return <AccessView onToast={onToast} onModal={onModal} allowedStations={allowedStations} />;
     case "audit":
       return <AuditView />;
     case "management":
@@ -2015,9 +2015,174 @@ function ReportsView({ period, onToast }: { period: string; onToast: (toast: Toa
   );
 }
 
-function AccessView({ onToast }: { onToast: (toast: Toast) => void }) {
+function UserEditModal({
+  user,
+  allowedStations,
+  onClose,
+  onComplete,
+}: {
+  user: UserRecord;
+  allowedStations: AllowedStation[];
+  onClose: () => void;
+  onComplete: (title: string, detail: string) => void;
+}) {
+  const detailApi = useApiData<any>(`/api/users/${user.id}`);
+  const setupApi = useApiData<UserSetup>("/api/users/setup");
+  
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [selectedStations, setSelectedStations] = useState<string[]>([]);
+  const [selectedBUs, setSelectedBUs] = useState<string[]>([]);
+  const [reason, setReason] = useState("");
+
+  const detail = detailApi.data;
+
+  useEffect(() => {
+    if (!detail) return;
+    setFirstName(detail.firstName ?? "");
+    setLastName(detail.lastName ?? "");
+    setEmail(detail.email ?? "");
+    setPhone(detail.phone ?? "");
+    setSelectedRoles(detail.roleAssignments.map((a: any) => a.role.id));
+    setSelectedStations(detail.stationScopes.map((s: any) => s.stationId));
+    setSelectedBUs(detail.businessUnitScopes.map((b: any) => b.businessUnitId));
+  }, [detail]);
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!detail) return;
+    if (selectedRoles.length === 0) {
+      setError("Please select at least one role.");
+      return;
+    }
+    setError(null); setBusy(true);
+    try {
+      await workflowPost(`/api/users/${user.id}`, {
+        version: detail.version,
+        firstName,
+        lastName,
+        email: email || null,
+        phone: phone || null,
+        roleIds: selectedRoles,
+        stationIds: selectedStations,
+        businessUnitIds: selectedBUs,
+        reason
+      }, "PATCH");
+      onComplete("User updated", `${detail.username} access permissions and scopes were updated.`);
+    } catch (e) { setError(e instanceof Error ? e.message : "Update failed."); }
+    finally { setBusy(false); }
+  };
+
+  if (detailApi.loading || setupApi.loading) return (
+    <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={onClose}>
+      <div className="workflow-dialog" style={{ maxWidth: "500px" }}>
+        <div className="workflow-header"><div><span>Access control</span><h2>Edit user access</h2></div><button onClick={onClose}><X size={19} /></button></div>
+        <div className="workflow-body"><EmptyState icon={RefreshCcw} title="Loading user settings" detail="Reading current grants from registry." compact /></div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="workflow-dialog" style={{ maxWidth: "600px" }}>
+        <div className="workflow-header">
+          <div>
+            <span>Access control</span>
+            <h2 id="workflow-title">Edit user access: {detail?.username}</h2>
+            <p>Modify roles, station isolation, and business unit scoping.</p>
+          </div>
+          <button onClick={onClose} aria-label="Close modal"><X size={19} /></button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="workflow-body">
+            <div className="form-grid">
+              <Field label="First name"><input className="field-input" value={firstName} onChange={e => setFirstName(e.target.value)} required /></Field>
+              <Field label="Last name"><input className="field-input" value={lastName} onChange={e => setLastName(e.target.value)} required /></Field>
+              <Field label="Email"><input className="field-input" type="email" value={email} onChange={e => setEmail(e.target.value)} /></Field>
+              <Field label="Phone"><input className="field-input" value={phone} onChange={e => setPhone(e.target.value)} /></Field>
+              
+              <Field label="Roles (multiple)" full>
+                <select
+                  className="field-input"
+                  multiple
+                  required
+                  value={selectedRoles}
+                  onChange={(e) => setSelectedRoles(Array.from(e.target.selectedOptions).map(o => o.value))}
+                  style={{ height: "120px" }}
+                >
+                  {(setupApi.data?.roles ?? []).map((r) => (
+                    <option key={r.id} value={r.id}>{r.name} · {r.scope.toLowerCase()}</option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Station scope (multiple)" full>
+                <select
+                  className="field-input"
+                  multiple
+                  value={selectedStations}
+                  onChange={(e) => setSelectedStations(Array.from(e.target.selectedOptions).map(o => o.value))}
+                  style={{ height: "120px" }}
+                >
+                  {allowedStations.map((s) => (
+                    <option key={s.id} value={s.id}>{s.code} · {s.name}</option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Business-unit scope (multiple)" full>
+                <select
+                  className="field-input"
+                  multiple
+                  value={selectedBUs}
+                  onChange={(e) => setSelectedBUs(Array.from(e.target.selectedOptions).map(o => o.value))}
+                  style={{ height: "100px" }}
+                >
+                  {(setupApi.data?.businessUnits ?? []).map((b) => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Reason for change" full>
+                <input
+                  className="field-input"
+                  value={reason}
+                  onChange={e => setReason(e.target.value)}
+                  required
+                  minLength={5}
+                  placeholder="e.g. Added Operations Manager role for Lagos scope"
+                />
+              </Field>
+            </div>
+            {error && <div className="form-note"><AlertTriangle size={16} /><span>{error}</span></div>}
+          </div>
+          <ModalFooter onClose={onClose} submitLabel={busy ? "Saving..." : "Save access details"} icon={ShieldCheck} disabled={busy} />
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function AccessView({
+  onToast,
+  onModal,
+  allowedStations,
+}: {
+  onToast: (toast: Toast) => void;
+  onModal?: (modal: ModalKind) => void;
+  allowedStations: AllowedStation[];
+}) {
   const [tab, setTab] = useState("Users");
   const [query, setQuery] = useState("");
+  const [editingUser, setEditingUser] = useState<UserRecord | null>(null);
+  
   const roleApi = useApiData<RoleRecord[]>("/api/roles"); const userApi = useApiData<UserRecord[]>("/api/users?pageSize=100"); const permissionApi = useApiData<PermissionRecord[]>("/api/permissions"); const sessionApi = useApiData<SessionRecord[]>("/api/sessions?pageSize=100");
   const roles = roleApi.data ?? [];
   const tones = ["navy", "blue", "teal", "gold", "slate", "red"];
@@ -2029,7 +2194,7 @@ function AccessView({ onToast }: { onToast: (toast: Toast) => void }) {
   const visibleRoles = roles.filter((role) => !q || `${role.name} ${role.code} ${role.scope}`.toLowerCase().includes(q));
   const permissions = (permissionApi.data ?? []).filter((item) => !q || `${item.key} ${item.module} ${item.action} ${item.description}`.toLowerCase().includes(q));
   const sessions = (sessionApi.data ?? []).filter((item) => !q || `${item.user.name ?? ""} ${item.user.username} ${item.user.email ?? ""} ${item.ipAddress ?? ""}`.toLowerCase().includes(q));
-  return <div className="content-stack"><section className="security-banner"><div><ShieldCheck size={22} /><div><strong>Server-enforced access control</strong><span>{roles.length} roles, {userApi.total} users and {permissionApi.total} granular permissions are configured.</span></div></div><button onClick={reload}><RefreshCcw size={14} /> Refresh access</button></section><Panel><TableToolbar tabs={["Users", "Roles", "Permissions", "Sessions"]} activeTab={tab} onTab={(value) => { setTab(value); setQuery(""); }} placeholder="Search users, roles, permissions or sessions" search={query} onSearch={setQuery} />{error ? <EmptyState icon={AlertTriangle} title="Access configuration could not be loaded" detail={error} /> : loading ? <EmptyState icon={RefreshCcw} title="Loading access configuration" detail="Retrieving users, grants and active sessions." compact /> : tab === "Roles" ? visibleRoles.length ? <div className="role-grid">{visibleRoles.map((role, index) => <article className="role-card" key={role.id}><div><span className={classNames("role-icon", tones[index % tones.length])}><KeyRound size={17} /></span><StatusPill value={role.scope} /></div><strong>{role.name}</strong><span>{role.code}</span><div className="role-meta"><span><Users size={14} />{role._count.users} users</span><span><Fingerprint size={14} />{role.permissions.length} permissions</span></div><button>Server enforced <ShieldCheck size={13} /></button></article>)}</div> : <EmptyState icon={KeyRound} title={q ? "No matching roles" : "No roles configured"} detail={q ? "Try a different role name or code." : "Create a role and assign only the permissions needed for the job."} /> : tab === "Permissions" ? <div className="table-wrap"><table className="data-table"><thead><tr><th>Permission</th><th>Module</th><th>Action</th><th>Description</th><th>Control</th></tr></thead><tbody>{permissions.map((item) => <tr key={item.id}><td><code>{item.key}</code></td><td>{item.module}</td><td>{item.action}</td><td>{item.description}</td><td><StatusPill value={item.elevated ? "Elevated" : "Standard"} /></td></tr>)}</tbody></table></div> : tab === "Sessions" ? <div className="table-wrap"><table className="data-table"><thead><tr><th>User</th><th>IP address</th><th>User agent</th><th>Last seen</th><th>Expires</th><th>Status</th><th /></tr></thead><tbody>{sessions.map((item) => { const active = !item.revokedAt && new Date(item.expires) >= new Date(); return <tr key={item.id}><td><div className="primary-cell"><strong>{item.user.name ?? item.user.username}</strong><span>{item.user.email ?? item.user.username}</span></div></td><td>{item.ipAddress ?? "Unknown"}</td><td>{item.userAgent?.slice(0, 60) ?? "Unknown"}</td><td>{new Date(item.lastSeenAt).toLocaleString("en-NG")}</td><td>{formatDate(item.expires)}</td><td><StatusPill value={item.revokedAt ? "Revoked" : new Date(item.expires) < new Date() ? "Expired" : "Active"} /></td><td>{active ? <button className="row-button" onClick={() => revokeSession(item)}>Revoke</button> : <span className="verified-cell"><ShieldCheck size={13} />Closed</span>}</td></tr>; })}</tbody></table></div> : users.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>User</th><th>Username</th><th>Roles</th><th>Station scopes</th><th>Last login</th><th>Status</th><th /></tr></thead><tbody>{users.map((item) => <tr key={item.id}><td><div className="agent-cell staff"><span>{`${item.firstName[0]}${item.lastName[0]}`}</span><div><strong>{item.name ?? `${item.firstName} ${item.lastName}`}</strong><small>{item.email ?? "No email"}</small></div></div></td><td><code>{item.username}</code></td><td>{item.roleAssignments.map((grant) => grant.role.name).join(", ") || "—"}</td><td>{item.stationScopes.length}</td><td>{item.lastLoginAt ? new Date(item.lastLoginAt).toLocaleString("en-NG") : "Never"}</td><td><StatusPill value={item.status.replaceAll("_", " ")} /></td><td><div className="row-actions">{item.status === "ACTIVE" ? <button className="row-button" onClick={() => userAction(item, "deactivate", "Deactivate user")}>Disable</button> : <button className="row-button" onClick={() => userAction(item, "activate", "Activate user")}>Activate</button>}<button className="icon-ghost" title="Reset password" onClick={() => userAction(item, "reset-password", "Password reset")}><KeyRound size={15} /></button><button className="icon-ghost" title="Revoke all sessions" onClick={() => userAction(item, "revoke-sessions", "Revoke sessions")}><LogOut size={15} /></button></div></td></tr>)}</tbody></table></div> : <EmptyState icon={Users} title={q ? "No matching users" : "No users"} detail={q ? "Try a different name, username or email." : "Invite a user to grant scoped access."} />}<div className="permission-note"><LockKeyhole size={17} /><div><strong>Server-enforced permissions</strong><span>Menu visibility, API authorization and database query scope use the same permission policy.</span></div></div></Panel></div>;
+  return <div className="content-stack"><section className="security-banner"><div><ShieldCheck size={22} /><div><strong>Server-enforced access control</strong><span>{roles.length} roles, {userApi.total} users and {permissionApi.total} granular permissions are configured.</span></div></div><button onClick={reload}><RefreshCcw size={14} /> Refresh access</button></section><Panel><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap", marginBottom: "8px" }}><TableToolbar tabs={["Users", "Roles", "Permissions", "Sessions"]} activeTab={tab} onTab={(value) => { setTab(value); setQuery(""); }} placeholder="Search users, roles, permissions or sessions" search={query} onSearch={setQuery} />{tab === "Users" && onModal && <button className="primary-button" onClick={() => onModal("invite")} style={{ height: "36px", padding: "0 16px" }}><UserPlus size={15} /><span>Invite user</span></button>}</div>{error ? <EmptyState icon={AlertTriangle} title="Access configuration could not be loaded" detail={error} /> : loading ? <EmptyState icon={RefreshCcw} title="Loading access configuration" detail="Retrieving users, grants and active sessions." compact /> : tab === "Roles" ? visibleRoles.length ? <div className="role-grid">{visibleRoles.map((role, index) => <article className="role-card" key={role.id}><div><span className={classNames("role-icon", tones[index % tones.length])}><KeyRound size={17} /></span><StatusPill value={role.scope} /></div><strong>{role.name}</strong><span>{role.code}</span><div className="role-meta"><span><Users size={14} />{role._count.users} users</span><span><Fingerprint size={14} />{role.permissions.length} permissions</span></div><button>Server enforced <ShieldCheck size={13} /></button></article>)}</div> : <EmptyState icon={KeyRound} title={q ? "No matching roles" : "No roles configured"} detail={q ? "Try a different role name or code." : "Create a role and assign only the permissions needed for the job."} /> : tab === "Permissions" ? <div className="table-wrap"><table className="data-table"><thead><tr><th>Permission</th><th>Module</th><th>Action</th><th>Description</th><th>Control</th></tr></thead><tbody>{permissions.map((item) => <tr key={item.id}><td><code>{item.key}</code></td><td>{item.module}</td><td>{item.action}</td><td>{item.description}</td><td><StatusPill value={item.elevated ? "Elevated" : "Standard"} /></td></tr>)}</tbody></table></div> : tab === "Sessions" ? <div className="table-wrap"><table className="data-table"><thead><tr><th>User</th><th>IP address</th><th>User agent</th><th>Last seen</th><th>Expires</th><th>Status</th><th /></tr></thead><tbody>{sessions.map((item) => { const active = !item.revokedAt && new Date(item.expires) >= new Date(); return <tr key={item.id}><td><div className="primary-cell"><strong>{item.user.name ?? item.user.username}</strong><span>{item.user.email ?? item.user.username}</span></div></td><td>{item.ipAddress ?? "Unknown"}</td><td>{item.userAgent?.slice(0, 60) ?? "Unknown"}</td><td>{new Date(item.lastSeenAt).toLocaleString("en-NG")}</td><td>{formatDate(item.expires)}</td><td><StatusPill value={item.revokedAt ? "Revoked" : new Date(item.expires) < new Date() ? "Expired" : "Active"} /></td><td>{active ? <button className="row-button" onClick={() => revokeSession(item)}>Revoke</button> : <span className="verified-cell"><ShieldCheck size={13} />Closed</span>}</td></tr>; })}</tbody></table></div> : users.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>User</th><th>Username</th><th>Roles</th><th>Station scopes</th><th>Last login</th><th>Status</th><th /></tr></thead><tbody>{users.map((item) => <tr key={item.id}><td><div className="agent-cell staff"><span>{`${item.firstName[0]}${item.lastName[0]}`}</span><div><strong>{item.name ?? `${item.firstName} ${item.lastName}`}</strong><small>{item.email ?? "No email"}</small></div></div></td><td><code>{item.username}</code></td><td>{item.roleAssignments.map((grant) => grant.role.name).join(", ") || "—"}</td><td>{item.stationScopes.length}</td><td>{item.lastLoginAt ? new Date(item.lastLoginAt).toLocaleString("en-NG") : "Never"}</td><td><StatusPill value={item.status.replaceAll("_", " ")} /></td><td><div className="row-actions">{item.status === "ACTIVE" ? <button className="row-button" onClick={() => userAction(item, "deactivate", "Deactivate user")}>Disable</button> : <button className="row-button" onClick={() => userAction(item, "activate", "Activate user")}>Activate</button>}<button className="icon-ghost" title="Edit user access" onClick={() => setEditingUser(item)}><Settings2 size={15} /></button><button className="icon-ghost" title="Reset password" onClick={() => userAction(item, "reset-password", "Password reset")}><KeyRound size={15} /></button><button className="icon-ghost" title="Revoke all sessions" onClick={() => userAction(item, "revoke-sessions", "Revoke sessions")}><LogOut size={15} /></button></div></td></tr>)}</tbody></table></div> : <EmptyState icon={Users} title={q ? "No matching users" : "No users"} detail={q ? "Try a different name, username or email." : "Invite a user to grant scoped access."} />}{editingUser && <UserEditModal user={editingUser} allowedStations={allowedStations} onClose={() => setEditingUser(null)} onComplete={(title, detail) => { setEditingUser(null); userApi.reload(); onToast({ title, detail }); }} />}<div className="permission-note"><LockKeyhole size={17} /><div><strong>Server-enforced permissions</strong><span>Menu visibility, API authorization and database query scope use the same permission policy.</span></div></div></Panel></div>;
 }
 
 function AuditDetailPanel({ id, onClose }: { id: string; onClose: () => void }) {
