@@ -2127,19 +2127,9 @@ function StaffDetailModal({
               padding: 15px 10px 5px;
               box-sizing: border-box;
             }
-            .logo-box {
-              background: white;
-              border-radius: 8px;
-              padding: 6px 12px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              max-width: 90%;
-              box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-            }
             .logo-img {
-              max-height: 45px;
-              max-width: 100%;
+              max-height: 60px;
+              max-width: 90%;
               object-fit: contain;
             }
             .photo-border {
@@ -2307,9 +2297,7 @@ function StaffDetailModal({
             <!-- FRONT -->
             <div class="id-card front">
               <div class="logo-container">
-                <div class="logo-box">
-                  <img class="logo-img" src="${logoUrl}" alt="AAU Chamo Logo" />
-                </div>
+                <img class="logo-img" src="${logoUrl}" alt="AAU Chamo Logo" />
               </div>
               
               <div class="photo-border">
@@ -2386,7 +2374,7 @@ function StaffDetailModal({
       month: "long",
       day: "numeric",
     });
-    const logoUrl = new URL("/aauchamo-logo.png", window.location.origin).toString();
+    const logoUrl = new URL("/logo.png", window.location.origin).toString();
     const salaryFormatted = salary
       ? new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(Number(salary))
       : "₦[Negotiated]";
@@ -2737,7 +2725,7 @@ function StaffDetailModal({
                 className="danger-ghost"
                 onClick={handleDelete}
                 disabled={deleteBusy}
-                style={{ display: "flex", alignItems: "center", gap: "6px" }}
+                style={{ display: "flex", alignItems: "center", gap: "6px", paddingLeft: "16px", paddingRight: "16px" }}
               >
                 <Trash2 size={15} />
                 <span>{deleteBusy ? "Deleting..." : "Delete"}</span>
@@ -2786,8 +2774,11 @@ function StaffView({
 }) {
   const [tab, setTab] = useState("All staff");
   const [editingStaff, setEditingStaff] = useState<StaffRecord | null>(null);
+  const [stationId, setStationId] = useState("");
   
-  const { data, total, loading, error, reload } = useApiData<StaffRecord[]>("/api/staff?pageSize=100");
+  const { data, total, loading, error, reload } = useApiData<StaffRecord[]>(
+    `/api/staff?pageSize=100${stationId ? `&stationId=${stationId}` : ""}`
+  );
   const staffRecords = data ?? [];
   const visibleStaff = staffRecords.filter((person) => {
     if (tab === "Active") return person.status === "ACTIVE";
@@ -2810,7 +2801,23 @@ function StaffView({
       </section>
       <Panel>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap", marginBottom: "8px" }}>
-          <TableToolbar tabs={["All staff", "Active", "On leave", "Inactive"]} activeTab={tab} onTab={(value) => { setTab(value); table.resetPage(); }} placeholder="Search staff name, ID, position or station" search={table.search} onSearch={table.setSearch} />
+          <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap", flex: 1 }}>
+            <TableToolbar tabs={["All staff", "Active", "On leave", "Inactive"]} activeTab={tab} onTab={(value) => { setTab(value); table.resetPage(); }} placeholder="Search staff name, ID, position or station" search={table.search} onSearch={table.setSearch} />
+            <select
+              className="field-input"
+              style={{ width: "180px", height: "38px", padding: "0 8px" }}
+              value={stationId}
+              onChange={(e) => {
+                setStationId(e.target.value);
+                table.resetPage();
+              }}
+            >
+              <option value="">All Stations</option>
+              {allowedStations.map((st) => (
+                <option key={st.id} value={st.id}>{st.name}</option>
+              ))}
+            </select>
+          </div>
           {onModal && (
             <button className="primary-button" onClick={() => onModal("staff")} style={{ height: "36px", padding: "0 16px" }}>
               <UserPlus size={15} /><span>Add staff</span>
@@ -2904,8 +2911,11 @@ function AttendanceView({
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [gpsError, setGpsError] = useState<string | null>(null);
   const [time, setTime] = useState("");
+  const [filterStationId, setFilterStationId] = useState("");
 
-  const logsApi = useApiData<any>("/api/staff/attendance?pageSize=100");
+  const logsApi = useApiData<any>(
+    `/api/staff/attendance?pageSize=100${filterStationId ? `&stationId=${filterStationId}` : ""}`
+  );
   
   // Update time clock every second
   useEffect(() => {
@@ -2999,17 +3009,34 @@ function AttendanceView({
   return (
     <div className="content-stack">
       <Panel>
-        <TableToolbar
-          tabs={["Clock portal", "Attendance logs"]}
-          activeTab={tab}
-          onTab={(value) => {
-            setTab(value);
-            if (value === "Attendance logs") logsApi.reload();
-          }}
-          placeholder="Search logs..."
-          search=""
-          onSearch={() => {}}
-        />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap", width: "100%", marginBottom: "12px" }}>
+          <TableToolbar
+            tabs={["Clock portal", "Attendance logs"]}
+            activeTab={tab}
+            onTab={(value) => {
+              setTab(value);
+              if (value === "Attendance logs") logsApi.reload();
+            }}
+            placeholder="Search logs..."
+            search=""
+            onSearch={() => {}}
+          />
+          {tab === "Attendance logs" && (
+            <select
+              className="field-input"
+              style={{ width: "180px", height: "38px", padding: "0 8px" }}
+              value={filterStationId}
+              onChange={(e) => {
+                setFilterStationId(e.target.value);
+              }}
+            >
+              <option value="">All Stations</option>
+              {allowedStations.map((st) => (
+                <option key={st.id} value={st.id}>{st.name}</option>
+              ))}
+            </select>
+          )}
+        </div>
 
         {tab === "Clock portal" ? (
           <div style={{ maxWidth: "500px", margin: "40px auto", padding: "20px" }}>
