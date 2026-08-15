@@ -4,8 +4,10 @@ import { Prisma } from "@/lib/generated/prisma/client";
 import type { AccessContext } from "@/lib/server/access";
 import { AppError } from "@/lib/server/api";
 import { writeAudit } from "@/lib/server/audit";
+import { db } from "@/lib/server/db";
 import { claimIdempotency, completeIdempotency, hashRequest } from "@/lib/server/idempotency";
 import { applyStockMovement, quantity } from "@/lib/server/inventory";
+import { dispatchNotification } from "@/lib/server/notifications";
 import { enqueueOutbox } from "@/lib/server/outbox";
 import { allocateSequence } from "@/lib/server/sequence";
 
@@ -85,11 +87,26 @@ export async function postSale(input: {
     const payment = await tx.payment.create({ data: { companyId: access.companyId, stationId: payload.stationId, customerId: payload.customerId, paymentMethodId: method.id, paymentNumber, amount: paymentInput.amount, reference: paymentInput.reference, terminalId: paymentInput.terminalId, receivedById: access.userId, allocations: { create: { saleId: sale.id, amount: paymentInput.amount } } } });
     if (method.type === "WALLET") {
       if (!payload.agentId) throw new AppError("AGENT_REQUIRED", "An agent is required for wallet payment.", 422);
-      const wallet = await tx.walletAccount.findFirst({ where: { agent: { id: payload.agentId, companyId: access.companyId, status: "ACTIVE" } } });
+      const wallet = await tx.walletAccount.findFirst({ where: { agent: { id: payload.agentId, companyId: access.companyId, status: "ACTIVE" } }, include: { agent: true } });
       const amount = new Prisma.Decimal(paymentInput.amount); if (!wallet || wallet.balance.lt(amount)) throw new AppError("INSUFFICIENT_WALLET_BALANCE", "Agent wallet balance is insufficient.", 409);
-      const updated = await tx.walletAccount.updateMany({ where: { id: wallet.id, version: wallet.version }, data: { balance: wallet.balance.minus(amount), version: { increment: 1 } } }); if (updated.count !== 1) throw new AppError("WALLET_CONFLICT", "Wallet changed while posting. Retry safely.", 409);
+      const nextBalance = wallet.balance.minus(amount);
+      const updated = await tx.walletAccount.updateMany({ where: { id: wallet.id, version: wallet.version }, data: { balance: nextBalance, version: { increment: 1 } } }); if (updated.count !== 1) throw new AppError("WALLET_CONFLICT", "Wallet changed while posting. Retry safely.", 409);
       const entryNumber = await allocateSequence(tx, { companyId: access.companyId, stationId: payload.stationId, documentType: "WALLET_ENTRY", prefix: "WLT", includeDate: true, padding: 6 });
-      await tx.walletEntry.create({ data: { companyId: access.companyId, stationId: payload.stationId, walletAccountId: wallet.id, paymentMethodId: method.id, entryNumber, type: "SALE_DEBIT", amount: amount.negated(), balanceAfter: wallet.balance.minus(amount), referenceType: "Sale", referenceId: sale.id, postedById: access.userId } });
+      await tx.walletEntry.create({ data: { companyId: access.companyId, stationId: payload.stationId, walletAccountId: wallet.id, paymentMethodId: method.id, entryNumber, type: "SALE_DEBIT", amount: amount.negated(), balanceAfter: nextBalance, referenceType: "Sale", referenceId: sale.id, postedById: access.userId } });
+
+      if (wallet.agent && wallet.agent.creditLimit && nextBalance.lt(wallet.agent.creditLimit)) {
+        await dispatchNotification(tx, {
+          companyId: access.companyId,
+          stationId: payload.stationId,
+          targetRoles: ["SUPER_ADMIN", "ADMIN", "FINANCE", "STATION_MANAGER"],
+          type: "WALLET_ALERT",
+          severity: "WARNING",
+          title: "Low Agent Wallet Balance",
+          message: `Agent ${wallet.agent.name} has fallen below their credit limit. Current balance: ${nextBalance.toString()}`,
+          entityType: "Agent",
+          entityId: wallet.agent.id,
+        });
+      }
     }
     const account = await tx.financialAccount.findFirst({ where: { companyId: access.companyId, paymentMethodId: method.id, isActive: true } });
     if (!account) throw new AppError("FINANCE_NOT_CONFIGURED", `No financial account is configured for ${method.name}.`, 500);
@@ -99,6 +116,20 @@ export async function postSale(input: {
   if (outstanding.isPositive()) await tx.outstandingPayment.create({ data: { saleId: sale.id, original: outstanding, outstanding } });
   await enqueueOutbox(tx, { companyId: access.companyId, aggregateType: "Sale", aggregateId: sale.id, eventType: "sale.posted", payload: { saleNumber, stationId: payload.stationId, customerId: payload.customerId, total: total.toString() } });
   await writeAudit(tx, { companyId: access.companyId, actorId: access.userId, stationId: payload.stationId, businessUnitId: payload.businessUnitId, action: "sale.posted", entityType: "Sale", entityId: sale.id, requestId, after: sale });
+  
+  if (total.gte(500_000)) {
+    await dispatchNotification(tx, {
+      companyId: access.companyId,
+      stationId: payload.stationId,
+      targetRoles: ["SUPER_ADMIN", "ADMIN", "FINANCE", "STATION_MANAGER"],
+      type: "FINANCE_ALERT",
+      title: "Large Sale Processed",
+      message: `A large sale of ${total.toString()} was posted.`,
+      entityType: "Sale",
+      entityId: sale.id,
+    });
+  }
+
   const result = { id: sale.id, saleNumber, total: total.toString(), paid: paidTotal.toString(), outstanding: outstanding.toString(), status: sale.status };
   await completeIdempotency(tx, claim.id, 201, result);
   return { replayed: false, result };

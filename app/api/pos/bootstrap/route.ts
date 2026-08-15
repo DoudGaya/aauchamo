@@ -13,6 +13,6 @@ export async function GET(request: Request) {
       db.stationBusinessUnit.findMany({ where: { stationId, businessUnit: { isActive: true } }, include: { businessUnit: true }, orderBy: { businessUnit: { name: "asc" } } }),
       db.agent.findMany({ where: { companyId: access.companyId, status: "ACTIVE", ...(access.companyWide ? {} : { homeStationId: { in: [...access.stationIds] } }) }, include: { wallet: true }, orderBy: { name: "asc" } }),
     ]);
-    return apiSuccess({ products: products.map((product) => ({ ...product, purchasePrice: undefined, available: product.balances.reduce((sum, row) => sum + row.quantity.toNumber(), 0) })), customers, paymentMethods, businessUnits: businessUnits.map((link) => link.businessUnit), agents }, requestId);
+    return apiSuccess({ permissions: [...access.permissions], products: products.map((product) => ({ ...product, purchasePrice: undefined, available: product.balances.reduce((sum, row) => sum + row.quantity.toNumber(), 0) })), customers, paymentMethods, businessUnits: businessUnits.map((link) => link.businessUnit), agents }, requestId);
   } catch (error) { return apiFailure(error, requestId); }
 }

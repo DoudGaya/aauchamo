@@ -15,7 +15,8 @@ export async function GET(request: Request) {
   const requestId = requestIdFrom(request);
   try {
     const access = requirePermission(await requireAccess(), "sales.view"); const url = new URL(request.url); const { page, pageSize, skip, take } = parsePagination(url.searchParams); const stationId = url.searchParams.get("stationId") ?? undefined; if (stationId) requireStation(access, stationId);
-    const where = { companyId: access.companyId, ...(stationId ? { stationId } : access.companyWide ? {} : { stationId: { in: [...access.stationIds] } }) };
+    const businessUnitId = url.searchParams.get("businessUnitId") ?? undefined;
+    const where = { companyId: access.companyId, ...(stationId ? { stationId } : access.companyWide ? {} : { stationId: { in: [...access.stationIds] } }), ...(businessUnitId ? { businessUnitId } : {}) };
     const [items, total, totals] = await Promise.all([
       db.sale.findMany({ where, include: { customer: { select: { id: true, customerNumber: true, displayName: true } }, station: { select: { id: true, code: true, name: true } }, businessUnit: { select: { id: true, code: true, name: true } }, lines: { select: { id: true, productCode: true, productName: true, quantity: true, unitPrice: true, lineTotal: true } }, allocations: { include: { payment: { include: { paymentMethod: true } } } } }, orderBy: { postedAt: "desc" }, skip, take }),
       db.sale.count({ where }), db.sale.aggregate({ where: { ...where, status: { in: ["POSTED", "PARTIALLY_PAID", "PAID", "PARTIALLY_REFUNDED"] } }, _sum: { total: true, paidTotal: true, outstandingTotal: true } }),

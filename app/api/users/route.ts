@@ -6,6 +6,8 @@ import { requireAccess, requirePermission, requireStation } from "@/lib/server/a
 import { AppError, apiFailure, apiSuccess, parseJson, parsePagination, requestIdFrom } from "@/lib/server/api";
 import { writeAudit } from "@/lib/server/audit";
 import { db } from "@/lib/server/db";
+import { dispatchNotification } from "@/lib/server/notifications";
+import { allocateSequence } from "@/lib/server/sequence";
 import { getRuntimeEnv } from "@/lib/server/env";
 import { hashPassword } from "@/lib/server/password";
 import { addMinutes } from "@/lib/server/time";
@@ -188,6 +190,17 @@ export async function POST(request: Request) {
           },
         });
       }
+
+      await dispatchNotification(tx, {
+        companyId: access.companyId,
+        targetRoles: ["SUPER_ADMIN", "ADMIN"],
+        type: "SECURITY",
+        title: "New User Registered",
+        message: `User ${user.name} was registered.`,
+        href: `/admin/users`,
+        entityType: "User",
+        entityId: user.id,
+      });
 
       await writeAudit(tx, {
         companyId: access.companyId,

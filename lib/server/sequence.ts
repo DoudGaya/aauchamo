@@ -19,7 +19,16 @@ type AllocateSequenceInput = {
 
 export async function allocateSequence(tx: TransactionClient, input: AllocateSequenceInput) {
   const period = input.includeDate === false ? "" : dateKey(input.date, input.timeZone);
-  const scopeKey = [input.stationId ?? "ALL", input.businessUnitId ?? "ALL"].join(":");
+  // Document numbers (saleNumber, awbNumber, entryNumber, ...) are unique per
+  // company: every numbered model is constrained by @@unique([companyId, <number>]).
+  // The emitted number is `PREFIX-DATE-NUMERIC` with no station/business-unit
+  // segment, so the counter MUST be company-wide per (documentType, date).
+  // Scoping the counter per station/business unit made each scope restart at 1,
+  // producing duplicate `…-000001` numbers across stations on the same day and
+  // failing the unique constraint for the second station to post. Company-wide
+  // numbering keeps a single monotonic daily series that stays globally unique
+  // and matches the intended format (e.g. SAL-260802-1847).
+  const scopeKey = "GLOBAL";
   const padding = input.padding ?? 6;
 
   const sequence = await tx.sequence.upsert({
@@ -33,8 +42,6 @@ export async function allocateSequence(tx: TransactionClient, input: AllocateSeq
     },
     create: {
       companyId: input.companyId,
-      stationId: input.stationId,
-      businessUnitId: input.businessUnitId,
       scopeKey,
       documentType: input.documentType,
       dateKey: period,

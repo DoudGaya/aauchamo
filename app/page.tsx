@@ -24,6 +24,11 @@ export default async function Home() {
     orderBy: { name: "asc" },
   });
 
+  const company = await db.company.findUniqueOrThrow({
+    where: { id: access.companyId },
+    select: { logoObjectKey: true, logoDarkObjectKey: true }
+  });
+
   return (
     <ERPWorkspace
       identity={{
@@ -32,6 +37,10 @@ export default async function Home() {
         role: access.roleNames.join(" · ") || "Authorized user",
         permissions: [...access.permissions],
         companyWide: access.companyWide,
+      }}
+      brand={{
+        logoUrl: company.logoObjectKey,
+        logoDarkUrl: company.logoDarkObjectKey
       }}
       allowedStations={allowedStations}
     />

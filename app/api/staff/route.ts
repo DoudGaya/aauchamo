@@ -33,6 +33,7 @@ const createStaffSchema = z.object({
   homeStationId: z.string().cuid(),
   businessUnitId: z.string().cuid().optional(),
   userId: z.string().cuid().optional(),
+  passportPhoto: z.string().optional(),
   nextOfKin: z.array(nextOfKinSchema).max(5).default([]),
 });
 
@@ -140,6 +141,7 @@ export async function POST(request: Request) {
           departmentId: input.departmentId,
           positionId: input.positionId,
           homeStationId: input.homeStationId,
+          passportObjectKey: input.passportPhoto,
           createdById: access.userId,
           updatedById: access.userId,
           nextOfKin: {
@@ -177,7 +179,7 @@ export async function POST(request: Request) {
         after: { ...created, salary: "[REDACTED]", address: "[REDACTED]", nationalIdCiphertext: "[REDACTED]" },
       });
       return created;
-    });
+    }, { maxWait: 10000, timeout: 20000 });
     return apiSuccess({ id: staff.id, staffNumber: staff.staffNumber, name: `${staff.firstName} ${staff.lastName}` }, requestId, { created: true });
   } catch (error) {
     return apiFailure(error, requestId);

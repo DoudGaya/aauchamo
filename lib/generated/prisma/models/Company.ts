@@ -45,6 +45,7 @@ export type CompanyMinAggregateOutputType = {
   phone: string | null
   address: string | null
   logoObjectKey: string | null
+  logoDarkObjectKey: string | null
   timezone: string | null
   currencyCode: string | null
   locale: string | null
@@ -66,6 +67,7 @@ export type CompanyMaxAggregateOutputType = {
   phone: string | null
   address: string | null
   logoObjectKey: string | null
+  logoDarkObjectKey: string | null
   timezone: string | null
   currencyCode: string | null
   locale: string | null
@@ -87,6 +89,7 @@ export type CompanyCountAggregateOutputType = {
   phone: number
   address: number
   logoObjectKey: number
+  logoDarkObjectKey: number
   timezone: number
   currencyCode: number
   locale: number
@@ -120,6 +123,7 @@ export type CompanyMinAggregateInputType = {
   phone?: true
   address?: true
   logoObjectKey?: true
+  logoDarkObjectKey?: true
   timezone?: true
   currencyCode?: true
   locale?: true
@@ -141,6 +145,7 @@ export type CompanyMaxAggregateInputType = {
   phone?: true
   address?: true
   logoObjectKey?: true
+  logoDarkObjectKey?: true
   timezone?: true
   currencyCode?: true
   locale?: true
@@ -162,6 +167,7 @@ export type CompanyCountAggregateInputType = {
   phone?: true
   address?: true
   logoObjectKey?: true
+  logoDarkObjectKey?: true
   timezone?: true
   currencyCode?: true
   locale?: true
@@ -270,6 +276,7 @@ export type CompanyGroupByOutputType = {
   phone: string | null
   address: string | null
   logoObjectKey: string | null
+  logoDarkObjectKey: string | null
   timezone: string
   currencyCode: string
   locale: string
@@ -314,6 +321,7 @@ export type CompanyWhereInput = {
   phone?: Prisma.StringNullableFilter<"Company"> | string | null
   address?: Prisma.StringNullableFilter<"Company"> | string | null
   logoObjectKey?: Prisma.StringNullableFilter<"Company"> | string | null
+  logoDarkObjectKey?: Prisma.StringNullableFilter<"Company"> | string | null
   timezone?: Prisma.StringFilter<"Company"> | string
   currencyCode?: Prisma.StringFilter<"Company"> | string
   locale?: Prisma.StringFilter<"Company"> | string
@@ -375,6 +383,7 @@ export type CompanyOrderByWithRelationInput = {
   phone?: Prisma.SortOrderInput | Prisma.SortOrder
   address?: Prisma.SortOrderInput | Prisma.SortOrder
   logoObjectKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  logoDarkObjectKey?: Prisma.SortOrderInput | Prisma.SortOrder
   timezone?: Prisma.SortOrder
   currencyCode?: Prisma.SortOrder
   locale?: Prisma.SortOrder
@@ -439,6 +448,7 @@ export type CompanyWhereUniqueInput = Prisma.AtLeast<{
   phone?: Prisma.StringNullableFilter<"Company"> | string | null
   address?: Prisma.StringNullableFilter<"Company"> | string | null
   logoObjectKey?: Prisma.StringNullableFilter<"Company"> | string | null
+  logoDarkObjectKey?: Prisma.StringNullableFilter<"Company"> | string | null
   timezone?: Prisma.StringFilter<"Company"> | string
   currencyCode?: Prisma.StringFilter<"Company"> | string
   locale?: Prisma.StringFilter<"Company"> | string
@@ -500,6 +510,7 @@ export type CompanyOrderByWithAggregationInput = {
   phone?: Prisma.SortOrderInput | Prisma.SortOrder
   address?: Prisma.SortOrderInput | Prisma.SortOrder
   logoObjectKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  logoDarkObjectKey?: Prisma.SortOrderInput | Prisma.SortOrder
   timezone?: Prisma.SortOrder
   currencyCode?: Prisma.SortOrder
   locale?: Prisma.SortOrder
@@ -529,6 +540,7 @@ export type CompanyScalarWhereWithAggregatesInput = {
   phone?: Prisma.StringNullableWithAggregatesFilter<"Company"> | string | null
   address?: Prisma.StringNullableWithAggregatesFilter<"Company"> | string | null
   logoObjectKey?: Prisma.StringNullableWithAggregatesFilter<"Company"> | string | null
+  logoDarkObjectKey?: Prisma.StringNullableWithAggregatesFilter<"Company"> | string | null
   timezone?: Prisma.StringWithAggregatesFilter<"Company"> | string
   currencyCode?: Prisma.StringWithAggregatesFilter<"Company"> | string
   locale?: Prisma.StringWithAggregatesFilter<"Company"> | string
@@ -550,6 +562,7 @@ export type CompanyCreateInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -611,6 +624,7 @@ export type CompanyUncheckedCreateInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -672,6 +686,7 @@ export type CompanyUpdateInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -733,6 +748,7 @@ export type CompanyUncheckedUpdateInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -794,6 +810,7 @@ export type CompanyCreateManyInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -815,6 +832,7 @@ export type CompanyUpdateManyMutationInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -836,6 +854,7 @@ export type CompanyUncheckedUpdateManyInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -857,6 +876,7 @@ export type CompanyCountOrderByAggregateInput = {
   phone?: Prisma.SortOrder
   address?: Prisma.SortOrder
   logoObjectKey?: Prisma.SortOrder
+  logoDarkObjectKey?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
   currencyCode?: Prisma.SortOrder
   locale?: Prisma.SortOrder
@@ -883,6 +903,7 @@ export type CompanyMaxOrderByAggregateInput = {
   phone?: Prisma.SortOrder
   address?: Prisma.SortOrder
   logoObjectKey?: Prisma.SortOrder
+  logoDarkObjectKey?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
   currencyCode?: Prisma.SortOrder
   locale?: Prisma.SortOrder
@@ -904,6 +925,7 @@ export type CompanyMinOrderByAggregateInput = {
   phone?: Prisma.SortOrder
   address?: Prisma.SortOrder
   logoObjectKey?: Prisma.SortOrder
+  logoDarkObjectKey?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
   currencyCode?: Prisma.SortOrder
   locale?: Prisma.SortOrder
@@ -1527,6 +1549,7 @@ export type CompanyCreateWithoutBusinessUnitsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -1587,6 +1610,7 @@ export type CompanyUncheckedCreateWithoutBusinessUnitsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -1663,6 +1687,7 @@ export type CompanyUpdateWithoutBusinessUnitsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1723,6 +1748,7 @@ export type CompanyUncheckedUpdateWithoutBusinessUnitsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1783,6 +1809,7 @@ export type CompanyCreateWithoutStationsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -1843,6 +1870,7 @@ export type CompanyUncheckedCreateWithoutStationsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -1919,6 +1947,7 @@ export type CompanyUpdateWithoutStationsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1979,6 +2008,7 @@ export type CompanyUncheckedUpdateWithoutStationsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2039,6 +2069,7 @@ export type CompanyCreateWithoutUsersInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -2099,6 +2130,7 @@ export type CompanyUncheckedCreateWithoutUsersInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -2175,6 +2207,7 @@ export type CompanyUpdateWithoutUsersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2235,6 +2268,7 @@ export type CompanyUncheckedUpdateWithoutUsersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2295,6 +2329,7 @@ export type CompanyCreateWithoutRolesInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -2355,6 +2390,7 @@ export type CompanyUncheckedCreateWithoutRolesInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -2431,6 +2467,7 @@ export type CompanyUpdateWithoutRolesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2491,6 +2528,7 @@ export type CompanyUncheckedUpdateWithoutRolesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2551,6 +2589,7 @@ export type CompanyCreateWithoutSequencesInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -2611,6 +2650,7 @@ export type CompanyUncheckedCreateWithoutSequencesInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -2687,6 +2727,7 @@ export type CompanyUpdateWithoutSequencesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2747,6 +2788,7 @@ export type CompanyUncheckedUpdateWithoutSequencesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2807,6 +2849,7 @@ export type CompanyCreateWithoutAuditEventsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -2867,6 +2910,7 @@ export type CompanyUncheckedCreateWithoutAuditEventsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -2943,6 +2987,7 @@ export type CompanyUpdateWithoutAuditEventsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3003,6 +3048,7 @@ export type CompanyUncheckedUpdateWithoutAuditEventsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3063,6 +3109,7 @@ export type CompanyCreateWithoutApprovalsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -3123,6 +3170,7 @@ export type CompanyUncheckedCreateWithoutApprovalsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -3199,6 +3247,7 @@ export type CompanyUpdateWithoutApprovalsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3259,6 +3308,7 @@ export type CompanyUncheckedUpdateWithoutApprovalsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3319,6 +3369,7 @@ export type CompanyCreateWithoutAttachmentsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -3379,6 +3430,7 @@ export type CompanyUncheckedCreateWithoutAttachmentsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -3455,6 +3507,7 @@ export type CompanyUpdateWithoutAttachmentsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3515,6 +3568,7 @@ export type CompanyUncheckedUpdateWithoutAttachmentsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3575,6 +3629,7 @@ export type CompanyCreateWithoutNotificationsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -3635,6 +3690,7 @@ export type CompanyUncheckedCreateWithoutNotificationsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -3711,6 +3767,7 @@ export type CompanyUpdateWithoutNotificationsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3771,6 +3828,7 @@ export type CompanyUncheckedUpdateWithoutNotificationsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -3831,6 +3889,7 @@ export type CompanyCreateWithoutSettingsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -3891,6 +3950,7 @@ export type CompanyUncheckedCreateWithoutSettingsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -3967,6 +4027,7 @@ export type CompanyUpdateWithoutSettingsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4027,6 +4088,7 @@ export type CompanyUncheckedUpdateWithoutSettingsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4087,6 +4149,7 @@ export type CompanyCreateWithoutOutboxEventsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -4147,6 +4210,7 @@ export type CompanyUncheckedCreateWithoutOutboxEventsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -4223,6 +4287,7 @@ export type CompanyUpdateWithoutOutboxEventsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4283,6 +4348,7 @@ export type CompanyUncheckedUpdateWithoutOutboxEventsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4343,6 +4409,7 @@ export type CompanyCreateWithoutIdempotencyKeysInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -4403,6 +4470,7 @@ export type CompanyUncheckedCreateWithoutIdempotencyKeysInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -4479,6 +4547,7 @@ export type CompanyUpdateWithoutIdempotencyKeysInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4539,6 +4608,7 @@ export type CompanyUncheckedUpdateWithoutIdempotencyKeysInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4599,6 +4669,7 @@ export type CompanyCreateWithoutPaymentMethodsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -4659,6 +4730,7 @@ export type CompanyUncheckedCreateWithoutPaymentMethodsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -4735,6 +4807,7 @@ export type CompanyUpdateWithoutPaymentMethodsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4795,6 +4868,7 @@ export type CompanyUncheckedUpdateWithoutPaymentMethodsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -4855,6 +4929,7 @@ export type CompanyCreateWithoutDepartmentsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -4915,6 +4990,7 @@ export type CompanyUncheckedCreateWithoutDepartmentsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -4991,6 +5067,7 @@ export type CompanyUpdateWithoutDepartmentsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -5051,6 +5128,7 @@ export type CompanyUncheckedUpdateWithoutDepartmentsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -5111,6 +5189,7 @@ export type CompanyCreateWithoutPositionsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -5171,6 +5250,7 @@ export type CompanyUncheckedCreateWithoutPositionsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -5247,6 +5327,7 @@ export type CompanyUpdateWithoutPositionsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -5307,6 +5388,7 @@ export type CompanyUncheckedUpdateWithoutPositionsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -5367,6 +5449,7 @@ export type CompanyCreateWithoutStaffInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -5427,6 +5510,7 @@ export type CompanyUncheckedCreateWithoutStaffInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -5503,6 +5587,7 @@ export type CompanyUpdateWithoutStaffInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -5563,6 +5648,7 @@ export type CompanyUncheckedUpdateWithoutStaffInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -5623,6 +5709,7 @@ export type CompanyCreateWithoutCustomersInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -5683,6 +5770,7 @@ export type CompanyUncheckedCreateWithoutCustomersInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -5759,6 +5847,7 @@ export type CompanyUpdateWithoutCustomersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -5819,6 +5908,7 @@ export type CompanyUncheckedUpdateWithoutCustomersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -5879,6 +5969,7 @@ export type CompanyCreateWithoutCustomerMergesInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -5939,6 +6030,7 @@ export type CompanyUncheckedCreateWithoutCustomerMergesInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -6015,6 +6107,7 @@ export type CompanyUpdateWithoutCustomerMergesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -6075,6 +6168,7 @@ export type CompanyUncheckedUpdateWithoutCustomerMergesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -6135,6 +6229,7 @@ export type CompanyCreateWithoutProductCategoriesInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -6195,6 +6290,7 @@ export type CompanyUncheckedCreateWithoutProductCategoriesInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -6271,6 +6367,7 @@ export type CompanyUpdateWithoutProductCategoriesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -6331,6 +6428,7 @@ export type CompanyUncheckedUpdateWithoutProductCategoriesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -6391,6 +6489,7 @@ export type CompanyCreateWithoutUnitsOfMeasureInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -6451,6 +6550,7 @@ export type CompanyUncheckedCreateWithoutUnitsOfMeasureInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -6527,6 +6627,7 @@ export type CompanyUpdateWithoutUnitsOfMeasureInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -6587,6 +6688,7 @@ export type CompanyUncheckedUpdateWithoutUnitsOfMeasureInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -6647,6 +6749,7 @@ export type CompanyCreateWithoutSuppliersInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -6707,6 +6810,7 @@ export type CompanyUncheckedCreateWithoutSuppliersInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -6783,6 +6887,7 @@ export type CompanyUpdateWithoutSuppliersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -6843,6 +6948,7 @@ export type CompanyUncheckedUpdateWithoutSuppliersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -6903,6 +7009,7 @@ export type CompanyCreateWithoutProductsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -6963,6 +7070,7 @@ export type CompanyUncheckedCreateWithoutProductsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -7039,6 +7147,7 @@ export type CompanyUpdateWithoutProductsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -7099,6 +7208,7 @@ export type CompanyUncheckedUpdateWithoutProductsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -7159,6 +7269,7 @@ export type CompanyCreateWithoutStockMovementsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -7219,6 +7330,7 @@ export type CompanyUncheckedCreateWithoutStockMovementsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -7295,6 +7407,7 @@ export type CompanyUpdateWithoutStockMovementsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -7355,6 +7468,7 @@ export type CompanyUncheckedUpdateWithoutStockMovementsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -7415,6 +7529,7 @@ export type CompanyCreateWithoutPurchaseOrdersInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -7475,6 +7590,7 @@ export type CompanyUncheckedCreateWithoutPurchaseOrdersInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -7551,6 +7667,7 @@ export type CompanyUpdateWithoutPurchaseOrdersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -7611,6 +7728,7 @@ export type CompanyUncheckedUpdateWithoutPurchaseOrdersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -7671,6 +7789,7 @@ export type CompanyCreateWithoutGoodsReceiptsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -7731,6 +7850,7 @@ export type CompanyUncheckedCreateWithoutGoodsReceiptsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -7807,6 +7927,7 @@ export type CompanyUpdateWithoutGoodsReceiptsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -7867,6 +7988,7 @@ export type CompanyUncheckedUpdateWithoutGoodsReceiptsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -7927,6 +8049,7 @@ export type CompanyCreateWithoutStockTransfersInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -7987,6 +8110,7 @@ export type CompanyUncheckedCreateWithoutStockTransfersInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -8063,6 +8187,7 @@ export type CompanyUpdateWithoutStockTransfersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -8123,6 +8248,7 @@ export type CompanyUncheckedUpdateWithoutStockTransfersInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -8183,6 +8309,7 @@ export type CompanyCreateWithoutInventoryAdjustmentsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -8243,6 +8370,7 @@ export type CompanyUncheckedCreateWithoutInventoryAdjustmentsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -8319,6 +8447,7 @@ export type CompanyUpdateWithoutInventoryAdjustmentsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -8379,6 +8508,7 @@ export type CompanyUncheckedUpdateWithoutInventoryAdjustmentsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -8439,6 +8569,7 @@ export type CompanyCreateWithoutSalesInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -8499,6 +8630,7 @@ export type CompanyUncheckedCreateWithoutSalesInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -8575,6 +8707,7 @@ export type CompanyUpdateWithoutSalesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -8635,6 +8768,7 @@ export type CompanyUncheckedUpdateWithoutSalesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -8695,6 +8829,7 @@ export type CompanyCreateWithoutPaymentsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -8755,6 +8890,7 @@ export type CompanyUncheckedCreateWithoutPaymentsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -8831,6 +8967,7 @@ export type CompanyUpdateWithoutPaymentsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -8891,6 +9028,7 @@ export type CompanyUncheckedUpdateWithoutPaymentsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -8951,6 +9089,7 @@ export type CompanyCreateWithoutRefundsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -9011,6 +9150,7 @@ export type CompanyUncheckedCreateWithoutRefundsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -9087,6 +9227,7 @@ export type CompanyUpdateWithoutRefundsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -9147,6 +9288,7 @@ export type CompanyUncheckedUpdateWithoutRefundsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -9207,6 +9349,7 @@ export type CompanyCreateWithoutCargoShipmentsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -9267,6 +9410,7 @@ export type CompanyUncheckedCreateWithoutCargoShipmentsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -9343,6 +9487,7 @@ export type CompanyUpdateWithoutCargoShipmentsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -9403,6 +9548,7 @@ export type CompanyUncheckedUpdateWithoutCargoShipmentsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -9463,6 +9609,7 @@ export type CompanyCreateWithoutAgentsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -9523,6 +9670,7 @@ export type CompanyUncheckedCreateWithoutAgentsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -9599,6 +9747,7 @@ export type CompanyUpdateWithoutAgentsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -9659,6 +9808,7 @@ export type CompanyUncheckedUpdateWithoutAgentsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -9719,6 +9869,7 @@ export type CompanyCreateWithoutWalletEntriesInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -9779,6 +9930,7 @@ export type CompanyUncheckedCreateWithoutWalletEntriesInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -9855,6 +10007,7 @@ export type CompanyUpdateWithoutWalletEntriesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -9915,6 +10068,7 @@ export type CompanyUncheckedUpdateWithoutWalletEntriesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -9975,6 +10129,7 @@ export type CompanyCreateWithoutFinancialAccountsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -10035,6 +10190,7 @@ export type CompanyUncheckedCreateWithoutFinancialAccountsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -10111,6 +10267,7 @@ export type CompanyUpdateWithoutFinancialAccountsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -10171,6 +10328,7 @@ export type CompanyUncheckedUpdateWithoutFinancialAccountsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -10231,6 +10389,7 @@ export type CompanyCreateWithoutFinancialCategoriesInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -10291,6 +10450,7 @@ export type CompanyUncheckedCreateWithoutFinancialCategoriesInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -10367,6 +10527,7 @@ export type CompanyUpdateWithoutFinancialCategoriesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -10427,6 +10588,7 @@ export type CompanyUncheckedUpdateWithoutFinancialCategoriesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -10487,6 +10649,7 @@ export type CompanyCreateWithoutCashbookEntriesInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -10547,6 +10710,7 @@ export type CompanyUncheckedCreateWithoutCashbookEntriesInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -10623,6 +10787,7 @@ export type CompanyUpdateWithoutCashbookEntriesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -10683,6 +10848,7 @@ export type CompanyUncheckedUpdateWithoutCashbookEntriesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -10743,6 +10909,7 @@ export type CompanyCreateWithoutFinancialPeriodsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -10803,6 +10970,7 @@ export type CompanyUncheckedCreateWithoutFinancialPeriodsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -10879,6 +11047,7 @@ export type CompanyUpdateWithoutFinancialPeriodsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -10939,6 +11108,7 @@ export type CompanyUncheckedUpdateWithoutFinancialPeriodsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -10999,6 +11169,7 @@ export type CompanyCreateWithoutReconciliationsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -11059,6 +11230,7 @@ export type CompanyUncheckedCreateWithoutReconciliationsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -11135,6 +11307,7 @@ export type CompanyUpdateWithoutReconciliationsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -11195,6 +11368,7 @@ export type CompanyUncheckedUpdateWithoutReconciliationsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -11255,6 +11429,7 @@ export type CompanyCreateWithoutTicketBookingsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -11315,6 +11490,7 @@ export type CompanyUncheckedCreateWithoutTicketBookingsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -11391,6 +11567,7 @@ export type CompanyUpdateWithoutTicketBookingsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -11451,6 +11628,7 @@ export type CompanyUncheckedUpdateWithoutTicketBookingsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -11511,6 +11689,7 @@ export type CompanyCreateWithoutGeneratedDocumentsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -11571,6 +11750,7 @@ export type CompanyUncheckedCreateWithoutGeneratedDocumentsInput = {
   phone?: string | null
   address?: string | null
   logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
   timezone?: string
   currencyCode?: string
   locale?: string
@@ -11647,6 +11827,7 @@ export type CompanyUpdateWithoutGeneratedDocumentsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -11707,6 +11888,7 @@ export type CompanyUncheckedUpdateWithoutGeneratedDocumentsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
   locale?: Prisma.StringFieldUpdateOperationsInput | string
@@ -12149,6 +12331,7 @@ export type CompanySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   phone?: boolean
   address?: boolean
   logoObjectKey?: boolean
+  logoDarkObjectKey?: boolean
   timezone?: boolean
   currencyCode?: boolean
   locale?: boolean
@@ -12211,6 +12394,7 @@ export type CompanySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   phone?: boolean
   address?: boolean
   logoObjectKey?: boolean
+  logoDarkObjectKey?: boolean
   timezone?: boolean
   currencyCode?: boolean
   locale?: boolean
@@ -12232,6 +12416,7 @@ export type CompanySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   phone?: boolean
   address?: boolean
   logoObjectKey?: boolean
+  logoDarkObjectKey?: boolean
   timezone?: boolean
   currencyCode?: boolean
   locale?: boolean
@@ -12253,6 +12438,7 @@ export type CompanySelectScalar = {
   phone?: boolean
   address?: boolean
   logoObjectKey?: boolean
+  logoDarkObjectKey?: boolean
   timezone?: boolean
   currencyCode?: boolean
   locale?: boolean
@@ -12265,7 +12451,7 @@ export type CompanySelectScalar = {
   updatedAt?: boolean
 }
 
-export type CompanyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "code" | "legalName" | "displayName" | "email" | "phone" | "address" | "logoObjectKey" | "timezone" | "currencyCode" | "locale" | "taxRate" | "isActive" | "version" | "createdById" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["company"]>
+export type CompanyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "code" | "legalName" | "displayName" | "email" | "phone" | "address" | "logoObjectKey" | "logoDarkObjectKey" | "timezone" | "currencyCode" | "locale" | "taxRate" | "isActive" | "version" | "createdById" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["company"]>
 export type CompanyInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   businessUnits?: boolean | Prisma.Company$businessUnitsArgs<ExtArgs>
   stations?: boolean | Prisma.Company$stationsArgs<ExtArgs>
@@ -12365,6 +12551,7 @@ export type $CompanyPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     phone: string | null
     address: string | null
     logoObjectKey: string | null
+    logoDarkObjectKey: string | null
     timezone: string
     currencyCode: string
     locale: string
@@ -12846,6 +13033,7 @@ export interface CompanyFieldRefs {
   readonly phone: Prisma.FieldRef<"Company", 'String'>
   readonly address: Prisma.FieldRef<"Company", 'String'>
   readonly logoObjectKey: Prisma.FieldRef<"Company", 'String'>
+  readonly logoDarkObjectKey: Prisma.FieldRef<"Company", 'String'>
   readonly timezone: Prisma.FieldRef<"Company", 'String'>
   readonly currencyCode: Prisma.FieldRef<"Company", 'String'>
   readonly locale: Prisma.FieldRef<"Company", 'String'>

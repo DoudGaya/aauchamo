@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { requireAccess, requirePermission } from "@/lib/server/access";
-import { apiFailure, apiSuccess, parseJson, requestIdFrom } from "@/lib/server/api";
+import { ConflictError, apiFailure, apiSuccess, parseJson, requestIdFrom } from "@/lib/server/api";
 import { writeAudit } from "@/lib/server/audit";
 import { db } from "@/lib/server/db";
 
@@ -37,7 +37,9 @@ export async function GET(request: Request) {
       },
       orderBy: { name: "asc" },
     });
-    return apiSuccess(stations, requestId);
+    const res = apiSuccess(stations, requestId);
+    res.headers.set("Cache-Control", "private, max-age=10, must-revalidate");
+    return res;
   } catch (error) {
     return apiFailure(error, requestId);
   }
@@ -82,6 +84,17 @@ export async function POST(request: Request) {
     });
     return apiSuccess(station, requestId, { created: true });
   } catch (error) {
+    // Map Prisma unique constraint violations to a meaningful 409
+    if (
+      error instanceof Object &&
+      "code" in error &&
+      (error as { code: string }).code === "P2002"
+    ) {
+      return apiFailure(
+        new ConflictError("A station with this code already exists."),
+        requestId,
+      );
+    }
     return apiFailure(error, requestId);
   }
 }

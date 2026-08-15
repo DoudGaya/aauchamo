@@ -158,6 +158,12 @@ async function main() {
     });
   }
 
+  await db.sequence.upsert({
+    where: { companyId_scopeKey_documentType_dateKey: { companyId: company.id, scopeKey: "GLOBAL", documentType: "STAFF", dateKey: "" } },
+    create: { companyId: company.id, scopeKey: "GLOBAL", documentType: "STAFF", dateKey: "", prefix: "STF", nextValue: 5, padding: 5 },
+    update: { nextValue: 5 },
+  });
+
   const roleMap = new Map<string, string>();
   for (const [code, name, scope] of roles) {
     const role = await db.role.upsert({
@@ -380,6 +386,14 @@ async function main() {
     update: { name: "Northstar Agency", status: "ACTIVE", creditLimit: "1000000" },
   });
   await db.walletAccount.upsert({ where: { agentId: seededAgent.id }, create: { agentId: seededAgent.id, balance: "500000" }, update: { balance: "500000", version: { increment: 1 } } });
+
+  // Advance the AGENT sequence counter past seeded agent numbers so that
+  // the next API-allocated number (AGT-00002) does not collide with AGT-00001.
+  await db.sequence.upsert({
+    where: { companyId_scopeKey_documentType_dateKey: { companyId: company.id, scopeKey: "GLOBAL", documentType: "AGENT", dateKey: "" } },
+    create: { companyId: company.id, scopeKey: "GLOBAL", documentType: "AGENT", dateKey: "", prefix: "AGT", nextValue: 2, padding: 5 },
+    update: { nextValue: { increment: 0 } },
+  });
 
   const paymentMethodMap = new Map<string, string>();
   for (const [code, name, type, requiresReference, requiresTerminal] of [

@@ -24,4 +24,53 @@
 .codes img { max-width: 100%; height: auto; }
 .sheet footer { border-top: 2px solid #10243d; padding-top: 10px; font-size: 11px; font-weight: 700; }
 .thermal { max-width: 620px; }
-@media print { .sheet { margin: 0; max-width: none; border: 0; } .thermal { width: 100mm; padding: 4mm; } }
+
+.tagsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  border-top: 2px dashed #aeb8c4;
+  padding-top: 10px;
+}
+
+.tagWrap {
+  width: 100%;
+  height: 50px;
+  border: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  page-break-inside: avoid;
+}
+
+.thermal .tagWrap {
+  margin-bottom: 8px;
+}
+
+.tagContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 12px;
+  flex: 1;
+}
+
+.tagDestCode {
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.tagLogoWrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.tagBottomLine {
+  height: 6px;
+  width: 100%;
+}
+
+@media print { .sheet { margin: 0; max-width: none; border: 0; padding: 0 !important; } .thermal { width: 100mm; padding: 4mm !important; } .tagsContainer { border-top-style: dotted; } }

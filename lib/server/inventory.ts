@@ -2,6 +2,7 @@ import "server-only";
 
 import { Prisma, type StockMovementType } from "@/lib/generated/prisma/client";
 import { AppError, ConflictError } from "@/lib/server/api";
+import { dispatchNotification } from "@/lib/server/notifications";
 
 type StockMutation = {
   companyId: string;
@@ -17,6 +18,12 @@ type StockMutation = {
   reason?: string;
   allowNegative?: boolean;
 };
+
+export function quantity(value: Prisma.Decimal | string | number) {
+  const parsed = new Prisma.Decimal(value).toDecimalPlaces(3);
+  if (!parsed.gt(0)) throw new AppError("INVALID_QUANTITY", "Quantity must be greater than zero.", 422);
+  return parsed;
+}
 
 export async function applyStockMovement(tx: Prisma.TransactionClient, input: StockMutation) {
   const delta = new Prisma.Decimal(input.quantityDelta).toDecimalPlaces(3);
@@ -69,11 +76,21 @@ export async function applyStockMovement(tx: Prisma.TransactionClient, input: St
       reason: input.reason,
     },
   });
-  return { movement, balance: nextQuantity };
-}
 
-export function quantity(value: Prisma.Decimal | string | number) {
-  const parsed = new Prisma.Decimal(value).toDecimalPlaces(3);
-  if (!parsed.gt(0)) throw new AppError("INVALID_QUANTITY", "Quantity must be greater than zero.", 422);
-  return parsed;
+  const product = await tx.product.findUnique({ where: { id: input.productId }, select: { name: true, minimumLevel: true } });
+  if (product && product.minimumLevel.gt(0) && balance.quantity.gte(product.minimumLevel) && nextQuantity.lt(product.minimumLevel)) {
+    await dispatchNotification(tx, {
+      companyId: input.companyId,
+      stationId: input.stationId,
+      targetRoles: ["SUPER_ADMIN", "ADMIN", "OPERATIONS_MANAGER", "STATION_MANAGER"],
+      type: "INVENTORY_ALERT",
+      severity: "WARNING",
+      title: "Low Stock Alert",
+      message: `${product.name} has dropped below the minimum level of ${product.minimumLevel.toString()}. (Current: ${nextQuantity.toString()})`,
+      entityType: "Product",
+      entityId: input.productId,
+    });
+  }
+
+  return { movement, balance: nextQuantity };
 }

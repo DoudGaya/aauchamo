@@ -9,6 +9,7 @@ import { writeAudit } from "@/lib/server/audit";
 import { getRuntimeEnv } from "@/lib/server/env";
 import { verifyPassword } from "@/lib/server/password";
 import { addMinutes, addSeconds } from "@/lib/server/time";
+import { dispatchNotification } from "@/lib/server/notifications";
 
 const credentialSchema = z.object({
   identifier: z.string().trim().min(3).max(254),
@@ -98,6 +99,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => {
                 },
               });
               await writeAudit(tx, { companyId: user.companyId, actorId: user.id, action: shouldLock ? "auth.account_locked" : "auth.login_failed", entityType: "User", entityId: user.id, outcome: "FAILURE", ...metadata });
+              
+              await dispatchNotification(tx, {
+                companyId: user.companyId,
+                targetRoles: ["SUPER_ADMIN"],
+                type: "SECURITY",
+                severity: shouldLock ? "ERROR" : "WARNING",
+                title: shouldLock ? "User Account Locked" : "Failed Login Attempt",
+                message: `User ${user.email} failed to log in (${failedLoginCount} times).`,
+                entityType: "User",
+                entityId: user.id,
+              });
             });
             return null;
           }

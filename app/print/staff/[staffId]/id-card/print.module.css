@@ -1,0 +1,230 @@
+.container {
+  font-family: var(--font-inter, system-ui, sans-serif);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #f4f5f7;
+  padding: 2rem;
+}
+
+.printActions {
+  margin-bottom: 2rem;
+}
+
+.printActions button {
+  padding: 0.75rem 1.5rem;
+  background: var(--navy-600, #1e3a8a);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cardWrapper {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* 2.125 x 3.375 inches standard CR80 ID Card Size */
+.idCardFront, .idCardBack {
+  width: 2.125in;
+  height: 3.375in;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.idCardFront {
+  background: linear-gradient(135deg, #d32f2f, #b71c1c); /* Red background per user request */
+  color: white;
+}
+
+.header {
+  text-align: center;
+  padding: 0.5rem;
+  background: rgba(0,0,0,0.2);
+}
+
+.logo {
+  object-fit: contain;
+  background: white;
+  padding: 4px;
+  border-radius: 4px;
+  display: block;
+  margin: 0 auto;
+}
+
+.header h2 {
+  font-size: 0.6rem;
+  margin: 0.2rem 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.photoContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.photo {
+  width: 1.2in;
+  height: 1.2in;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid white;
+  background: white;
+}
+
+.photoPlaceholder {
+  width: 1.2in;
+  height: 1.2in;
+  border-radius: 50%;
+  border: 3px solid white;
+  background: rgba(255,255,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+}
+
+.details {
+  text-align: center;
+  padding: 0.5rem;
+  flex: 1;
+}
+
+.details h1 {
+  font-size: 0.9rem;
+  margin: 0 0 0.2rem;
+  font-weight: 700;
+}
+
+.position {
+  font-size: 0.65rem;
+  font-weight: 600;
+  margin: 0;
+  color: #ffcdd2;
+  text-transform: uppercase;
+}
+
+.department {
+  font-size: 0.55rem;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.contactInfo {
+  font-size: 0.5rem;
+  margin-top: 0.5rem;
+  color: #ffebee;
+}
+
+.contactInfo p {
+  margin: 0.1rem 0;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background: rgba(0,0,0,0.3);
+  font-size: 0.6rem;
+  font-weight: bold;
+}
+
+/* BACK OF CARD */
+.idCardBack {
+  background: #ffffff;
+  color: #333333;
+  padding: 0.75rem;
+}
+
+.terms {
+  font-size: 0.5rem;
+  line-height: 1.4;
+  text-align: center;
+  flex: 1;
+}
+
+.terms h3 {
+  font-size: 0.6rem;
+  margin: 0 0 0.2rem;
+  color: #b71c1c;
+}
+
+.terms address {
+  font-style: normal;
+  margin-top: 0.2rem;
+  font-weight: 600;
+}
+
+.barcode {
+  text-align: center;
+  margin: 0.5rem 0;
+}
+
+.barcodeSticks {
+  height: 0.4in;
+  background: repeating-linear-gradient(
+    90deg,
+    #000,
+    #000 2px,
+    transparent 2px,
+    transparent 4px,
+    #000 4px,
+    #000 5px,
+    transparent 5px,
+    transparent 8px
+  );
+  width: 100%;
+}
+
+.barcode p {
+  margin: 0.1rem 0 0;
+  font-size: 0.55rem;
+  letter-spacing: 1px;
+}
+
+.expiry {
+  text-align: center;
+  font-size: 0.5rem;
+  font-weight: bold;
+  color: #666;
+  padding-top: 0.2rem;
+  border-top: 1px solid #eee;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .cardWrapper, .cardWrapper * {
+    visibility: visible;
+  }
+  .cardWrapper {
+    position: absolute;
+    left: 0;
+    top: 0;
+    gap: 0.5in;
+  }
+  .printActions {
+    display: none;
+  }
+  .idCardFront, .idCardBack {
+    box-shadow: none;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

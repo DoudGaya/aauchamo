@@ -44,3 +44,37 @@ export async function POST(request: Request) {
     return apiFailure(error, requestId);
   }
 }
+
+const updateSchema = z.object({
+  id: z.string().cuid(),
+  kind: z.enum(["department", "position"]),
+  code: z.string().trim().min(2).max(30).regex(/^[A-Z0-9-]+$/).transform((value) => value.toUpperCase()),
+  name: z.string().trim().min(2).max(120),
+  description: z.string().trim().max(500).optional().nullable(),
+  businessUnitId: z.string().cuid().optional().nullable(),
+});
+
+export async function PUT(request: Request) {
+  const requestId = requestIdFrom(request);
+  try {
+    const access = requirePermission(await requireAccess(), "staff.manage");
+    const input = await parseJson(request, updateSchema);
+    const record = await db.$transaction(async (tx) => {
+      let updated;
+      if (input.kind === "department") {
+        const existing = await tx.department.findFirst({ where: { id: input.id, companyId: access.companyId } });
+        if (!existing) throw new Error("Department not found.");
+        updated = await tx.department.update({ where: { id: existing.id }, data: { code: input.code, name: input.name, description: input.description, businessUnitId: input.businessUnitId, updatedById: access.userId } });
+      } else {
+        const existing = await tx.position.findFirst({ where: { id: input.id, companyId: access.companyId } });
+        if (!existing) throw new Error("Position not found.");
+        updated = await tx.position.update({ where: { id: existing.id }, data: { code: input.code, name: input.name, description: input.description, updatedById: access.userId } });
+      }
+      await writeAudit(tx, { companyId: access.companyId, actorId: access.userId, action: `hr.${input.kind}_updated`, entityType: input.kind === "department" ? "Department" : "Position", entityId: updated.id, requestId, after: updated });
+      return updated;
+    });
+    return apiSuccess(record, requestId);
+  } catch (error) {
+    return apiFailure(error, requestId);
+  }
+}

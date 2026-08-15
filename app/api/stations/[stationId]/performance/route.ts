@@ -14,7 +14,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ stat
       db.customer.count({ where: { homeStationId: stationId, status: "ACTIVE" } }),
       db.approvalRequest.count({ where: { stationId, status: "PENDING" } }),
     ]);
-    return apiSuccess({ stationId, scopedUsers, activeStaff, customers, pendingApprovals }, requestId);
+    const res = apiSuccess({ stationId, scopedUsers, activeStaff, customers, pendingApprovals }, requestId);
+    res.headers.set("Cache-Control", "private, max-age=10, must-revalidate");
+    return res;
   } catch (error) {
     return apiFailure(error, requestId);
   }

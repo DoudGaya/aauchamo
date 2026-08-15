@@ -1,0 +1,48 @@
+.sheet {
+  width: 100mm;
+  height: 50mm;
+  margin: 0 auto;
+  background: #fff;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  page-break-after: always;
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  flex: 1;
+}
+
+.destCode {
+  font-size: 55px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.logoWrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.bottomLine {
+  height: 12px;
+  width: 100%;
+}
+
+@page {
+  margin: 0;
+  size: 100mm 50mm;
+}
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+  }
+}

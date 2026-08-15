@@ -58,6 +58,7 @@ export type StaffMinAggregateOutputType = {
   positionId: string | null
   homeStationId: string | null
   passportAttachmentId: string | null
+  passportObjectKey: string | null
   version: number | null
   createdById: string | null
   updatedById: string | null
@@ -87,6 +88,7 @@ export type StaffMaxAggregateOutputType = {
   positionId: string | null
   homeStationId: string | null
   passportAttachmentId: string | null
+  passportObjectKey: string | null
   version: number | null
   createdById: string | null
   updatedById: string | null
@@ -116,6 +118,7 @@ export type StaffCountAggregateOutputType = {
   positionId: number
   homeStationId: number
   passportAttachmentId: number
+  passportObjectKey: number
   version: number
   createdById: number
   updatedById: number
@@ -157,6 +160,7 @@ export type StaffMinAggregateInputType = {
   positionId?: true
   homeStationId?: true
   passportAttachmentId?: true
+  passportObjectKey?: true
   version?: true
   createdById?: true
   updatedById?: true
@@ -186,6 +190,7 @@ export type StaffMaxAggregateInputType = {
   positionId?: true
   homeStationId?: true
   passportAttachmentId?: true
+  passportObjectKey?: true
   version?: true
   createdById?: true
   updatedById?: true
@@ -215,6 +220,7 @@ export type StaffCountAggregateInputType = {
   positionId?: true
   homeStationId?: true
   passportAttachmentId?: true
+  passportObjectKey?: true
   version?: true
   createdById?: true
   updatedById?: true
@@ -331,6 +337,7 @@ export type StaffGroupByOutputType = {
   positionId: string
   homeStationId: string
   passportAttachmentId: string | null
+  passportObjectKey: string | null
   version: number
   createdById: string | null
   updatedById: string | null
@@ -383,6 +390,7 @@ export type StaffWhereInput = {
   positionId?: Prisma.StringFilter<"Staff"> | string
   homeStationId?: Prisma.StringFilter<"Staff"> | string
   passportAttachmentId?: Prisma.StringNullableFilter<"Staff"> | string | null
+  passportObjectKey?: Prisma.StringNullableFilter<"Staff"> | string | null
   version?: Prisma.IntFilter<"Staff"> | number
   createdById?: Prisma.StringNullableFilter<"Staff"> | string | null
   updatedById?: Prisma.StringNullableFilter<"Staff"> | string | null
@@ -421,6 +429,7 @@ export type StaffOrderByWithRelationInput = {
   positionId?: Prisma.SortOrder
   homeStationId?: Prisma.SortOrder
   passportAttachmentId?: Prisma.SortOrderInput | Prisma.SortOrder
+  passportObjectKey?: Prisma.SortOrderInput | Prisma.SortOrder
   version?: Prisma.SortOrder
   createdById?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedById?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -463,6 +472,7 @@ export type StaffWhereUniqueInput = Prisma.AtLeast<{
   positionId?: Prisma.StringFilter<"Staff"> | string
   homeStationId?: Prisma.StringFilter<"Staff"> | string
   passportAttachmentId?: Prisma.StringNullableFilter<"Staff"> | string | null
+  passportObjectKey?: Prisma.StringNullableFilter<"Staff"> | string | null
   version?: Prisma.IntFilter<"Staff"> | number
   createdById?: Prisma.StringNullableFilter<"Staff"> | string | null
   updatedById?: Prisma.StringNullableFilter<"Staff"> | string | null
@@ -501,6 +511,7 @@ export type StaffOrderByWithAggregationInput = {
   positionId?: Prisma.SortOrder
   homeStationId?: Prisma.SortOrder
   passportAttachmentId?: Prisma.SortOrderInput | Prisma.SortOrder
+  passportObjectKey?: Prisma.SortOrderInput | Prisma.SortOrder
   version?: Prisma.SortOrder
   createdById?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedById?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -538,6 +549,7 @@ export type StaffScalarWhereWithAggregatesInput = {
   positionId?: Prisma.StringWithAggregatesFilter<"Staff"> | string
   homeStationId?: Prisma.StringWithAggregatesFilter<"Staff"> | string
   passportAttachmentId?: Prisma.StringNullableWithAggregatesFilter<"Staff"> | string | null
+  passportObjectKey?: Prisma.StringNullableWithAggregatesFilter<"Staff"> | string | null
   version?: Prisma.IntWithAggregatesFilter<"Staff"> | number
   createdById?: Prisma.StringNullableWithAggregatesFilter<"Staff"> | string | null
   updatedById?: Prisma.StringNullableWithAggregatesFilter<"Staff"> | string | null
@@ -561,6 +573,7 @@ export type StaffCreateInput = {
   employmentType: $Enums.EmploymentType
   status?: $Enums.StaffStatus
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -599,6 +612,7 @@ export type StaffUncheckedCreateInput = {
   positionId: string
   homeStationId: string
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -625,6 +639,7 @@ export type StaffUpdateInput = {
   employmentType?: Prisma.EnumEmploymentTypeFieldUpdateOperationsInput | $Enums.EmploymentType
   status?: Prisma.EnumStaffStatusFieldUpdateOperationsInput | $Enums.StaffStatus
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -663,6 +678,7 @@ export type StaffUncheckedUpdateInput = {
   positionId?: Prisma.StringFieldUpdateOperationsInput | string
   homeStationId?: Prisma.StringFieldUpdateOperationsInput | string
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -695,6 +711,7 @@ export type StaffCreateManyInput = {
   positionId: string
   homeStationId: string
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -718,6 +735,7 @@ export type StaffUpdateManyMutationInput = {
   employmentType?: Prisma.EnumEmploymentTypeFieldUpdateOperationsInput | $Enums.EmploymentType
   status?: Prisma.EnumStaffStatusFieldUpdateOperationsInput | $Enums.StaffStatus
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -747,6 +765,7 @@ export type StaffUncheckedUpdateManyInput = {
   positionId?: Prisma.StringFieldUpdateOperationsInput | string
   homeStationId?: Prisma.StringFieldUpdateOperationsInput | string
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -796,6 +815,7 @@ export type StaffCountOrderByAggregateInput = {
   positionId?: Prisma.SortOrder
   homeStationId?: Prisma.SortOrder
   passportAttachmentId?: Prisma.SortOrder
+  passportObjectKey?: Prisma.SortOrder
   version?: Prisma.SortOrder
   createdById?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
@@ -830,6 +850,7 @@ export type StaffMaxOrderByAggregateInput = {
   positionId?: Prisma.SortOrder
   homeStationId?: Prisma.SortOrder
   passportAttachmentId?: Prisma.SortOrder
+  passportObjectKey?: Prisma.SortOrder
   version?: Prisma.SortOrder
   createdById?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
@@ -859,6 +880,7 @@ export type StaffMinOrderByAggregateInput = {
   positionId?: Prisma.SortOrder
   homeStationId?: Prisma.SortOrder
   passportAttachmentId?: Prisma.SortOrder
+  passportObjectKey?: Prisma.SortOrder
   version?: Prisma.SortOrder
   createdById?: Prisma.SortOrder
   updatedById?: Prisma.SortOrder
@@ -1192,6 +1214,7 @@ export type StaffCreateWithoutCompanyInput = {
   employmentType: $Enums.EmploymentType
   status?: $Enums.StaffStatus
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -1228,6 +1251,7 @@ export type StaffUncheckedCreateWithoutCompanyInput = {
   positionId: string
   homeStationId: string
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -1289,6 +1313,7 @@ export type StaffScalarWhereInput = {
   positionId?: Prisma.StringFilter<"Staff"> | string
   homeStationId?: Prisma.StringFilter<"Staff"> | string
   passportAttachmentId?: Prisma.StringNullableFilter<"Staff"> | string | null
+  passportObjectKey?: Prisma.StringNullableFilter<"Staff"> | string | null
   version?: Prisma.IntFilter<"Staff"> | number
   createdById?: Prisma.StringNullableFilter<"Staff"> | string | null
   updatedById?: Prisma.StringNullableFilter<"Staff"> | string | null
@@ -1312,6 +1337,7 @@ export type StaffCreateWithoutBusinessUnitInput = {
   employmentType: $Enums.EmploymentType
   status?: $Enums.StaffStatus
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -1348,6 +1374,7 @@ export type StaffUncheckedCreateWithoutBusinessUnitInput = {
   positionId: string
   homeStationId: string
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -1400,6 +1427,7 @@ export type StaffCreateWithoutHomeStationInput = {
   employmentType: $Enums.EmploymentType
   status?: $Enums.StaffStatus
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -1436,6 +1464,7 @@ export type StaffUncheckedCreateWithoutHomeStationInput = {
   departmentId: string
   positionId: string
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -1488,6 +1517,7 @@ export type StaffCreateWithoutUserInput = {
   employmentType: $Enums.EmploymentType
   status?: $Enums.StaffStatus
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -1524,6 +1554,7 @@ export type StaffUncheckedCreateWithoutUserInput = {
   positionId: string
   homeStationId: string
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -1566,6 +1597,7 @@ export type StaffUpdateWithoutUserInput = {
   employmentType?: Prisma.EnumEmploymentTypeFieldUpdateOperationsInput | $Enums.EmploymentType
   status?: Prisma.EnumStaffStatusFieldUpdateOperationsInput | $Enums.StaffStatus
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1602,6 +1634,7 @@ export type StaffUncheckedUpdateWithoutUserInput = {
   positionId?: Prisma.StringFieldUpdateOperationsInput | string
   homeStationId?: Prisma.StringFieldUpdateOperationsInput | string
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1628,6 +1661,7 @@ export type StaffCreateWithoutDepartmentInput = {
   employmentType: $Enums.EmploymentType
   status?: $Enums.StaffStatus
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -1664,6 +1698,7 @@ export type StaffUncheckedCreateWithoutDepartmentInput = {
   positionId: string
   homeStationId: string
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -1716,6 +1751,7 @@ export type StaffCreateWithoutPositionInput = {
   employmentType: $Enums.EmploymentType
   status?: $Enums.StaffStatus
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -1752,6 +1788,7 @@ export type StaffUncheckedCreateWithoutPositionInput = {
   departmentId: string
   homeStationId: string
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -1804,6 +1841,7 @@ export type StaffCreateWithoutEmploymentHistoryInput = {
   employmentType: $Enums.EmploymentType
   status?: $Enums.StaffStatus
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -1841,6 +1879,7 @@ export type StaffUncheckedCreateWithoutEmploymentHistoryInput = {
   positionId: string
   homeStationId: string
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -1882,6 +1921,7 @@ export type StaffUpdateWithoutEmploymentHistoryInput = {
   employmentType?: Prisma.EnumEmploymentTypeFieldUpdateOperationsInput | $Enums.EmploymentType
   status?: Prisma.EnumStaffStatusFieldUpdateOperationsInput | $Enums.StaffStatus
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1919,6 +1959,7 @@ export type StaffUncheckedUpdateWithoutEmploymentHistoryInput = {
   positionId?: Prisma.StringFieldUpdateOperationsInput | string
   homeStationId?: Prisma.StringFieldUpdateOperationsInput | string
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1944,6 +1985,7 @@ export type StaffCreateWithoutStationHistoryInput = {
   employmentType: $Enums.EmploymentType
   status?: $Enums.StaffStatus
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -1981,6 +2023,7 @@ export type StaffUncheckedCreateWithoutStationHistoryInput = {
   positionId: string
   homeStationId: string
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -2022,6 +2065,7 @@ export type StaffUpdateWithoutStationHistoryInput = {
   employmentType?: Prisma.EnumEmploymentTypeFieldUpdateOperationsInput | $Enums.EmploymentType
   status?: Prisma.EnumStaffStatusFieldUpdateOperationsInput | $Enums.StaffStatus
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2059,6 +2103,7 @@ export type StaffUncheckedUpdateWithoutStationHistoryInput = {
   positionId?: Prisma.StringFieldUpdateOperationsInput | string
   homeStationId?: Prisma.StringFieldUpdateOperationsInput | string
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2084,6 +2129,7 @@ export type StaffCreateWithoutNextOfKinInput = {
   employmentType: $Enums.EmploymentType
   status?: $Enums.StaffStatus
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -2121,6 +2167,7 @@ export type StaffUncheckedCreateWithoutNextOfKinInput = {
   positionId: string
   homeStationId: string
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -2162,6 +2209,7 @@ export type StaffUpdateWithoutNextOfKinInput = {
   employmentType?: Prisma.EnumEmploymentTypeFieldUpdateOperationsInput | $Enums.EmploymentType
   status?: Prisma.EnumStaffStatusFieldUpdateOperationsInput | $Enums.StaffStatus
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2199,6 +2247,7 @@ export type StaffUncheckedUpdateWithoutNextOfKinInput = {
   positionId?: Prisma.StringFieldUpdateOperationsInput | string
   homeStationId?: Prisma.StringFieldUpdateOperationsInput | string
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2229,6 +2278,7 @@ export type StaffCreateManyCompanyInput = {
   positionId: string
   homeStationId: string
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -2252,6 +2302,7 @@ export type StaffUpdateWithoutCompanyInput = {
   employmentType?: Prisma.EnumEmploymentTypeFieldUpdateOperationsInput | $Enums.EmploymentType
   status?: Prisma.EnumStaffStatusFieldUpdateOperationsInput | $Enums.StaffStatus
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2288,6 +2339,7 @@ export type StaffUncheckedUpdateWithoutCompanyInput = {
   positionId?: Prisma.StringFieldUpdateOperationsInput | string
   homeStationId?: Prisma.StringFieldUpdateOperationsInput | string
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2319,6 +2371,7 @@ export type StaffUncheckedUpdateManyWithoutCompanyInput = {
   positionId?: Prisma.StringFieldUpdateOperationsInput | string
   homeStationId?: Prisma.StringFieldUpdateOperationsInput | string
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2347,6 +2400,7 @@ export type StaffCreateManyBusinessUnitInput = {
   positionId: string
   homeStationId: string
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -2370,6 +2424,7 @@ export type StaffUpdateWithoutBusinessUnitInput = {
   employmentType?: Prisma.EnumEmploymentTypeFieldUpdateOperationsInput | $Enums.EmploymentType
   status?: Prisma.EnumStaffStatusFieldUpdateOperationsInput | $Enums.StaffStatus
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2406,6 +2461,7 @@ export type StaffUncheckedUpdateWithoutBusinessUnitInput = {
   positionId?: Prisma.StringFieldUpdateOperationsInput | string
   homeStationId?: Prisma.StringFieldUpdateOperationsInput | string
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2437,6 +2493,7 @@ export type StaffUncheckedUpdateManyWithoutBusinessUnitInput = {
   positionId?: Prisma.StringFieldUpdateOperationsInput | string
   homeStationId?: Prisma.StringFieldUpdateOperationsInput | string
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2465,6 +2522,7 @@ export type StaffCreateManyHomeStationInput = {
   departmentId: string
   positionId: string
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -2488,6 +2546,7 @@ export type StaffUpdateWithoutHomeStationInput = {
   employmentType?: Prisma.EnumEmploymentTypeFieldUpdateOperationsInput | $Enums.EmploymentType
   status?: Prisma.EnumStaffStatusFieldUpdateOperationsInput | $Enums.StaffStatus
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2524,6 +2583,7 @@ export type StaffUncheckedUpdateWithoutHomeStationInput = {
   departmentId?: Prisma.StringFieldUpdateOperationsInput | string
   positionId?: Prisma.StringFieldUpdateOperationsInput | string
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2555,6 +2615,7 @@ export type StaffUncheckedUpdateManyWithoutHomeStationInput = {
   departmentId?: Prisma.StringFieldUpdateOperationsInput | string
   positionId?: Prisma.StringFieldUpdateOperationsInput | string
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2583,6 +2644,7 @@ export type StaffCreateManyDepartmentInput = {
   positionId: string
   homeStationId: string
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -2606,6 +2668,7 @@ export type StaffUpdateWithoutDepartmentInput = {
   employmentType?: Prisma.EnumEmploymentTypeFieldUpdateOperationsInput | $Enums.EmploymentType
   status?: Prisma.EnumStaffStatusFieldUpdateOperationsInput | $Enums.StaffStatus
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2642,6 +2705,7 @@ export type StaffUncheckedUpdateWithoutDepartmentInput = {
   positionId?: Prisma.StringFieldUpdateOperationsInput | string
   homeStationId?: Prisma.StringFieldUpdateOperationsInput | string
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2673,6 +2737,7 @@ export type StaffUncheckedUpdateManyWithoutDepartmentInput = {
   positionId?: Prisma.StringFieldUpdateOperationsInput | string
   homeStationId?: Prisma.StringFieldUpdateOperationsInput | string
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2701,6 +2766,7 @@ export type StaffCreateManyPositionInput = {
   departmentId: string
   homeStationId: string
   passportAttachmentId?: string | null
+  passportObjectKey?: string | null
   version?: number
   createdById?: string | null
   updatedById?: string | null
@@ -2724,6 +2790,7 @@ export type StaffUpdateWithoutPositionInput = {
   employmentType?: Prisma.EnumEmploymentTypeFieldUpdateOperationsInput | $Enums.EmploymentType
   status?: Prisma.EnumStaffStatusFieldUpdateOperationsInput | $Enums.StaffStatus
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2760,6 +2827,7 @@ export type StaffUncheckedUpdateWithoutPositionInput = {
   departmentId?: Prisma.StringFieldUpdateOperationsInput | string
   homeStationId?: Prisma.StringFieldUpdateOperationsInput | string
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2791,6 +2859,7 @@ export type StaffUncheckedUpdateManyWithoutPositionInput = {
   departmentId?: Prisma.StringFieldUpdateOperationsInput | string
   homeStationId?: Prisma.StringFieldUpdateOperationsInput | string
   passportAttachmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passportObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   version?: Prisma.IntFieldUpdateOperationsInput | number
   createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2869,6 +2938,7 @@ export type StaffSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   positionId?: boolean
   homeStationId?: boolean
   passportAttachmentId?: boolean
+  passportObjectKey?: boolean
   version?: boolean
   createdById?: boolean
   updatedById?: boolean
@@ -2908,6 +2978,7 @@ export type StaffSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   positionId?: boolean
   homeStationId?: boolean
   passportAttachmentId?: boolean
+  passportObjectKey?: boolean
   version?: boolean
   createdById?: boolean
   updatedById?: boolean
@@ -2943,6 +3014,7 @@ export type StaffSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   positionId?: boolean
   homeStationId?: boolean
   passportAttachmentId?: boolean
+  passportObjectKey?: boolean
   version?: boolean
   createdById?: boolean
   updatedById?: boolean
@@ -2978,6 +3050,7 @@ export type StaffSelectScalar = {
   positionId?: boolean
   homeStationId?: boolean
   passportAttachmentId?: boolean
+  passportObjectKey?: boolean
   version?: boolean
   createdById?: boolean
   updatedById?: boolean
@@ -2985,7 +3058,7 @@ export type StaffSelectScalar = {
   updatedAt?: boolean
 }
 
-export type StaffOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "companyId" | "businessUnitId" | "userId" | "staffNumber" | "firstName" | "middleName" | "lastName" | "preferredName" | "phone" | "email" | "address" | "nationalIdCiphertext" | "salary" | "employmentDate" | "employmentType" | "status" | "departmentId" | "positionId" | "homeStationId" | "passportAttachmentId" | "version" | "createdById" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["staff"]>
+export type StaffOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "companyId" | "businessUnitId" | "userId" | "staffNumber" | "firstName" | "middleName" | "lastName" | "preferredName" | "phone" | "email" | "address" | "nationalIdCiphertext" | "salary" | "employmentDate" | "employmentType" | "status" | "departmentId" | "positionId" | "homeStationId" | "passportAttachmentId" | "passportObjectKey" | "version" | "createdById" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["staff"]>
 export type StaffInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
   businessUnit?: boolean | Prisma.Staff$businessUnitArgs<ExtArgs>
@@ -3050,6 +3123,7 @@ export type $StaffPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     positionId: string
     homeStationId: string
     passportAttachmentId: string | null
+    passportObjectKey: string | null
     version: number
     createdById: string | null
     updatedById: string | null
@@ -3508,6 +3582,7 @@ export interface StaffFieldRefs {
   readonly positionId: Prisma.FieldRef<"Staff", 'String'>
   readonly homeStationId: Prisma.FieldRef<"Staff", 'String'>
   readonly passportAttachmentId: Prisma.FieldRef<"Staff", 'String'>
+  readonly passportObjectKey: Prisma.FieldRef<"Staff", 'String'>
   readonly version: Prisma.FieldRef<"Staff", 'Int'>
   readonly createdById: Prisma.FieldRef<"Staff", 'String'>
   readonly updatedById: Prisma.FieldRef<"Staff", 'String'>

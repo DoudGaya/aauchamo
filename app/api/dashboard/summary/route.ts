@@ -22,7 +22,37 @@ export async function GET(request: Request) {
       db.approvalRequest.count({ where: { companyId: access.companyId, status: "PENDING", ...(filters.stationIds ? { OR: [{ stationId: null }, { stationId: { in: filters.stationIds } }] } : {}) } }),
       db.outstandingPayment.aggregate({ where: { sale: saleWhere, outstanding: { gt: 0 } }, _sum: { outstanding: true }, _count: true }),
     ]);
+
+    const businessUnits = await db.businessUnit.findMany({
+      where: { companyId: access.companyId, isActive: true },
+      select: { id: true, code: true, name: true },
+      orderBy: { name: "asc" }
+    });
+
+    let inventoryValueStr = "0";
+    if (access.permissions.has("finance.view_profit") || access.permissions.has("inventory.view_cost")) {
+      let valueResult: any[] = [];
+      if (filters.stationIds && filters.stationIds.length > 0) {
+        valueResult = await db.$queryRaw`
+          SELECT COALESCE(SUM(ib.quantity * p."purchasePrice"), 0) as "totalValue"
+          FROM inventory_balances ib
+          JOIN products p ON ib."productId" = p.id
+          WHERE p."companyId" = ${access.companyId}
+            AND ib."stationId" IN (${db.$queryRawUnsafe(filters.stationIds.map(id => `'${id}'`).join(','))})
+        `;
+      } else {
+        valueResult = await db.$queryRaw`
+          SELECT COALESCE(SUM(ib.quantity * p."purchasePrice"), 0) as "totalValue"
+          FROM inventory_balances ib
+          JOIN products p ON ib."productId" = p.id
+          WHERE p."companyId" = ${access.companyId}
+        `;
+      }
+      inventoryValueStr = valueResult[0]?.totalValue?.toString() ?? "0";
+    }
     const gross = sales._sum.total?.toString() ?? "0"; const refundTotal = refunds._sum.amount?.toString() ?? "0";
-    return apiSuccess({ range: { from: filters.start, to: filters.end }, sales: { grossRevenue: gross, refunds: refundTotal, netRevenue: sales._sum.total?.minus(refunds._sum.amount ?? 0).toString() ?? "0", transactions: sales._count, outstanding: sales._sum.outstandingTotal?.toString() ?? "0" }, inventory: { quantity: stock._sum.quantity?.toString() ?? "0", balanceRows: stock._count, outOfStock: lowStock }, entities: { customers, agents, staff, stations }, cargo: Object.fromEntries(cargo.map((item) => [item.status, item._count])), approvals: { pending: approvals }, receivables: { count: outstanding._count, amount: outstanding._sum.outstanding?.toString() ?? "0" }, financialVisible: access.permissions.has("finance.view_profit") }, requestId);
+    const res = apiSuccess({ range: { from: filters.start, to: filters.end }, sales: { grossRevenue: gross, refunds: refundTotal, netRevenue: sales._sum.total?.minus(refunds._sum.amount ?? 0).toString() ?? "0", transactions: sales._count, outstanding: sales._sum.outstandingTotal?.toString() ?? "0" }, inventory: { quantity: stock._sum.quantity?.toString() ?? "0", balanceRows: stock._count, outOfStock: lowStock, value: inventoryValueStr }, entities: { customers, agents, staff, stations }, cargo: Object.fromEntries(cargo.map((item) => [item.status, item._count])), approvals: { pending: approvals }, receivables: { count: outstanding._count, amount: outstanding._sum.outstanding?.toString() ?? "0" }, financialVisible: access.permissions.has("finance.view_profit"), businessUnits }, requestId);
+    res.headers.set("Cache-Control", "private, max-age=15, must-revalidate");
+    return res;
   } catch (error) { return apiFailure(error, requestId); }
 }

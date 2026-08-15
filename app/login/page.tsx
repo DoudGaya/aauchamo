@@ -1,7 +1,9 @@
 import { Building2, CheckCircle2, Gauge, ShieldCheck } from "lucide-react";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 
 import { requireAccess } from "@/lib/server/access";
+import { db } from "@/lib/server/db";
 import LoginForm from "./login-form";
 import styles from "./login.module.css";
 
@@ -20,11 +22,20 @@ export default async function LoginPage({
   }
   if (hasValidSession) redirect("/");
 
+  // Fetch the active company logo for the login screen. Assuming a single active tenant for now.
+  const company = await db.company.findFirst({
+    where: { isActive: true },
+    select: { logoObjectKey: true, logoDarkObjectKey: true }
+  });
+
+  const logoLight = company?.logoObjectKey || "/logo.png";
+  const logoDark = company?.logoDarkObjectKey || logoLight;
+
   return (
     <main className={styles.page}>
       <section className={styles.brandPanel}>
         <div className={styles.brandMark}>
-          <img src="/logo.png" alt="AAU Chamo Logo" className={styles.brandLogo} />
+          <Image src={logoDark} alt="AAU Chamo Logo" className={styles.brandLogo} width={120} height={120} priority style={{ width: "auto", height: "auto" }} />
         </div>
         <div className={styles.brandCopy}>
           <span>AAU CHAMO</span>
