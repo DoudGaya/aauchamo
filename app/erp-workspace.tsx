@@ -832,7 +832,7 @@ function ModuleView({
     case "tickets":
       return <TicketsView />;
     case "staff":
-      return <StaffView />;
+      return <StaffView onModal={onModal} allowedStations={allowedStations} />;
     case "reports":
       return <ReportsView period={period} onToast={onToast} />;
     case "access":
@@ -1978,9 +1978,217 @@ function TicketsView() {
   return <div className="content-stack"><section className="summary-strip"><SummaryItem label="Booking records" value={total.toString()} icon={TicketCheck} tone="info" /><SummaryItem label="Ticketed" value={ticketed.length.toString()} icon={BadgeCheck} tone="success" /><SummaryItem label="Reserved value" value={formatNaira(reservedValue)} icon={Clock3} tone="warning" /><SummaryItem label="Ticketed profit" value={formatNaira(profit)} icon={TrendingUp} tone="success" /></section><Panel><TableToolbar tabs={["All bookings", "Reserved", "Ticketed", "Cancelled"]} activeTab={tab} onTab={(value) => { setTab(value); table.resetPage(); }} placeholder="Search PNR, passenger, airline or route" search={table.search} onSearch={table.setSearch} />{error ? <EmptyState icon={AlertTriangle} title="Bookings could not be loaded" detail={error} /> : loading ? <EmptyState icon={RefreshCcw} title="Loading bookings" detail="Retrieving permission-scoped ticket records." compact /> : table.filtered.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>Booking / PNR</th><th>Passenger</th><th>Route</th><th>Airline</th><th>Travel date</th><th>Fare</th><th>Selling price</th><th>Profit</th><th>Status</th><th /></tr></thead><tbody>{table.pageRows.map((booking) => <tr key={booking.id}><td><div className="primary-cell"><strong className="pnr-code">{booking.pnr}</strong><span>{booking.bookingNumber}</span></div></td><td>{booking.passengerName}</td><td><strong className="route-code">{booking.origin} → {booking.destination}</strong></td><td>{booking.airline}</td><td>{formatDate(booking.travelDate)}</td><td className="number-cell">{formatNaira(Number(booking.fare))}</td><td className="number-cell">{formatNaira(Number(booking.sellingPrice))}</td><td className="number-cell positive-number">{formatNaira(Number(booking.profit))}</td><td><StatusPill value={booking.status} /></td><td><button className="icon-ghost" onClick={reload} aria-label={`Refresh ${booking.pnr}`}><RefreshCcw size={15} /></button></td></tr>)}</tbody></table></div> : <EmptyState icon={TicketCheck} title={table.search ? "No matching bookings" : "No bookings found"} detail={table.search ? "Try a different PNR, passenger, airline or route." : "Reserved and ticketed flight bookings will appear here."} />}<Pagination total={table.total} page={table.page} pageSize={table.pageSize} onPage={table.setPage} /></Panel></div>;
 }
 
-function StaffView() {
+function StaffDetailModal({
+  staff,
+  allowedStations,
+  onClose,
+  onComplete,
+}: {
+  staff: StaffRecord;
+  allowedStations: AllowedStation[];
+  onClose: () => void;
+  onComplete: (title: string, detail: string) => void;
+}) {
+  const detailApi = useApiData<any>(`/api/staff/${staff.id}`);
+  const hrSetupApi = useApiData<HrSetup>("/api/hr/catalogue");
+  
+  const [busy, setBusy] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const [firstName, setFirstName] = useState("");
+  const [middleName, setMiddleName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [preferredName, setPreferredName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [nationalId, setNationalId] = useState("");
+  const [salary, setSalary] = useState("");
+  const [employmentType, setEmploymentType] = useState<any>("PERMANENT");
+  const [departmentId, setDepartmentId] = useState("");
+  const [positionId, setPositionId] = useState("");
+  const [reason, setReason] = useState("");
+
+  const detail = detailApi.data;
+
+  useEffect(() => {
+    if (!detail) return;
+    setFirstName(detail.firstName ?? "");
+    setMiddleName(detail.middleName ?? "");
+    setLastName(detail.lastName ?? "");
+    setPreferredName(detail.preferredName ?? "");
+    setPhone(detail.phone ?? "");
+    setEmail(detail.email ?? "");
+    setAddress(detail.address ?? "");
+    setNationalId(detail.nationalId ?? "");
+    setSalary(detail.salary === "••••••" ? "" : detail.salary ?? "");
+    setEmploymentType(detail.employmentType ?? "PERMANENT");
+    setDepartmentId(detail.departmentId ?? "");
+    setPositionId(detail.positionId ?? "");
+  }, [detail]);
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!detail) return;
+    setError(null); setBusy(true);
+    try {
+      await workflowPost(`/api/staff/${staff.id}`, {
+        version: detail.version,
+        firstName,
+        middleName: middleName || null,
+        lastName,
+        preferredName: preferredName || null,
+        phone,
+        email: email || null,
+        address: address || null,
+        nationalId: nationalId || undefined,
+        salary: salary || null,
+        employmentType,
+        departmentId,
+        positionId,
+        reason
+      }, "PATCH");
+      onComplete("Staff updated", `${detail.firstName} ${detail.lastName} details were updated.`);
+    } catch (e) { setError(e instanceof Error ? e.message : "Update failed."); }
+    finally { setBusy(false); }
+  };
+
+  const handleDelete = async () => {
+    if (!detail) return;
+    if (!window.confirm(`Are you sure you want to permanently delete staff member ${detail.firstName} ${detail.lastName}?`)) return;
+    setError(null); setDeleteBusy(true);
+    try {
+      const response = await fetch(`/api/staff/${staff.id}`, {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ reason })
+      });
+      const body = await response.json() as ApiEnvelope<any>;
+      if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Delete failed.");
+      onComplete("Staff deleted", `${detail.firstName} ${detail.lastName} was deleted.`);
+    } catch (e) { setError(e instanceof Error ? e.message : "Delete failed."); }
+    finally { setDeleteBusy(false); }
+  };
+
+  if (detailApi.loading || hrSetupApi.loading) return (
+    <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={onClose}>
+      <div className="workflow-dialog" style={{ maxWidth: "500px" }}>
+        <div className="workflow-header"><div><span>Human resources</span><h2>Edit staff member</h2></div><button onClick={onClose}><X size={19} /></button></div>
+        <div className="workflow-body"><EmptyState icon={RefreshCcw} title="Loading staff records" detail="Reading current record from HR registry." compact /></div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="workflow-dialog" style={{ maxWidth: "600px" }}>
+        <div className="workflow-header">
+          <div>
+            <span>Human resources</span>
+            <h2 id="workflow-title">Edit staff member: {detail?.staffNumber}</h2>
+            <p>Update contact information, department, salary, and employment parameters.</p>
+          </div>
+          <button onClick={onClose} aria-label="Close modal"><X size={19} /></button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="workflow-body">
+            <div className="form-grid">
+              <Field label="First name"><input className="field-input" value={firstName} onChange={e => setFirstName(e.target.value)} required /></Field>
+              <Field label="Middle name"><input className="field-input" value={middleName} onChange={e => setMiddleName(e.target.value)} /></Field>
+              <Field label="Last name"><input className="field-input" value={lastName} onChange={e => setLastName(e.target.value)} required /></Field>
+              <Field label="Preferred name"><input className="field-input" value={preferredName} onChange={e => setPreferredName(e.target.value)} /></Field>
+              <Field label="Phone"><input className="field-input" value={phone} onChange={e => setPhone(e.target.value)} required /></Field>
+              <Field label="Email"><input className="field-input" type="email" value={email} onChange={e => setEmail(e.target.value)} /></Field>
+              <Field label="National ID"><input className="field-input" value={nationalId} onChange={e => setNationalId(e.target.value)} /></Field>
+              
+              <Field label="Department">
+                <select className="field-input" value={departmentId} onChange={e => setDepartmentId(e.target.value)} required>
+                  <option value="" disabled>Select department</option>
+                  {(hrSetupApi.data?.departments ?? []).map((item) => (
+                    <option key={item.id} value={item.id}>{item.name}</option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Position">
+                <select className="field-input" value={positionId} onChange={e => setPositionId(e.target.value)} required>
+                  <option value="" disabled>Select position</option>
+                  {(hrSetupApi.data?.positions ?? []).map((item) => (
+                    <option key={item.id} value={item.id}>{item.name}</option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Employment type">
+                <select className="field-input" value={employmentType} onChange={e => setEmploymentType(e.target.value as any)}>
+                  <option value="PERMANENT">Permanent</option>
+                  <option value="CONTRACT">Contract</option>
+                  <option value="TEMPORARY">Temporary</option>
+                  <option value="INTERN">Intern</option>
+                  <option value="CONSULTANT">Consultant</option>
+                </select>
+              </Field>
+
+              <Field label="Salary">
+                <div className="money-input">
+                  <span>₦</span>
+                  <input className="field-input" type="number" step="0.01" min="0" value={salary} onChange={e => setSalary(e.target.value)} />
+                </div>
+              </Field>
+
+              <Field label="Address" full><textarea className="field-input" value={address} onChange={e => setAddress(e.target.value)} /></Field>
+              <Field label="Reason for change (min. 5 characters)" full>
+                <input
+                  className="field-input"
+                  value={reason}
+                  onChange={e => setReason(e.target.value)}
+                  required
+                  minLength={5}
+                  placeholder="e.g. Promotion to senior operations lead"
+                />
+              </Field>
+            </div>
+            {error && <div className="form-note"><AlertTriangle size={16} /><span>{error}</span></div>}
+          </div>
+          <div className="workflow-footer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <button
+              type="button"
+              className="danger-ghost"
+              onClick={handleDelete}
+              disabled={deleteBusy}
+              style={{ display: "flex", alignItems: "center", gap: "6px" }}
+            >
+              <Trash2 size={15} />
+              <span>{deleteBusy ? "Deleting..." : "Delete staff"}</span>
+            </button>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button type="button" className="secondary-button" onClick={onClose}>
+                Cancel
+              </button>
+              <button type="submit" className="primary-button" disabled={busy}>
+                <ShieldCheck size={15} />
+                <span>{busy ? "Saving..." : "Save staff details"}</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function StaffView({
+  onModal,
+  allowedStations,
+}: {
+  onModal?: (modal: ModalKind) => void;
+  allowedStations: AllowedStation[];
+}) {
   const [tab, setTab] = useState("All staff");
-  const { data, total, loading, error } = useApiData<StaffRecord[]>("/api/staff?pageSize=100");
+  const [editingStaff, setEditingStaff] = useState<StaffRecord | null>(null);
+  
+  const { data, total, loading, error, reload } = useApiData<StaffRecord[]>("/api/staff?pageSize=100");
   const staffRecords = data ?? [];
   const visibleStaff = staffRecords.filter((person) => {
     if (tab === "Active") return person.status === "ACTIVE";
@@ -1993,7 +2201,91 @@ function StaffView() {
   const activeCount = staffRecords.filter((person) => person.status === "ACTIVE").length;
   const leaveCount = staffRecords.filter((person) => person.status === "ON_LEAVE").length;
   const thisMonth = staffRecords.filter((person) => new Date(person.employmentDate).getMonth() === new Date().getMonth() && new Date(person.employmentDate).getFullYear() === new Date().getFullYear()).length;
-  return <div className="content-stack"><section className="summary-strip"><SummaryItem label="Active staff" value={activeCount.toString()} icon={UserCheck} tone="success" /><SummaryItem label="Stations" value={stationCount.toString()} icon={Store} tone="info" /><SummaryItem label="On leave" value={leaveCount.toString()} icon={CalendarDays} tone="warning" /><SummaryItem label="New this month" value={thisMonth.toString()} icon={UserPlus} tone="success" /></section><Panel><TableToolbar tabs={["All staff", "Active", "On leave", "Inactive"]} activeTab={tab} onTab={(value) => { setTab(value); table.resetPage(); }} placeholder="Search staff name, ID, position or station" search={table.search} onSearch={table.setSearch} />{error ? <EmptyState icon={AlertTriangle} title="Staff records could not be loaded" detail={error} /> : loading ? <EmptyState icon={RefreshCcw} title="Loading staff directory" detail="Retrieving protected staff records from the database." compact /> : table.filtered.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>Staff member</th><th>Position</th><th>Department</th><th>Station</th><th>Employed since</th><th>Status</th><th /></tr></thead><tbody>{table.pageRows.map((person) => { const name = [person.firstName, person.middleName, person.lastName].filter(Boolean).join(" "); return <tr key={person.id}><td><div className="agent-cell staff"><span>{name.split(" ").map((part) => part[0]).join("").slice(0, 2)}</span><div><strong>{name}</strong><small>{person.staffNumber}</small></div></div></td><td>{person.position.name}</td><td>{person.department.name}</td><td>{person.homeStation.name}</td><td>{formatDate(person.employmentDate)}</td><td><StatusPill value={person.status.replaceAll("_", " ")} /></td><td><button className="icon-ghost" aria-label={`Open ${name}`}><MoreHorizontal size={17} /></button></td></tr>; })}</tbody></table></div> : <EmptyState icon={UserCheck} title={table.search ? "No matching staff" : "No staff records"} detail={table.search ? "Try a different name, ID, position or station." : "Add the first staff member and assign their department, position and home station."} />}<Pagination total={table.total} page={table.page} pageSize={table.pageSize} onPage={table.setPage} /></Panel></div>;
+  return (
+    <div className="content-stack">
+      <section className="summary-strip">
+        <SummaryItem label="Active staff" value={activeCount.toString()} icon={UserCheck} tone="success" />
+        <SummaryItem label="Stations" value={stationCount.toString()} icon={Store} tone="info" />
+        <SummaryItem label="On leave" value={leaveCount.toString()} icon={CalendarDays} tone="warning" />
+        <SummaryItem label="New this month" value={thisMonth.toString()} icon={UserPlus} tone="success" />
+      </section>
+      <Panel>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap", marginBottom: "8px" }}>
+          <TableToolbar tabs={["All staff", "Active", "On leave", "Inactive"]} activeTab={tab} onTab={(value) => { setTab(value); table.resetPage(); }} placeholder="Search staff name, ID, position or station" search={table.search} onSearch={table.setSearch} />
+          {onModal && (
+            <button className="primary-button" onClick={() => onModal("staff")} style={{ height: "36px", padding: "0 16px" }}>
+              <UserPlus size={15} /><span>Add staff</span>
+            </button>
+          )}
+        </div>
+        {error ? (
+          <EmptyState icon={AlertTriangle} title="Staff records could not be loaded" detail={error} />
+        ) : loading ? (
+          <EmptyState icon={RefreshCcw} title="Loading staff directory" detail="Retrieving protected staff records from the database." compact />
+        ) : table.filtered.length ? (
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Staff member</th>
+                  <th>Position</th>
+                  <th>Department</th>
+                  <th>Station</th>
+                  <th>Employed since</th>
+                  <th>Status</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {table.pageRows.map((person) => {
+                  const name = [person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ");
+                  return (
+                    <tr key={person.id} onClick={() => setEditingStaff(person)} style={{ cursor: "pointer" }} title="Click to view and edit details">
+                      <td>
+                        <div className="agent-cell staff">
+                          <span>{name.split(" ").map((part) => part[0]).join("").slice(0, 2)}</span>
+                          <div>
+                            <strong>{name}</strong>
+                            <small>{person.staffNumber}</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>{person.position.name}</td>
+                      <td>{person.department.name}</td>
+                      <td>{person.homeStation.name}</td>
+                      <td>{formatDate(person.employmentDate)}</td>
+                      <td>
+                        <StatusPill value={person.status.replaceAll("_", " ")} />
+                      </td>
+                      <td>
+                        <button className="icon-ghost" aria-label={`Open ${name}`} onClick={(e) => { e.stopPropagation(); setEditingStaff(person); }}>
+                          <MoreHorizontal size={17} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState icon={UserCheck} title={table.search ? "No matching staff" : "No staff records"} detail={table.search ? "Try a different name, ID, position or station." : "Add the first staff member and assign their department, position and home station."} />
+        )}
+        <Pagination total={table.total} page={table.page} pageSize={table.pageSize} onPage={table.setPage} />
+      </Panel>
+      {editingStaff && (
+        <StaffDetailModal
+          staff={editingStaff}
+          allowedStations={allowedStations}
+          onClose={() => setEditingStaff(null)}
+          onComplete={(title, detail) => {
+            setEditingStaff(null);
+            reload();
+          }}
+        />
+      )}
+    </div>
+  );
 }
 
 function ReportsView({ period, onToast }: { period: string; onToast: (toast: Toast) => void }) {
