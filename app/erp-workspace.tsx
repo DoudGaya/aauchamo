@@ -826,7 +826,7 @@ function ModuleView({
     case "agents":
       return <AgentsView onModal={onModal} />;
     case "customers":
-      return <CustomersView onModal={onModal} />;
+      return <CustomersView onModal={onModal} allowedStations={allowedStations} onToast={onToast} />;
     case "finance":
       return <FinanceView onToast={onToast} />;
     case "stations":
@@ -1430,8 +1430,395 @@ function AgentsView({ onModal }: { onModal: (modal: ModalKind) => void }) {
   );
 }
 
-function CustomersView({ onModal }: { onModal: (modal: ModalKind) => void }) {
+function CustomerDetailModal({
+  customer,
+  allowedStations,
+  onClose,
+  onComplete,
+}: {
+  customer: CustomerRecord;
+  allowedStations: AllowedStation[];
+  onClose: () => void;
+  onComplete: (title: string, detail: string) => void;
+}) {
+  const detailApi = useApiData<any>(`/api/customers/${customer.id}`);
+  const historyApi = useApiData<any>(`/api/customers/${customer.id}/history`);
+  const allCustomersApi = useApiData<CustomerRecord[]>("/api/customers?pageSize=100");
+
+  const [tab, setTab] = useState("Profile");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [nationalId, setNationalId] = useState("");
+  const [pnr, setPnr] = useState("");
+  const [destination, setDestination] = useState("");
+  const [airline, setAirline] = useState("");
+  const [remarks, setRemarks] = useState("");
+  const [reason, setReason] = useState("");
+
+  // Merge state
+  const [targetCustomerId, setTargetCustomerId] = useState("");
+  const [mergeReason, setMergeReason] = useState("");
+  const [confirmMerge, setConfirmMerge] = useState(false);
+
+  const detail = detailApi.data;
+  const history = historyApi.data;
+
+  useEffect(() => {
+    if (!detail) return;
+    setFirstName(detail.firstName ?? "");
+    setLastName(detail.lastName ?? "");
+    setCompanyName(detail.companyName ?? "");
+    setPhone(detail.primaryPhone ?? "");
+    setEmail(detail.primaryEmail ?? "");
+    setNationalId(detail.identifiers?.[0]?.value || "");
+    setPnr(detail.defaultPnr ?? "");
+    setDestination(detail.defaultDestination ?? "");
+    setAirline(detail.defaultAirline ?? "");
+    setRemarks(detail.remarks ?? "");
+  }, [detail]);
+
+  const handleUpdate = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setBusy(true);
+    try {
+      const response = await fetch(`/api/customers/${customer.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          version: detail.version,
+          type: detail.type,
+          firstName: detail.type === "INDIVIDUAL" ? firstName || null : null,
+          lastName: detail.type === "INDIVIDUAL" ? lastName || null : null,
+          companyName: detail.type === "BUSINESS" ? companyName || null : null,
+          phone,
+          email: email || null,
+          pnr: pnr || null,
+          nationalId: nationalId || undefined,
+          destination: destination || null,
+          airline: airline || null,
+          remarks: remarks || null,
+          reason,
+        }),
+      });
+      const body = await response.json();
+      if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Update failed.");
+      onComplete("Customer updated", `${displayName} details were updated successfully.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update customer.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleMerge = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!confirmMerge) {
+      alert("Please check the confirmation box to authorize this merge.");
+      return;
+    }
+    setError(null);
+    setBusy(true);
+    try {
+      const response = await fetch(`/api/customers/${customer.id}/merge`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          targetCustomerId,
+          reason: mergeReason,
+        }),
+      });
+      const body = await response.json();
+      if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Merge failed.");
+      onComplete("Customer merged", "Duplicate record merged successfully and source deactivated.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to merge customer.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const displayName = detail?.displayName || customer.displayName;
+  const otherCustomers = (allCustomersApi.data ?? []).filter((c) => c.id !== customer.id);
+
+  if (detailApi.loading || historyApi.loading) {
+    return (
+      <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={onClose}>
+        <div className="workflow-dialog" style={{ maxWidth: "500px" }}>
+          <div className="workflow-header">
+            <div>
+              <span>Customer management</span>
+              <h2>Loading customer detail</h2>
+            </div>
+            <button onClick={onClose}><X size={19} /></button>
+          </div>
+          <div className="workflow-body">
+            <EmptyState icon={RefreshCcw} title="Loading customer record" detail="Reading current record and transaction histories." compact />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="workflow-dialog" style={{ maxWidth: "800px" }}>
+        <div className="workflow-header">
+          <div>
+            <span>Customer operations</span>
+            <h2>{displayName} ({detail?.customerNumber})</h2>
+            <p>Home station: {detail?.homeStation?.name}</p>
+          </div>
+          <button onClick={onClose} aria-label="Close modal"><X size={19} /></button>
+        </div>
+
+        <div style={{ padding: "0 24px" }}>
+          <div className="tab-bar" style={{ marginBottom: "16px" }}>
+            <button className={classNames("tab-btn", tab === "Profile" && "tab-active")} onClick={() => setTab("Profile")}>Profile & Edit</button>
+            <button className={classNames("tab-btn", tab === "History" && "tab-active")} onClick={() => setTab("History")}>Transaction History</button>
+            <button className={classNames("tab-btn", tab === "Merge" && "tab-active")} onClick={() => setTab("Merge")}>Duplicate Merge</button>
+          </div>
+        </div>
+
+        {tab === "Profile" && (
+          <form onSubmit={handleUpdate}>
+            <div className="workflow-body" style={{ maxHeight: "60vh", overflowY: "auto" }}>
+              <div className="form-grid">
+                {detail?.type === "INDIVIDUAL" ? (
+                  <>
+                    <Field label="First name"><input className="field-input" value={firstName} onChange={(e) => setFirstName(e.target.value)} required /></Field>
+                    <Field label="Last name"><input className="field-input" value={lastName} onChange={(e) => setLastName(e.target.value)} required /></Field>
+                  </>
+                ) : (
+                  <Field label="Company name" full><input className="field-input" value={companyName} onChange={(e) => setCompanyName(e.target.value)} required /></Field>
+                )}
+                <Field label="Phone number"><input className="field-input" value={phone} onChange={(e) => setPhone(e.target.value)} required /></Field>
+                <Field label="Email address"><input className="field-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
+                <Field label="National ID"><input className="field-input" value={nationalId} onChange={(e) => setNationalId(e.target.value)} /></Field>
+                <Field label="Default PNR"><input className="field-input" value={pnr} onChange={(e) => setPnr(e.target.value)} /></Field>
+                <Field label="Default Destination"><input className="field-input" value={destination} onChange={(e) => setDestination(e.target.value)} /></Field>
+                <Field label="Default Airline"><input className="field-input" value={airline} onChange={(e) => setAirline(e.target.value)} /></Field>
+                <Field label="Remarks" full><textarea className="field-input" value={remarks} onChange={(e) => setRemarks(e.target.value)} /></Field>
+                
+                <div style={{ gridColumn: "1 / -1", margin: "10px 0", borderTop: "1px dashed var(--border-color)", paddingTop: "15px" }}>
+                  <h4 style={{ margin: "0 0 10px 0", fontSize: "14px", fontWeight: "600", color: "var(--text-primary)" }}>Audit trail log reason</h4>
+                </div>
+                <Field label="Reason for change (min. 5 characters)" full>
+                  <input
+                    className="field-input"
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    required
+                    minLength={5}
+                    placeholder="e.g. Updating contact email and default destination station"
+                  />
+                </Field>
+              </div>
+              {error && <div className="form-note"><AlertTriangle size={16} /><span>{error}</span></div>}
+            </div>
+            <div className="workflow-footer">
+              <span><ShieldCheck size={14} /> Scope verified</span>
+              <div>
+                <button type="button" className="secondary-button" onClick={onClose}>Cancel</button>
+                <button type="submit" className="primary-button" disabled={busy}><ShieldCheck size={16} />{busy ? "Saving..." : "Save details"}</button>
+              </div>
+            </div>
+          </form>
+        )}
+
+        {tab === "History" && (
+          <div className="workflow-body" style={{ maxHeight: "60vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: "24px" }}>
+            {/* POS Sales */}
+            <div>
+              <h3 style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "8px", borderBottom: "1px solid var(--border-color)", paddingBottom: "6px" }}>POS Sales & Invoices</h3>
+              {!history?.sales?.length ? (
+                <div style={{ color: "var(--text-muted)", fontSize: "12px", padding: "10px 0" }}>No POS sales recorded for this customer.</div>
+              ) : (
+                <div className="table-wrap">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Invoice Ref</th>
+                        <th>Posted Date</th>
+                        <th>Total</th>
+                        <th>Outstanding</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {history.sales.map((sale: any) => (
+                        <tr key={sale.id}>
+                          <td><strong>{sale.saleNumber}</strong></td>
+                          <td>{formatDate(sale.postedAt)}</td>
+                          <td>{formatNaira(Number(sale.total))}</td>
+                          <td>{formatNaira(Number(sale.outstandingTotal))}</td>
+                          <td><StatusPill value={sale.status} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Cargo */}
+            <div>
+              <h3 style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "8px", borderBottom: "1px solid var(--border-color)", paddingBottom: "6px" }}>Cargo Shipments</h3>
+              {!history?.cargo?.length ? (
+                <div style={{ color: "var(--text-muted)", fontSize: "12px", padding: "10px 0" }}>No cargo shipments recorded.</div>
+              ) : (
+                <div className="table-wrap">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>AWB Number</th>
+                        <th>Destination</th>
+                        <th>Weight</th>
+                        <th>Receiver</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {history.cargo.map((shipment: any) => (
+                        <tr key={shipment.id}>
+                          <td><strong>{shipment.awbNumber}</strong></td>
+                          <td>{shipment.destination}</td>
+                          <td>{shipment.weightKg} kg</td>
+                          <td>{shipment.receiverName}</td>
+                          <td><StatusPill value={shipment.status} /></td>
+                          <td>{formatDate(shipment.createdAt)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Bookings */}
+            <div>
+              <h3 style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "8px", borderBottom: "1px solid var(--border-color)", paddingBottom: "6px" }}>Flight Ticket Bookings</h3>
+              {!history?.bookings?.length ? (
+                <div style={{ color: "var(--text-muted)", fontSize: "12px", padding: "10px 0" }}>No flight ticket bookings recorded.</div>
+              ) : (
+                <div className="table-wrap">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Booking Ref</th>
+                        <th>PNR</th>
+                        <th>Passenger</th>
+                        <th>Destination</th>
+                        <th>Travel Date</th>
+                        <th>Selling Price</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {history.bookings.map((booking: any) => (
+                        <tr key={booking.id}>
+                          <td><strong>{booking.bookingNumber}</strong></td>
+                          <td><code style={{ fontSize: "12px", fontWeight: "bold", background: "var(--field-bg)", padding: "2px 6px", borderRadius: "4px" }}>{booking.pnr}</code></td>
+                          <td>{booking.passengerName}</td>
+                          <td>{booking.destination}</td>
+                          <td>{formatDate(booking.travelDate)}</td>
+                          <td>{formatNaira(Number(booking.sellingPrice))}</td>
+                          <td><StatusPill value={booking.status} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {tab === "Merge" && (
+          <form onSubmit={handleMerge}>
+            <div className="workflow-body">
+              <div style={{ background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.2)", padding: "16px", borderRadius: "8px", marginBottom: "20px", display: "flex", gap: "12px" }}>
+                <AlertTriangle style={{ color: "#ef4444", flexShrink: 0 }} size={20} />
+                <div style={{ fontSize: "13px", color: "var(--text-primary)" }}>
+                  <strong style={{ display: "block", marginBottom: "4px" }}>Danger Zone: Merge Duplicate Record</strong>
+                  This action cannot be undone. Merging will permanently re-assign all POS invoices, cargo labels, flight tickets, and contact records from <strong>{displayName}</strong> to the target customer selected below, and this customer record will be permanently deactivated.
+                </div>
+              </div>
+
+              <div className="form-grid">
+                <Field label="Target Customer" full>
+                  <select className="field-input" value={targetCustomerId} onChange={(e) => setTargetCustomerId(e.target.value)} required>
+                    <option value="" disabled>Select the master customer record to merge into</option>
+                    {otherCustomers.map((c) => (
+                      <option key={c.id} value={c.id}>{c.displayName} ({c.customerNumber} · {c.primaryPhone})</option>
+                    ))}
+                  </select>
+                </Field>
+
+                <Field label="Reason for Merge (min. 10 characters)" full>
+                  <textarea
+                    className="field-input"
+                    value={mergeReason}
+                    onChange={(e) => setMergeReason(e.target.value)}
+                    required
+                    minLength={10}
+                    placeholder="e.g. Duplicate records created during offline mode synchronization sync."
+                  />
+                </Field>
+
+                <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: "10px", marginTop: "10px" }}>
+                  <input
+                    type="checkbox"
+                    id="confirm-merge-check"
+                    checked={confirmMerge}
+                    onChange={(e) => setConfirmMerge(e.target.checked)}
+                    required
+                    style={{ width: "18px", height: "18px" }}
+                  />
+                  <label htmlFor="confirm-merge-check" style={{ fontSize: "13px", fontWeight: "600", cursor: "pointer", color: "var(--text-primary)" }}>
+                    I authorize the transfer of all ledger records and understand this action is irreversible.
+                  </label>
+                </div>
+              </div>
+
+              {error && <div className="form-note"><AlertTriangle size={16} /><span>{error}</span></div>}
+            </div>
+            
+            <div className="workflow-footer">
+              <span><ShieldCheck size={14} /> Admin authorization required</span>
+              <div>
+                <button type="button" className="secondary-button" onClick={onClose}>Cancel</button>
+                <button type="submit" className="primary-button" style={{ background: "#ef4444", color: "white" }} disabled={busy || !targetCustomerId || mergeReason.length < 10}>
+                  <Trash2 size={16} />
+                  {busy ? "Merging..." : "Confirm & Execute Merge"}
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CustomersView({
+  onModal,
+  allowedStations,
+  onToast,
+}: {
+  onModal: (modal: ModalKind) => void;
+  allowedStations: AllowedStation[];
+  onToast: (toast: Toast) => void;
+}) {
   const [tab, setTab] = useState("All customers");
+  const [editingCustomer, setEditingCustomer] = useState<CustomerRecord | null>(null);
   const { data, total, loading, error, reload } = useApiData<CustomerRecord[]>("/api/customers?pageSize=100");
   const customerRecords = data ?? [];
   const visibleCustomers = customerRecords.filter((customer) =>
@@ -1450,10 +1837,22 @@ function CustomersView({ onModal }: { onModal: (modal: ModalKind) => void }) {
       <Panel>
         <TableToolbar tabs={["All customers", "Individuals", "Corporate"]} activeTab={tab} onTab={(value) => { setTab(value); table.resetPage(); }} placeholder="Search name, phone, email or PNR" search={table.search} onSearch={table.setSearch} />
         {error ? <EmptyState icon={AlertTriangle} title="Customers could not be loaded" detail={error} /> : loading ? <EmptyState icon={RefreshCcw} title="Loading customer records" detail="Retrieving permission-scoped records from the database." compact /> : table.filtered.length ? (
-          <div className="table-wrap"><table className="data-table"><thead><tr><th>Customer</th><th>Phone</th><th>Email</th><th>Type</th><th>Home station</th><th>PNR</th><th>Created</th><th /></tr></thead><tbody>{table.pageRows.map((customer) => <tr key={customer.id}><td><div className="agent-cell customer"><span>{customer.displayName.split(" ").map((part) => part[0]).join("").slice(0, 2)}</span><div><strong>{customer.displayName}</strong><small>{customer.customerNumber}</small></div></div></td><td>{customer.primaryPhone}</td><td>{customer.primaryEmail ?? "—"}</td><td><StatusPill value={customer.type === "BUSINESS" ? "Corporate" : "Individual"} /></td><td>{customer.homeStation.name}</td><td>{customer.defaultPnr ?? "—"}</td><td>{formatDate(customer.createdAt)}</td><td><button className="icon-ghost" onClick={() => onModal("customer")} aria-label={`Add a customer from ${customer.displayName}`}><MoreHorizontal size={17} /></button></td></tr>)}</tbody></table></div>
+          <div className="table-wrap"><table className="data-table"><thead><tr><th>Customer</th><th>Phone</th><th>Email</th><th>Type</th><th>Home station</th><th>PNR</th><th>Created</th><th /></tr></thead><tbody>{table.pageRows.map((customer) => <tr key={customer.id} onClick={() => setEditingCustomer(customer)} style={{ cursor: "pointer" }} title="Click to view details and history"><td><div className="agent-cell customer"><span>{customer.displayName.split(" ").map((part) => part[0]).join("").slice(0, 2)}</span><div><strong>{customer.displayName}</strong><small>{customer.customerNumber}</small></div></div></td><td>{customer.primaryPhone}</td><td>{customer.primaryEmail ?? "—"}</td><td><StatusPill value={customer.type === "BUSINESS" ? "Corporate" : "Individual"} /></td><td>{customer.homeStation.name}</td><td>{customer.defaultPnr ?? "—"}</td><td>{formatDate(customer.createdAt)}</td><td><button className="icon-ghost" onClick={(e) => { e.stopPropagation(); onModal("customer"); }} aria-label={`Add a customer from ${customer.displayName}`}><MoreHorizontal size={17} /></button></td></tr>)}</tbody></table></div>
         ) : <EmptyState icon={Users} title={table.search ? "No matching customers" : "No customers yet"} detail={table.search ? "Try a different name, phone, email or PNR." : "Register the first customer to reuse their details across sales, cargo and bookings."} />}
         <Pagination total={table.total} page={table.page} pageSize={table.pageSize} onPage={table.setPage} />
       </Panel>
+      {editingCustomer && (
+        <CustomerDetailModal
+          customer={editingCustomer}
+          allowedStations={allowedStations}
+          onClose={() => setEditingCustomer(null)}
+          onComplete={(title, detail) => {
+            setEditingCustomer(null);
+            reload();
+            onToast({ title, detail });
+          }}
+        />
+      )}
     </div>
   );
 }
