@@ -24,6 +24,7 @@ const createUserSchema = z.object({
   stationIds: z.array(z.string().cuid()).default([]),
   businessUnitIds: z.array(z.string().cuid()).default([]),
   sendInvite: z.boolean().default(true),
+  password: z.string().min(6).max(100).optional(),
 });
 
 export async function GET(request: Request) {
@@ -113,7 +114,7 @@ export async function POST(request: Request) {
       throw new AppError("STATION_REQUIRED", "Station-scoped roles require at least one station.", 422);
     }
 
-    const temporaryPassword = `Aa1!${randomBytes(18).toString("base64url")}Z9!`;
+    const temporaryPassword = input.password || `Aa1!${randomBytes(12).toString("base64url")}Z9!`;
     const passwordHash = await hashPassword(temporaryPassword);
     const created = await db.$transaction(async (tx) => {
       const user = await tx.user.create({
@@ -215,7 +216,7 @@ export async function POST(request: Request) {
     });
 
     return apiSuccess(
-      { id: created.id, name: created.name, username: created.username, email: created.email, status: created.status },
+      { id: created.id, name: created.name, username: created.username, email: created.email, status: created.status, password: temporaryPassword },
       requestId,
       { created: true },
     );

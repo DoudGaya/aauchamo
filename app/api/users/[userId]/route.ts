@@ -4,6 +4,7 @@ import { requireAccess, requirePermission, requireStation } from "@/lib/server/a
 import { AppError, ConflictError, NotFoundError, apiFailure, apiSuccess, parseJson, requestIdFrom } from "@/lib/server/api";
 import { writeAudit } from "@/lib/server/audit";
 import { db } from "@/lib/server/db";
+import { hashPassword } from "@/lib/server/password";
 
 const updateSchema = z.object({
   version: z.number().int().positive(),
@@ -14,6 +15,7 @@ const updateSchema = z.object({
   roleIds: z.array(z.string().cuid()).min(1),
   stationIds: z.array(z.string().cuid()).default([]),
   businessUnitIds: z.array(z.string().cuid()).default([]),
+  password: z.string().min(6).max(100).optional(),
   reason: z.string().trim().min(5).max(500),
 });
 
@@ -55,18 +57,23 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ us
     if (!before) throw new NotFoundError("User not found.");
     if (roles.length !== input.roleIds.length) throw new AppError("INVALID_ROLE", "One or more roles are invalid.", 422);
     const after = await db.$transaction(async (tx) => {
+      let dataToUpdate: any = {
+        firstName: input.firstName,
+        lastName: input.lastName,
+        name: `${input.firstName} ${input.lastName}`,
+        email: input.email?.toLowerCase() ?? null,
+        phone: input.phone,
+        version: { increment: 1 },
+        securityVersion: { increment: 1 },
+        updatedById: access.userId,
+      };
+      if (input.password) {
+        dataToUpdate.passwordHash = await hashPassword(input.password);
+        dataToUpdate.mustChangePassword = true;
+      }
       const updatedCount = await tx.user.updateMany({
         where: { id: userId, version: input.version },
-        data: {
-          firstName: input.firstName,
-          lastName: input.lastName,
-          name: `${input.firstName} ${input.lastName}`,
-          email: input.email?.toLowerCase() ?? null,
-          phone: input.phone,
-          version: { increment: 1 },
-          securityVersion: { increment: 1 },
-          updatedById: access.userId,
-        },
+        data: dataToUpdate,
       });
       if (!updatedCount.count) throw new ConflictError("This user changed after you opened it. Refresh and try again.");
       await tx.userRole.deleteMany({ where: { userId } });
@@ -89,6 +96,54 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ us
       return updated;
     });
     return apiSuccess({ id: after.id, name: after.name, status: after.status, version: after.version }, requestId);
+  } catch (error) {
+    return apiFailure(error, requestId);
+  }
+}
+
+export async function DELETE(request: Request, { params }: { params: Promise<{ userId: string }> }) {
+  const requestId = requestIdFrom(request);
+  try {
+    const access = requirePermission(await requireAccess(), "users.manage");
+    const { userId } = await params;
+    if (userId === access.userId) {
+      throw new AppError("SELF_DELETE", "You cannot delete your own user account.", 409);
+    }
+    const before = await db.user.findFirst({ where: { id: userId, companyId: access.companyId } });
+    if (!before) throw new NotFoundError("User not found.");
+
+    // Check if user is referenced in critical tables
+    const [salesCount, auditCount, approvalCount] = await Promise.all([
+      db.sale.count({ where: { officerId: userId } }),
+      db.auditEvent.count({ where: { actorId: userId } }),
+      db.approvalRequest.count({ where: { OR: [{ requestedById: userId }, { decidedById: userId }, { assignedToId: userId }] } }),
+    ]);
+
+    if (salesCount > 0 || auditCount > 0 || approvalCount > 0) {
+      throw new ConflictError("User has historical records (sales, audits, or approvals) and cannot be deleted. Deactivate the account instead.");
+    }
+
+    const deleted = await db.$transaction(async (tx) => {
+      await tx.userRole.deleteMany({ where: { userId } });
+      await tx.userStationScope.deleteMany({ where: { userId } });
+      await tx.userBusinessUnitScope.deleteMany({ where: { userId } });
+      await tx.session.deleteMany({ where: { userId } });
+      await tx.stationManagerAssignment.deleteMany({ where: { managerId: userId } });
+      const res = await tx.user.delete({ where: { id: userId } });
+      
+      await writeAudit(tx, {
+        companyId: access.companyId,
+        actorId: access.userId,
+        action: "user.deleted",
+        entityType: "User",
+        entityId: userId,
+        requestId,
+        before,
+      });
+      return res;
+    });
+
+    return apiSuccess({ deleted: true, id: deleted.id }, requestId);
   } catch (error) {
     return apiFailure(error, requestId);
   }

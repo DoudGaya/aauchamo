@@ -2030,6 +2030,7 @@ function UserEditModal({
   const setupApi = useApiData<UserSetup>("/api/users/setup");
   
   const [busy, setBusy] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   const [firstName, setFirstName] = useState("");
@@ -2039,6 +2040,7 @@ function UserEditModal({
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [selectedStations, setSelectedStations] = useState<string[]>([]);
   const [selectedBUs, setSelectedBUs] = useState<string[]>([]);
+  const [password, setPassword] = useState("");
   const [reason, setReason] = useState("");
 
   const detail = detailApi.data;
@@ -2053,6 +2055,15 @@ function UserEditModal({
     setSelectedStations(detail.stationScopes.map((s: any) => s.stationId));
     setSelectedBUs(detail.businessUnitScopes.map((b: any) => b.businessUnitId));
   }, [detail]);
+
+  const generatePassword = () => {
+    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+    let pwd = "";
+    for (let i = 0; i < 14; i++) {
+      pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setPassword(pwd);
+  };
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -2072,11 +2083,25 @@ function UserEditModal({
         roleIds: selectedRoles,
         stationIds: selectedStations,
         businessUnitIds: selectedBUs,
+        password: password || undefined,
         reason
       }, "PATCH");
       onComplete("User updated", `${detail.username} access permissions and scopes were updated.`);
     } catch (e) { setError(e instanceof Error ? e.message : "Update failed."); }
     finally { setBusy(false); }
+  };
+
+  const handleDelete = async () => {
+    if (!detail) return;
+    if (!window.confirm(`Are you sure you want to permanently delete user ${detail.username}? This action is irreversible.`)) return;
+    setError(null); setDeleteBusy(true);
+    try {
+      const response = await fetch(`/api/users/${user.id}`, { method: "DELETE" });
+      const body = await response.json() as ApiEnvelope<any>;
+      if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Delete failed.");
+      onComplete("User deleted", `${detail.username} has been permanently deleted.`);
+    } catch (e) { setError(e instanceof Error ? e.message : "Delete failed."); }
+    finally { setDeleteBusy(false); }
   };
 
   if (detailApi.loading || setupApi.loading) return (
@@ -2106,6 +2131,22 @@ function UserEditModal({
               <Field label="Last name"><input className="field-input" value={lastName} onChange={e => setLastName(e.target.value)} required /></Field>
               <Field label="Email"><input className="field-input" type="email" value={email} onChange={e => setEmail(e.target.value)} /></Field>
               <Field label="Phone"><input className="field-input" value={phone} onChange={e => setPhone(e.target.value)} /></Field>
+
+              <Field label="Set New Password (Optional)" full>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <input
+                    className="field-input"
+                    style={{ flex: 1 }}
+                    type="text"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Leave blank to keep current password"
+                  />
+                  <button type="button" className="secondary-button" onClick={generatePassword} style={{ whiteSpace: "nowrap" }}>
+                    Generate
+                  </button>
+                </div>
+              </Field>
               
               <Field label="Roles (multiple)" full>
                 <select
@@ -2163,7 +2204,27 @@ function UserEditModal({
             </div>
             {error && <div className="form-note"><AlertTriangle size={16} /><span>{error}</span></div>}
           </div>
-          <ModalFooter onClose={onClose} submitLabel={busy ? "Saving..." : "Save access details"} icon={ShieldCheck} disabled={busy} />
+          <div className="workflow-footer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <button
+              type="button"
+              className="danger-ghost"
+              onClick={handleDelete}
+              disabled={deleteBusy}
+              style={{ display: "flex", alignItems: "center", gap: "6px" }}
+            >
+              <Trash2 size={15} />
+              <span>{deleteBusy ? "Deleting..." : "Delete user"}</span>
+            </button>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button type="button" className="secondary-button" onClick={onClose}>
+                Cancel
+              </button>
+              <button type="submit" className="primary-button" disabled={busy}>
+                <ShieldCheck size={15} />
+                <span>{busy ? "Saving..." : "Save access details"}</span>
+              </button>
+            </div>
+          </div>
         </form>
       </div>
     </div>
@@ -3070,10 +3131,153 @@ function StationForm({ onComplete, onClose }: { onComplete: (title: string, deta
   return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="Station code"><input name="code" required placeholder="LOS" /></Field><Field label="Station name"><input name="name" required /></Field><Field label="Email"><input name="email" type="email" /></Field><Field label="Phone"><input name="phone" /></Field><Field label="City"><input name="city" /></Field><Field label="State"><input name="state" /></Field><Field label="Address" full><textarea name="address" /></Field><Field label="Enabled business units" full><select name="businessUnitIds" multiple size={Math.min(5, api.data?.businessUnits.length ?? 3)}>{api.data?.businessUnits.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select></Field></div>{(error || api.error) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? api.error}</span></div>}</div><ModalFooter onClose={onClose} submitLabel={busy ? "Creating…" : "Create station"} icon={Building2} disabled={busy || api.loading} /></form>;
 }
 
-function InviteForm({ onComplete, onClose, allowedStations }: { onComplete: (title: string, detail: string) => void; onClose: () => void; allowedStations: AllowedStation[] }) {
-  const api = useApiData<UserSetup>("/api/users/setup"); const [busy, setBusy] = useState(false); const [error, setError] = useState<string | null>(null);
-  const submit = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setBusy(true); setError(null); const form = new FormData(event.currentTarget); try { const data = await workflowPost<{ username: string; status: string }>("/api/users", { firstName: String(form.get("firstName")), lastName: String(form.get("lastName")), username: String(form.get("username")), email: String(form.get("email")), phone: String(form.get("phone") || "") || undefined, roleIds: form.getAll("roleIds").map(String), stationIds: form.getAll("stationIds").map(String), businessUnitIds: form.getAll("businessUnitIds").map(String), sendInvite: true }); onComplete("User invited", `${data.username} was provisioned with explicit roles and scoped access.`); } catch (reason) { setError(reason instanceof Error ? reason.message : "User could not be invited."); } finally { setBusy(false); } };
-  return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="First name"><input name="firstName" required /></Field><Field label="Last name"><input name="lastName" required /></Field><Field label="Username"><input name="username" required /></Field><Field label="Email"><input name="email" type="email" required /></Field><Field label="Phone"><input name="phone" /></Field><Field label="Roles" full><select name="roleIds" multiple required size={Math.min(6, api.data?.roles.length ?? 4)}>{api.data?.roles.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.scope.toLowerCase()}</option>)}</select></Field><Field label="Station scope" full><select name="stationIds" multiple size={Math.min(6, allowedStations.length)}>{allowedStations.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select></Field><Field label="Business-unit scope" full><select name="businessUnitIds" multiple size={Math.min(5, api.data?.businessUnits.length ?? 3)}>{api.data?.businessUnits.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field></div>{(error || api.error) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? api.error}</span></div>}<div className="form-note"><LockKeyhole size={16} /><span>The invite carries a one-time credential and forces a password change at first sign-in.</span></div></div><ModalFooter onClose={onClose} submitLabel={busy ? "Inviting…" : "Invite user"} icon={UserPlus} disabled={busy || api.loading} /></form>;
+function InviteForm({
+  onComplete,
+  onClose,
+  allowedStations,
+}: {
+  onComplete: (title: string, detail: string) => void;
+  onClose: () => void;
+  allowedStations: AllowedStation[];
+}) {
+  const api = useApiData<UserSetup>("/api/users/setup");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [customPassword, setCustomPassword] = useState("");
+  const [credentials, setCredentials] = useState<{ username: string; password?: string } | null>(null);
+
+  const generatePassword = () => {
+    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+    let pwd = "";
+    for (let i = 0; i < 14; i++) {
+      pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setCustomPassword(pwd);
+  };
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setBusy(true);
+    setError(null);
+    const form = new FormData(event.currentTarget);
+    try {
+      const data = await workflowPost<{ username: string; status: string; password?: string }>("/api/users", {
+        firstName: String(form.get("firstName")),
+        lastName: String(form.get("lastName")),
+        username: String(form.get("username")),
+        email: String(form.get("email")),
+        phone: String(form.get("phone") || "") || undefined,
+        roleIds: form.getAll("roleIds").map(String),
+        stationIds: form.getAll("stationIds").map(String),
+        businessUnitIds: form.getAll("businessUnitIds").map(String),
+        password: customPassword || undefined,
+        sendInvite: !customPassword, // Skip invite email if password is set manually
+      });
+      setCredentials({ username: data.username, password: data.password });
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "User could not be invited.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (credentials) {
+    return (
+      <div className="workflow-body" style={{ padding: "20px" }}>
+        <div style={{ background: "var(--success-bg, rgba(16, 185, 129, 0.1))", border: "1px solid var(--success-border, #10b981)", padding: "16px", borderRadius: "6px", marginBottom: "20px" }}>
+          <h3 style={{ color: "#10b981", margin: "0 0 8px" }}>User Created Successfully!</h3>
+          <p style={{ margin: "0 0 12px", fontSize: "12px", color: "var(--text-secondary)" }}>
+            Please copy these temporary credentials. They will not be shown again.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--field-bg)", padding: "8px 12px", borderRadius: "4px" }}>
+              <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Username:</span>
+              <code style={{ fontSize: "12px", fontWeight: "bold" }}>{credentials.username}</code>
+            </div>
+            {credentials.password && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--field-bg)", padding: "8px 12px", borderRadius: "4px" }}>
+                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Temporary Password:</span>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <code style={{ fontSize: "12px", fontWeight: "bold", color: "#f59e0b" }}>{credentials.password}</code>
+                  <button
+                    type="button"
+                    className="row-button"
+                    style={{ padding: "2px 6px", fontSize: "10px" }}
+                    onClick={() => {
+                      navigator.clipboard.writeText(credentials.password || "");
+                      alert("Password copied to clipboard!");
+                    }}
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="workflow-actions" style={{ justifyContent: "flex-end", borderTop: "none", paddingTop: 0 }}>
+          <button type="button" className="primary-button" onClick={() => onComplete("User invited", `${credentials.username} provisioned.`)}>
+            Done
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={submit}>
+      <div className="workflow-body">
+        <div className="form-grid">
+          <Field label="First name"><input name="firstName" required className="field-input" /></Field>
+          <Field label="Last name"><input name="lastName" required className="field-input" /></Field>
+          <Field label="Username"><input name="username" required className="field-input" /></Field>
+          <Field label="Email"><input name="email" type="email" required className="field-input" /></Field>
+          <Field label="Phone"><input name="phone" className="field-input" /></Field>
+          
+          <Field label="Custom Password (Optional - skips email invite)" full>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <input
+                className="field-input"
+                style={{ flex: 1 }}
+                type="text"
+                value={customPassword}
+                onChange={(e) => setCustomPassword(e.target.value)}
+                placeholder="Leave blank to generate randomly and send email invitation"
+              />
+              <button type="button" className="secondary-button" onClick={generatePassword} style={{ whiteSpace: "nowrap" }}>
+                Generate
+              </button>
+            </div>
+          </Field>
+
+          <Field label="Roles" full>
+            <select name="roleIds" className="field-input" multiple required size={Math.min(6, api.data?.roles.length ?? 4)}>
+              {api.data?.roles.map((item) => (
+                <option key={item.id} value={item.id}>{item.name} · {item.scope.toLowerCase()}</option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Station scope" full>
+            <select name="stationIds" className="field-input" multiple size={Math.min(6, allowedStations.length)}>
+              {allowedStations.map((item) => (
+                <option key={item.id} value={item.id}>{item.code} · {item.name}</option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Business-unit scope" full>
+            <select name="businessUnitIds" className="field-input" multiple size={Math.min(5, api.data?.businessUnits.length ?? 3)}>
+              {api.data?.businessUnits.map((item) => (
+                <option key={item.id} value={item.id}>{item.name}</option>
+              ))}
+            </select>
+          </Field>
+        </div>
+        {(error || api.error) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? api.error}</span></div>}
+        <div className="form-note"><LockKeyhole size={16} /><span>Providing a custom password will mark the user active immediately. Leaving it blank triggers an email invite.</span></div>
+      </div>
+      <ModalFooter onClose={onClose} submitLabel={busy ? "Inviting..." : "Invite user"} icon={UserPlus} disabled={busy || api.loading} />
+    </form>
+  );
 }
 
 function AgentForm({ onComplete, onClose, allowedStations }: { onComplete: (title: string, detail: string) => void; onClose: () => void; allowedStations: AllowedStation[] }) {
