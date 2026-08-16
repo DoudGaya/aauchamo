@@ -87,7 +87,7 @@ describe("Purchase & Inventory Management (Module 06)", () => {
       await db.inventoryBalance.upsert({
         where: { stationId_productId_batchKey: { stationId: originStationId, productId, batchKey: "" } },
         create: { stationId: originStationId, productId, batchKey: "", quantity: 10 },
-        update: {},
+        update: { quantity: 10 },
       });
 
       const request = new Request("http://localhost/api/inventory/adjustments", {

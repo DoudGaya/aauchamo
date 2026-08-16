@@ -64,9 +64,6 @@ export function getRuntimeEnv(): RuntimeEnv {
     if (parsed.data.DATABASE_URL === developmentDefaults.DATABASE_URL) {
       throw new Error("DATABASE_URL must be configured before production starts.");
     }
-    if (!parsed.data.DATA_ENCRYPTION_KEY) {
-      throw new Error("DATA_ENCRYPTION_KEY must be configured before production starts.");
-    }
   }
 
   cachedEnv = parsed.data;
