@@ -9,15 +9,22 @@ import { getRuntimeEnv } from "@/lib/server/env";
 import { cargoTrackingToken } from "@/lib/server/tracking";
 import styles from "./print.module.css";
 
-export default async function CargoLabelPage({ params }: { params: Promise<{ shipmentId: string }> }) {
-  const access = requirePermission(await requireAccess(), "cargo.view"); const { shipmentId } = await params;
+export default async function CargoLabelPage({ params, searchParams }: { params: Promise<{ shipmentId: string }>; searchParams: Promise<{ format?: string }> }) {
+  const access = requirePermission(await requireAccess(), "cargo.view");
+  const { shipmentId } = await params;
+  const { format: urlFormat } = await searchParams;
   const shipment = await db.cargoShipment.findFirst({ where: { id: shipmentId, companyId: access.companyId }, include: { station: true, company: true } }); if (!shipment) notFound(); requireStation(access, shipment.stationId);
   const token = cargoTrackingToken(shipment.id, shipment.awbNumber); const trackingUrl = `${getRuntimeEnv().APP_URL}/track/${encodeURIComponent(shipment.awbNumber)}?token=${encodeURIComponent(token)}`;
   const barcode = await bwipjs.toBuffer({ bcid: "code128", text: shipment.awbNumber, scale: 3, height: 13, includetext: true, textxalign: "center", backgroundcolor: "FFFFFF" });
   const qr = await QRCode.toDataURL(trackingUrl, { errorCorrectionLevel: "M", margin: 1, width: 180, color: { dark: "#10243d", light: "#ffffff" } });
   const barcodeUrl = `data:image/png;base64,${barcode.toString("base64")}`;
   const settings = await db.systemSetting.findMany({ where: { companyId: access.companyId, namespace: "printer" } });
-  const paperSize = (settings.find(s => s.key === "paperSize")?.value as string) || "A4";
+  let paperSize = (settings.find(s => s.key === "paperSize")?.value as string) || "A4";
+  if (urlFormat === "thermal") {
+    paperSize = "THERMAL_100x150";
+  } else if (urlFormat === "a4") {
+    paperSize = "A4";
+  }
   const isThermal = paperSize.startsWith("THERMAL");
 
   const destinationColors: Record<string, string> = {

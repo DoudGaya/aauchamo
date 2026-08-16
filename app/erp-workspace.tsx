@@ -157,7 +157,7 @@ type ProductRecord = {
 };
 type PurchaseRecord = { id: string; orderNumber: string; status: string; total: string; expectedDate: string | null; createdAt: string; supplier: { name: string }; station: AllowedStation; lines: Array<{ id: string; quantityOrdered: string; quantityReceived: string; product: { name: string; trackBatches: boolean; trackExpiry: boolean } }> };
 type SaleRecord = { id: string; saleNumber: string; postedAt: string; status: string; total: string; paidTotal: string; outstandingTotal: string; customer: { displayName: string }; station: AllowedStation; businessUnit: { name: string }; allocations: Array<{ payment: { paymentMethod: { name: string } } }> };
-type CargoRecord = { id: string; awbNumber: string; senderName: string; receiverName: string; origin: string; destination: string; pieces: number; weightKg: string; airline: string | null; status: string; createdAt: string; customer: { displayName: string }; station: AllowedStation };
+type CargoRecord = { id: string; awbNumber: string; senderName: string; senderPhone: string; receiverName: string; receiverPhone: string; receiverAddress: string | null; origin: string; destination: string; pieces: number; weightKg: string; commodity: string; airline: string | null; flightNumber: string | null; flightDate: string | null; handlingNotes: string | null; declaredValue: string | null; status: string; labelVersion: number; reprintCount: number; createdAt: string; customer: { id: string; displayName: string; primaryPhone: string }; station: AllowedStation };
 type AgentRecord = { id: string; agentNumber: string; name: string; contactName: string; phone: string; creditLimit: string; status: string; homeStation: AllowedStation; wallet: { balance: string } | null; _count: { sales: number; bookings: number } };
 type FinanceRecord = { id: string; entryNumber: string; direction: string; amount: string; description: string; status: string; createdAt: string; account: { name: string }; category: { name: string }; station: AllowedStation };
 type TicketRecord = { id: string; bookingNumber: string; pnr: string; passengerName: string; origin: string; destination: string; airline: string; travelDate: string; fare: string; sellingPrice: string; profit: string; status: string; station: AllowedStation };
@@ -826,7 +826,7 @@ function ModuleView({
     case "purchases":
       return <InventoryView purchases={active === "purchases"} onModal={onModal} allowedStations={allowedStations} identity={identity} />;
     case "cargo":
-      return <CargoView onModal={onModal} onToast={onToast} />;
+      return <CargoView onModal={onModal} onToast={onToast} allowedStations={allowedStations} />;
     case "agents":
       return <AgentsView onModal={onModal} />;
     case "customers":
@@ -3552,34 +3552,461 @@ function InventoryView({
   );
 }
 
-function CargoView({ onModal, onToast }: { onModal: (modal: ModalKind) => void; onToast: (toast: Toast) => void }) {
+function CargoEditModal({
+  shipment,
+  allowedStations,
+  onClose,
+  onComplete,
+}: {
+  shipment: CargoRecord;
+  allowedStations: AllowedStation[];
+  onClose: () => void;
+  onComplete: (title: string, detail: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [reason, setReason] = useState("");
+
+  const isPreDispatch = ["DRAFT", "PROCESSING", "LABELLED"].includes(shipment.status);
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setBusy(true);
+    setError(null);
+    const form = new FormData(event.currentTarget);
+    const optional = (name: string) => String(form.get(name) ?? "").trim() || undefined;
+
+    const payload: any = {
+      senderName: String(form.get("senderName")),
+      senderPhone: String(form.get("senderPhone")),
+      receiverName: String(form.get("receiverName")),
+      receiverPhone: String(form.get("receiverPhone")),
+      receiverAddress: optional("receiverAddress"),
+      origin: String(form.get("origin")),
+      destination: String(form.get("destination")),
+      weightKg: String(form.get("weightKg")),
+      pieces: Number(form.get("pieces")),
+      commodity: String(form.get("commodity")),
+      airline: optional("airline"),
+      flightNumber: optional("flightNumber"),
+      flightDate: optional("flightDate") || undefined,
+      handlingNotes: optional("handlingNotes"),
+      declaredValue: optional("declaredValue"),
+    };
+
+    if (!isPreDispatch) {
+      payload.reason = reason;
+    }
+
+    try {
+      const response = await fetch(`/api/cargo/${shipment.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const body = await response.json() as ApiEnvelope<any>;
+      if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Failed to save updates.");
+
+      window.dispatchEvent(new Event("erp-data-changed"));
+
+      if (body.data?.approvalRequired) {
+        onComplete("Correction requested", "Label correction has been routed to supervisor approvals.");
+      } else {
+        onComplete("Shipment updated", "Draft shipment details were updated successfully.");
+      }
+    } catch (reason_) {
+      setError(reason_ instanceof Error ? reason_.message : "Failed to update shipment.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="workflow-dialog" style={{ maxWidth: "600px" }}>
+        <div className="workflow-header">
+          <div>
+            <span>Cargo & AWB</span>
+            <h2>{isPreDispatch ? "Edit Cargo Shipment" : "Correct Dispatched Label"}</h2>
+            <p>{isPreDispatch ? "Modify details of the draft shipment." : "Dispatched labels require a correction reason and supervisor approval."}</p>
+          </div>
+          <button onClick={onClose} aria-label="Close modal"><X size={19} /></button>
+        </div>
+
+        <form onSubmit={submit}>
+          <div className="workflow-body">
+            {!isPreDispatch && (
+              <div style={{ background: "#fef2f2", color: "#991b1b", padding: "12px 16px", borderRadius: "6px", marginBottom: "20px", border: "1px solid #fecaca" }}>
+                <strong style={{ display: "block", marginBottom: "4px", fontSize: "13px" }}>Correction Controls Active</strong>
+                <span style={{ fontSize: "12px" }}>This AWB has been dispatched. Modifying fields will increment the label version and must be approved by another supervisor.</span>
+              </div>
+            )}
+
+            <div className="form-grid">
+              <Field label="Sender name"><input name="senderName" defaultValue={shipment.senderName} required /></Field>
+              <Field label="Sender phone"><input name="senderPhone" defaultValue={shipment.senderPhone} required autoComplete="tel" /></Field>
+              <Field label="Receiver"><input name="receiverName" defaultValue={shipment.receiverName} required /></Field>
+              <Field label="Receiver phone"><input name="receiverPhone" defaultValue={shipment.receiverPhone} required autoComplete="tel" /></Field>
+              <Field label="Receiver address" full><input name="receiverAddress" defaultValue={shipment.receiverAddress ?? ""} /></Field>
+              <Field label="Origin"><input name="origin" defaultValue={shipment.origin} required /></Field>
+              <Field label="Destination"><input name="destination" defaultValue={shipment.destination} required /></Field>
+              <Field label="Weight (kg)"><input name="weightKg" type="number" step="0.001" min="0.001" defaultValue={shipment.weightKg} required /></Field>
+              <Field label="Pieces"><input name="pieces" type="number" min="1" defaultValue={shipment.pieces} required /></Field>
+              <Field label="Commodity" full><input name="commodity" defaultValue={shipment.commodity} required /></Field>
+              <Field label="Declared value"><div className="money-input"><span>₦</span><input name="declaredValue" type="number" step="0.01" min="0" defaultValue={shipment.declaredValue ?? ""} /></div></Field>
+              <Field label="Airline"><input name="airline" defaultValue={shipment.airline ?? ""} /></Field>
+              <Field label="Flight number"><input name="flightNumber" defaultValue={shipment.flightNumber ?? ""} /></Field>
+              <Field label="Flight date"><input name="flightDate" type="date" defaultValue={shipment.flightDate ? new Date(shipment.flightDate).toISOString().slice(0, 10) : ""} /></Field>
+              <Field label="Handling notes" full><textarea name="handlingNotes" defaultValue={shipment.handlingNotes ?? ""} /></Field>
+            </div>
+
+            {!isPreDispatch && (
+              <div style={{ marginTop: "20px", paddingTop: "20px", borderTop: "1px solid var(--border-color)" }}>
+                <Field label="Correction Reason (Mandatory)" full>
+                  <textarea
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    required
+                    placeholder="Enter reason and evidence for this label correction"
+                  />
+                </Field>
+              </div>
+            )}
+
+            {error && <div className="form-note"><AlertTriangle size={16} /><span>{error}</span></div>}
+          </div>
+
+          <div className="workflow-footer">
+            <span><ShieldCheck size={14} /> Audited under Maker-Checker controls</span>
+            <div>
+              <button type="button" className="secondary-button" onClick={onClose}>Cancel</button>
+              <button type="submit" className="primary-button" disabled={busy}>
+                {busy ? "Saving..." : isPreDispatch ? "Save Changes" : "Submit Correction"}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function CargoView({
+  onModal,
+  onToast,
+  allowedStations,
+}: {
+  onModal: (modal: ModalKind) => void;
+  onToast: (toast: Toast) => void;
+  allowedStations: AllowedStation[];
+}) {
   const [tab, setTab] = useState("All cargo");
-  const { data, total, loading, error } = useApiData<CargoRecord[]>("/api/cargo?pageSize=100");
-  const cargo = data ?? []; const visible = cargo.filter((item) => tab === "Processing" ? ["DRAFT", "PROCESSING", "LABELLED"].includes(item.status) : tab === "In transit" ? ["DISPATCHED", "IN_TRANSIT", "ARRIVED"].includes(item.status) : tab === "Delivered" ? item.status === "DELIVERED" : tab === "On hold" ? item.status === "ON_HOLD" : true);
-  const table = useTableControls(visible, (item, q) => `${item.awbNumber} ${item.senderName} ${item.receiverName} ${item.origin} ${item.destination} ${item.airline ?? ""} ${item.customer.displayName}`.toLowerCase().includes(q));
-  const nextStatus: Record<string, string> = { DRAFT: "LABELLED", PROCESSING: "LABELLED", LABELLED: "DISPATCHED", DISPATCHED: "IN_TRANSIT", IN_TRANSIT: "ARRIVED", ARRIVED: "DELIVERED" };
-  const advanceLabel: Record<string, string> = { DRAFT: "Issue label", PROCESSING: "Issue label", LABELLED: "Dispatch", DISPATCHED: "Mark in transit", IN_TRANSIT: "Mark arrived", ARRIVED: "Mark delivered" };
-  const advance = async (item: CargoRecord) => { const next = nextStatus[item.status]; if (!next) return; const notes = window.prompt(`Notes for moving ${item.awbNumber} to ${next.replaceAll("_", " ")}`, `Status updated to ${next}`); if (!notes?.trim()) return; try { await workflowPost(`/api/cargo/${item.id}/status`, { status: next, notes }); onToast({ title: "Cargo updated", detail: `${item.awbNumber} moved to ${next.replaceAll("_", " ").toLowerCase()}.` }); } catch (error_) { onToast({ title: "Update failed", detail: error_ instanceof Error ? error_.message : "The status could not be changed." }); } };
-  const reprint = async (item: CargoRecord) => { const reason = window.prompt(`Reason to reprint the label for ${item.awbNumber}`, "Customer copy"); if (!reason?.trim()) return; try { await workflowPost(`/api/cargo/${item.id}/reprint`, { format: "A4", reason }); window.open(`/print/cargo/${item.id}`, "_blank", "noopener,noreferrer"); onToast({ title: "Label reprinted", detail: `An audited reprint of ${item.awbNumber} was recorded.` }); } catch (error_) { onToast({ title: "Reprint failed", detail: error_ instanceof Error ? error_.message : "The label could not be reprinted." }); } };
+  const { data, total, loading, error, reload } = useApiData<CargoRecord[]>("/api/cargo?pageSize=100");
+  const [editingShipment, setEditingShipment] = useState<CargoRecord | null>(null);
+
+  const cargo = data ?? [];
+  const visible = cargo.filter((item) =>
+    tab === "Processing"
+      ? ["DRAFT", "PROCESSING", "LABELLED"].includes(item.status)
+      : tab === "In transit"
+      ? ["DISPATCHED", "IN_TRANSIT", "ARRIVED"].includes(item.status)
+      : tab === "Delivered"
+      ? item.status === "DELIVERED"
+      : tab === "On hold"
+      ? item.status === "ON_HOLD"
+      : true
+  );
+
+  const table = useTableControls(visible, (item, q) =>
+    `${item.awbNumber} ${item.senderName} ${item.receiverName} ${item.origin} ${item.destination} ${item.airline ?? ""} ${item.customer.displayName}`
+      .toLowerCase()
+      .includes(q)
+  );
+
+  const nextStatus: Record<string, string> = {
+    DRAFT: "LABELLED",
+    PROCESSING: "LABELLED",
+    LABELLED: "DISPATCHED",
+    DISPATCHED: "IN_TRANSIT",
+    IN_TRANSIT: "ARRIVED",
+    ARRIVED: "DELIVERED",
+  };
+
+  const advanceLabel: Record<string, string> = {
+    DRAFT: "Issue label",
+    PROCESSING: "Issue label",
+    LABELLED: "Dispatch",
+    DISPATCHED: "Mark in transit",
+    IN_TRANSIT: "Mark arrived",
+    ARRIVED: "Mark delivered",
+  };
+
+  const advance = async (item: CargoRecord) => {
+    const next = nextStatus[item.status];
+    if (!next) return;
+    const notes = window.prompt(`Notes for moving ${item.awbNumber} to ${next.replaceAll("_", " ")}`, `Status updated to ${next}`);
+    if (!notes?.trim()) return;
+    try {
+      await workflowPost(`/api/cargo/${item.id}/status`, { status: next, notes });
+      reload();
+      onToast({ title: "Cargo updated", detail: `${item.awbNumber} moved to ${next.replaceAll("_", " ").toLowerCase()}.` });
+    } catch (error_) {
+      onToast({
+        title: "Update failed",
+        detail: error_ instanceof Error ? error_.message : "The status could not be changed.",
+      });
+    }
+  };
+
+  const printLabel = (item: CargoRecord) => {
+    const isThermal = window.confirm("Print in thermal format? Click OK for Zebra/Thermal, Cancel for A4 standard.");
+    window.open(`/print/cargo/${item.id}?format=${isThermal ? "thermal" : "a4"}`, "_blank", "noopener,noreferrer");
+  };
+
+  const reprint = async (item: CargoRecord) => {
+    const isThermal = window.confirm("Reprint in thermal format? Click OK for Zebra/Thermal, Cancel for A4 standard.");
+    const reason = window.prompt(`Reason to reprint the label for ${item.awbNumber}`, "Customer copy");
+    if (!reason?.trim()) return;
+    try {
+      const format = isThermal ? "THERMAL" : "A4";
+      await workflowPost(`/api/cargo/${item.id}/reprint`, { format, reason });
+      reload();
+      window.open(`/print/cargo/${item.id}?format=${format.toLowerCase()}`, "_blank", "noopener,noreferrer");
+      onToast({ title: "Label reprinted", detail: `An audited reprint of ${item.awbNumber} was recorded.` });
+    } catch (error_) {
+      onToast({
+        title: "Reprint failed",
+        detail: error_ instanceof Error ? error_.message : "The label could not be reprinted.",
+      });
+    }
+  };
+
+  const exportManifest = () => {
+    const headers = [
+      "AWB Number",
+      "Customer",
+      "Sender Name",
+      "Sender Phone",
+      "Receiver Name",
+      "Receiver Phone",
+      "Receiver Address",
+      "Origin",
+      "Destination",
+      "Weight (kg)",
+      "Pieces",
+      "Commodity",
+      "Airline",
+      "Flight Number",
+      "Flight Date",
+      "Status",
+      "Label Version",
+      "Reprint Count",
+      "Created At",
+    ];
+    const rows = table.filtered.map((item) => [
+      item.awbNumber,
+      item.customer.displayName,
+      item.senderName,
+      item.senderPhone,
+      item.receiverName,
+      item.receiverPhone,
+      item.receiverAddress || "",
+      item.origin,
+      item.destination,
+      item.weightKg,
+      item.pieces,
+      item.commodity,
+      item.airline || "",
+      item.flightNumber || "",
+      item.flightDate ? new Date(item.flightDate).toLocaleDateString("en-NG") : "",
+      item.status,
+      `v${item.labelVersion}`,
+      item.reprintCount,
+      new Date(item.createdAt).toLocaleDateString("en-NG"),
+    ]);
+
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers.join(","), ...rows.map((e) => e.map((val) => `"${String(val).replace(/"/g, '""')}"`).join(","))].join(
+        "\n"
+      );
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `cargo_manifest_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="content-stack">
       <section className="summary-strip">
-        <SummaryItem label="Cargo records" value={total.toString()} detail={`${cargo.reduce((sum, item) => sum + Number(item.weightKg), 0).toLocaleString()} kg loaded`} icon={Plane} tone="info" />
-        <SummaryItem label="In transit" value={cargo.filter((item) => ["DISPATCHED", "IN_TRANSIT", "ARRIVED"].includes(item.status)).length.toString()} detail={`${cargo.reduce((sum, item) => sum + item.pieces, 0)} pieces loaded`} icon={ArrowUpRight} tone="success" />
-        <SummaryItem label="Processing" value={cargo.filter((item) => ["DRAFT", "PROCESSING", "LABELLED"].includes(item.status)).length.toString()} detail="Pre-dispatch" icon={Clock3} tone="warning" />
-        <SummaryItem label="On hold" value={cargo.filter((item) => item.status === "ON_HOLD").length.toString()} detail="Action required" icon={AlertTriangle} tone="danger" />
+        <SummaryItem
+          label="Cargo records"
+          value={total.toString()}
+          detail={`${cargo.reduce((sum, item) => sum + Number(item.weightKg), 0).toLocaleString()} kg loaded`}
+          icon={Plane}
+          tone="info"
+        />
+        <SummaryItem
+          label="In transit"
+          value={cargo.filter((item) => ["DISPATCHED", "IN_TRANSIT", "ARRIVED"].includes(item.status)).length.toString()}
+          detail={`${cargo.reduce((sum, item) => sum + item.pieces, 0)} pieces loaded`}
+          icon={ArrowUpRight}
+          tone="success"
+        />
+        <SummaryItem
+          label="Processing"
+          value={cargo.filter((item) => ["DRAFT", "PROCESSING", "LABELLED"].includes(item.status)).length.toString()}
+          detail="Pre-dispatch"
+          icon={Clock3}
+          tone="warning"
+        />
+        <SummaryItem
+          label="On hold"
+          value={cargo.filter((item) => item.status === "ON_HOLD").length.toString()}
+          detail="Action required"
+          icon={AlertTriangle}
+          tone="danger"
+        />
       </section>
       <Panel>
-        <TableToolbar tabs={["All cargo", "Processing", "In transit", "Delivered", "On hold"]} activeTab={tab} onTab={(value) => { setTab(value); table.resetPage(); }} placeholder="Search AWB, sender, receiver or route" search={table.search} onSearch={table.setSearch} />
-        {error ? <EmptyState icon={AlertTriangle} title="Cargo could not be loaded" detail={error} /> : loading ? <EmptyState icon={RefreshCcw} title="Loading cargo records" detail="Retrieving AWB records and status history." compact /> : table.filtered.length ? <div className="table-wrap">
-          <table className="data-table">
-            <thead><tr><th>AWB / cargo no.</th><th>Customer</th><th>Route</th><th>Shipment</th><th>Airline</th><th>Status</th><th>Created</th><th /></tr></thead>
-            <tbody>{table.pageRows.map((item) => <tr key={item.id}><td><div className="primary-cell"><strong>{item.awbNumber}</strong><span><Tag size={11} /> Barcode ready</span></div></td><td>{item.customer.displayName}</td><td><strong className="route-code">{item.origin} → {item.destination}</strong></td><td>{item.pieces} pcs · {item.weightKg} kg</td><td>{item.airline ?? "—"}</td><td><StatusPill value={item.status.replaceAll("_", " ")} /></td><td>{formatDate(item.createdAt)}</td><td><div className="row-actions">{nextStatus[item.status] && <button className="row-button" onClick={() => advance(item)}>{advanceLabel[item.status]}</button>}<button className="icon-ghost" title="Open label" onClick={() => window.open(`/print/cargo/${item.id}`, "_blank", "noopener,noreferrer")}><Printer size={16} /></button><button className="icon-ghost" title="Reprint label (audited)" onClick={() => reprint(item)}><RotateCcw size={16} /></button></div></td></tr>)}</tbody>
-          </table>
-        </div> : <EmptyState icon={Plane} title="No cargo records" detail="Create an AWB to generate the first scanner-compatible cargo label." />}
-        <div className="table-callout"><div><PackageCheck size={18} /><span><strong>Label output</strong> Code 128 · secure QR · thermal and A4</span></div><em><i /> Ready</em><button onClick={() => onModal("cargo")}>Create AWB</button></div>
-        <Pagination total={table.total} page={table.page} pageSize={table.pageSize} onPage={table.setPage} />
+        <TableToolbar
+          tabs={["All cargo", "Processing", "In transit", "Delivered", "On hold"]}
+          activeTab={tab}
+          onTab={(value) => {
+            setTab(value);
+            table.resetPage();
+          }}
+          exportable
+          onExport={exportManifest}
+          placeholder="Search AWB, sender, receiver or route"
+          search={table.search}
+          onSearch={table.setSearch}
+        />
+        {error ? (
+          <EmptyState icon={AlertTriangle} title="Cargo could not be loaded" detail={error} />
+        ) : loading ? (
+          <EmptyState
+            icon={RefreshCcw}
+            title="Loading cargo records"
+            detail="Retrieving AWB records and status history."
+            compact
+          />
+        ) : table.filtered.length ? (
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>AWB / cargo no.</th>
+                  <th>Customer</th>
+                  <th>Route</th>
+                  <th>Shipment</th>
+                  <th>Airline</th>
+                  <th>Label status</th>
+                  <th>Created</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {table.pageRows.map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      <div className="primary-cell">
+                        <strong>{item.awbNumber}</strong>
+                        <span>
+                          <Tag size={11} /> Label v{item.labelVersion}
+                          {item.reprintCount > 0 && ` (Reprinted ${item.reprintCount}x)`}
+                        </span>
+                      </div>
+                    </td>
+                    <td>{item.customer.displayName}</td>
+                    <td>
+                      <strong className="route-code">
+                        {item.origin} → {item.destination}
+                      </strong>
+                    </td>
+                    <td>
+                      {item.pieces} pcs · {item.weightKg} kg
+                    </td>
+                    <td>{item.airline ?? "—"}</td>
+                    <td>
+                      <StatusPill value={item.status.replaceAll("_", " ")} />
+                    </td>
+                    <td>{formatDate(item.createdAt)}</td>
+                    <td>
+                      <div className="row-actions">
+                        <button type="button" className="row-button" onClick={() => setEditingShipment(item)}>
+                          Edit
+                        </button>
+                        {nextStatus[item.status] && (
+                          <button type="button" className="row-button" onClick={() => advance(item)}>
+                            {advanceLabel[item.status]}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="icon-ghost"
+                          title="Open label"
+                          onClick={() => printLabel(item)}
+                        >
+                          <Printer size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          className="icon-ghost"
+                          title="Reprint label (audited)"
+                          onClick={() => reprint(item)}
+                        >
+                          <RotateCcw size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState
+            icon={Plane}
+            title="No cargo records"
+            detail="Create an AWB to generate the first scanner-compatible cargo label."
+          />
+        )}
+        <div className="table-callout">
+          <div>
+            <PackageCheck size={18} />
+            <span>
+              <strong>Label output</strong> Code 128 · secure QR · thermal and A4
+            </span>
+          </div>
+          <em>
+            <i /> Ready
+          </em>
+          <button onClick={() => onModal("cargo")}>Create AWB</button>
+        </div>
+        <Pagination
+          total={table.total}
+          page={table.page}
+          pageSize={table.pageSize}
+          onPage={table.setPage}
+        />
       </Panel>
+
+      {editingShipment && (
+        <CargoEditModal
+          shipment={editingShipment}
+          allowedStations={allowedStations}
+          onClose={() => setEditingShipment(null)}
+          onComplete={(title, detail) => {
+            setEditingShipment(null);
+            reload();
+            onToast({ title, detail });
+          }}
+        />
+      )}
     </div>
   );
 }
