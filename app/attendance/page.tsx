@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Clock,
   MapPin,
@@ -12,9 +13,7 @@ import {
   LogIn,
   User,
   Building2,
-  Map,
   Smartphone,
-  ExternalLink,
   ShieldCheck,
   ChevronLeft,
 } from "lucide-react";
@@ -32,9 +31,6 @@ export default function MobileAttendancePage() {
   const [coords, setCoords] = useState<{ latitude: number; longitude: number; accuracy?: number } | null>(null);
   const [gpsStatus, setGpsStatus] = useState<"acquiring" | "success" | "error">("acquiring");
   const [gpsErrorMessage, setGpsErrorMessage] = useState("");
-
-  // PWA Install prompt state
-  const [showPwaTip, setShowPwaTip] = useState(false);
 
   // 1. Live Clock Timer
   useEffect(() => {
@@ -93,9 +89,9 @@ export default function MobileAttendancePage() {
         setCoords(null);
         setGpsStatus("error");
         if (err.code === err.PERMISSION_DENIED) {
-          setGpsErrorMessage("GPS access denied. Please allow location permissions in your mobile browser settings.");
+          setGpsErrorMessage("GPS access denied. Please enable location permissions in browser settings.");
         } else {
-          setGpsErrorMessage("Unable to acquire high-accuracy GPS fix. Please step outside or retry.");
+          setGpsErrorMessage("Unable to acquire high-accuracy GPS fix. Step outside or retry.");
         }
       },
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
@@ -149,9 +145,9 @@ export default function MobileAttendancePage() {
   return (
     <div style={{
       minHeight: "100vh",
-      backgroundColor: "#071325",
-      color: "#f8fafc",
-      fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      backgroundColor: "#f8fafc",
+      color: "#111827",
+      fontFamily: '"Aptos", "Segoe UI Variable", "Segoe UI", Arial, sans-serif',
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
@@ -160,17 +156,14 @@ export default function MobileAttendancePage() {
       margin: "0 auto",
       position: "relative",
     }}>
-      {/* Background Decorative Gradient Blobs */}
+      {/* AAU Chamo Crimson Top Bar Accent */}
       <div style={{
         position: "absolute",
-        top: "-100px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        width: "300px",
-        height: "300px",
-        background: "radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(11, 31, 58, 0) 70%)",
-        pointerEvents: "none",
-        zIndex: 0,
+        top: 0,
+        left: 0,
+        right: 0,
+        height: "5px",
+        background: "linear-gradient(90deg, #ca0b12 0%, #b00a10 100%)",
       }} />
 
       {/* Top Header */}
@@ -179,34 +172,19 @@ export default function MobileAttendancePage() {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        padding: "8px 0 16px",
-        borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
-        zIndex: 1,
+        padding: "12px 0 16px",
+        borderBottom: "1px solid #e5e7eb",
+        marginTop: "4px",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{
-            width: "36px",
-            height: "36px",
-            borderRadius: "10px",
-            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontWeight: "bold",
-            fontSize: "18px",
-            color: "#ffffff",
-            boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
-          }}>
-            A
-          </div>
-          <div>
-            <div style={{ fontWeight: "700", fontSize: "15px", letterSpacing: "0.5px", color: "#ffffff" }}>
-              AAU CHAMO
-            </div>
-            <div style={{ fontSize: "11px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "1px" }}>
-              Attendance Punch Clock
-            </div>
-          </div>
+          <Image
+            src="/aauchamo-logo.png"
+            alt="AAU Chamo Logo"
+            width={140}
+            height={36}
+            style={{ objectFit: "contain" }}
+            priority
+          />
         </div>
 
         <Link
@@ -215,15 +193,15 @@ export default function MobileAttendancePage() {
             display: "flex",
             alignItems: "center",
             gap: "4px",
-            background: "rgba(255, 255, 255, 0.06)",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            color: "#cbd5e1",
+            background: "#ffffff",
+            border: "1px solid #d1d5db",
+            color: "#374151",
             padding: "6px 12px",
             borderRadius: "20px",
             fontSize: "12px",
             textDecoration: "none",
             fontWeight: "600",
-            transition: "all 0.2s ease",
+            boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
           }}
         >
           <ChevronLeft size={14} />
@@ -232,96 +210,106 @@ export default function MobileAttendancePage() {
       </header>
 
       {/* Main Container */}
-      <main style={{ width: "100%", zIndex: 1, marginTop: "16px", display: "flex", flexDirection: "column", gap: "16px" }}>
+      <main style={{ width: "100%", marginTop: "16px", display: "flex", flexDirection: "column", gap: "16px" }}>
 
-        {/* 1. Staff Identity Card */}
+        {/* 1. Staff Identity Card (Branded) */}
         {loading ? (
           <div style={{
-            background: "rgba(15, 23, 42, 0.6)",
-            backdropFilter: "blur(12px)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
+            background: "#ffffff",
+            border: "1px solid #e5e7eb",
             borderRadius: "16px",
             padding: "20px",
             textAlign: "center",
-            color: "#94a3b8",
+            color: "#6b7280",
             fontSize: "13px",
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
           }}>
             Loading staff profile...
           </div>
         ) : !data?.hasStaffRecord ? (
           <div style={{
-            background: "rgba(239, 68, 68, 0.1)",
-            border: "1px solid rgba(239, 68, 68, 0.3)",
+            background: "#fef2f2",
+            border: "1px solid #fca5a5",
             borderRadius: "16px",
             padding: "16px",
             display: "flex",
             alignItems: "flex-start",
             gap: "12px",
-            color: "#fca5a5",
+            color: "#991b1b",
           }}>
-            <AlertCircle size={20} style={{ flexShrink: 0, marginTop: "2px" }} />
+            <AlertCircle size={20} style={{ flexShrink: 0, marginTop: "2px", color: "#ca0b12" }} />
             <div style={{ fontSize: "13px" }}>
               <strong>Staff Profile Not Found</strong>
-              <p style={{ margin: "4px 0 0", color: "#f87171", fontSize: "12px" }}>
+              <p style={{ margin: "4px 0 0", color: "#b91c1c", fontSize: "12px" }}>
                 {data?.message ?? "Your system login is not linked to a physical employee record. Please contact HR."}
               </p>
             </div>
           </div>
         ) : (
           <div style={{
-            background: "linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(11, 31, 58, 0.9) 100%)",
-            backdropFilter: "blur(12px)",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
+            background: "#ffffff",
+            border: "1px solid #e5e7eb",
             borderRadius: "16px",
             padding: "16px",
             display: "flex",
             alignItems: "center",
             gap: "14px",
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+            boxShadow: "0 4px 16px rgba(0, 0, 0, 0.04)",
+            position: "relative",
+            overflow: "hidden",
           }}>
+            <div style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: "4px",
+              background: "#ca0b12",
+            }} />
+
             <div style={{
               width: "48px",
               height: "48px",
               borderRadius: "50%",
-              background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
+              background: "linear-gradient(135deg, #ca0b12 0%, #b00a10 100%)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               color: "#ffffff",
               fontSize: "18px",
-              fontWeight: "bold",
+              fontWeight: "700",
               flexShrink: 0,
-              boxShadow: "0 4px 14px rgba(59, 130, 246, 0.4)",
+              boxShadow: "0 4px 12px rgba(202, 11, 18, 0.25)",
             }}>
               {staffInfo.firstName?.[0] ?? "U"}{staffInfo.lastName?.[0] ?? ""}
             </div>
 
             <div style={{ flexGrow: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <h2 style={{ fontSize: "16px", fontWeight: "700", color: "#ffffff", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                <h2 style={{ fontSize: "16px", fontWeight: "700", color: "#111827", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {staffInfo.fullName}
                 </h2>
                 <span style={{
-                  background: "rgba(16, 185, 129, 0.15)",
-                  color: "#34d399",
-                  border: "1px solid rgba(16, 185, 129, 0.3)",
+                  background: "rgba(202, 11, 18, 0.08)",
+                  color: "#ca0b12",
+                  border: "1px solid rgba(202, 11, 18, 0.2)",
                   padding: "2px 8px",
                   borderRadius: "10px",
                   fontSize: "10px",
-                  fontWeight: "600",
+                  fontWeight: "700",
                 }}>
                   {staffInfo.staffNumber}
                 </span>
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "4px", fontSize: "12px", color: "#cbd5e1" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "4px", fontSize: "12px", color: "#4b5563" }}>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                  <User size={12} style={{ color: "#94a3b8" }} />
+                  <User size={12} style={{ color: "#ca0b12" }} />
                   {staffInfo.positionName}
                 </span>
                 <span>•</span>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                  <Building2 size={12} style={{ color: "#94a3b8" }} />
+                  <Building2 size={12} style={{ color: "#ca0b12" }} />
                   {staffInfo.homeStation?.name ?? "Main HQ"}
                 </span>
               </div>
@@ -329,22 +317,21 @@ export default function MobileAttendancePage() {
           </div>
         )}
 
-        {/* 2. Live Digital Clock Panel */}
+        {/* 2. Live Digital Clock Panel (Branded Surface) */}
         <div style={{
-          background: "linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(7, 19, 37, 0.95) 100%)",
-          backdropFilter: "blur(16px)",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
+          background: "#ffffff",
+          border: "1px solid #e5e7eb",
           borderRadius: "20px",
           padding: "24px 20px",
           textAlign: "center",
-          boxShadow: "0 12px 40px rgba(0, 0, 0, 0.4)",
+          boxShadow: "0 8px 30px rgba(0, 0, 0, 0.05)",
         }}>
           <div style={{
             fontSize: "12px",
-            fontWeight: "600",
+            fontWeight: "700",
             textTransform: "uppercase",
             letterSpacing: "1.5px",
-            color: "#94a3b8",
+            color: "#6b7280",
             marginBottom: "6px",
           }}>
             {currentDate || "Loading Date..."}
@@ -354,10 +341,9 @@ export default function MobileAttendancePage() {
             fontSize: "44px",
             fontWeight: "800",
             fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-            color: "#ffffff",
+            color: "#ca0b12",
             letterSpacing: "1px",
             margin: "4px 0 12px",
-            textShadow: "0 0 20px rgba(59, 130, 246, 0.3)",
           }}>
             {currentTime || "00:00:00 AM"}
           </div>
@@ -367,8 +353,8 @@ export default function MobileAttendancePage() {
             display: "inline-flex",
             alignItems: "center",
             gap: "8px",
-            background: "rgba(255, 255, 255, 0.05)",
-            border: `1px solid ${gpsStatus === "success" ? "rgba(16, 185, 129, 0.3)" : "rgba(239, 68, 68, 0.3)"}`,
+            background: "#f9fafb",
+            border: `1px solid ${gpsStatus === "success" ? "#bbf7d0" : "#fca5a5"}`,
             padding: "8px 14px",
             borderRadius: "24px",
             fontSize: "12px",
@@ -378,12 +364,12 @@ export default function MobileAttendancePage() {
               width: "8px",
               height: "8px",
               borderRadius: "50%",
-              background: gpsStatus === "success" ? "#10b981" : gpsStatus === "error" ? "#ef4444" : "#f59e0b",
-              boxShadow: gpsStatus === "success" ? "0 0 8px #10b981" : "none",
+              background: gpsStatus === "success" ? "#166534" : gpsStatus === "error" ? "#ca0b12" : "#d97706",
+              boxShadow: gpsStatus === "success" ? "0 0 8px #166534" : "none",
               flexShrink: 0,
             }} />
 
-            <span style={{ color: gpsStatus === "success" ? "#e2e8f0" : "#f87171", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <span style={{ color: gpsStatus === "success" ? "#166534" : "#991b1b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: "600" }}>
               {gpsStatus === "success" && coords
                 ? `GPS Lock (${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}) ±${coords.accuracy ?? 0}m`
                 : gpsStatus === "error"
@@ -397,7 +383,7 @@ export default function MobileAttendancePage() {
               style={{
                 background: "none",
                 border: "none",
-                color: "#60a5fa",
+                color: "#ca0b12",
                 padding: "2px 4px",
                 cursor: "pointer",
                 display: "inline-flex",
@@ -421,17 +407,18 @@ export default function MobileAttendancePage() {
                   style={{
                     width: "100%",
                     minHeight: "56px",
-                    background: "rgba(15, 23, 42, 0.7)",
-                    border: "1px solid rgba(255, 255, 255, 0.12)",
+                    background: "#ffffff",
+                    border: "1px solid #d1d5db",
                     borderRadius: "12px",
                     padding: "10px 14px",
-                    color: "#ffffff",
+                    color: "#111827",
                     fontSize: "13px",
                     resize: "none",
                     outline: "none",
                     boxSizing: "border-box",
+                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
                   }}
-                  placeholder="Optional shift notes (e.g. Remote work, field assignment, vehicle #)..."
+                  placeholder="Optional shift notes (e.g. Remote work, field assignment, station duty)..."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   disabled={busy}
@@ -451,8 +438,8 @@ export default function MobileAttendancePage() {
                   borderRadius: "16px",
                   border: "none",
                   background: !coords
-                    ? "rgba(16, 185, 129, 0.3)"
-                    : "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                    ? "#9ca3af"
+                    : "linear-gradient(135deg, #166534 0%, #15803d 100%)",
                   color: "#ffffff",
                   fontSize: "17px",
                   fontWeight: "700",
@@ -461,7 +448,7 @@ export default function MobileAttendancePage() {
                   justifyContent: "center",
                   gap: "10px",
                   cursor: !coords || busy ? "not-allowed" : "pointer",
-                  boxShadow: !coords ? "none" : "0 8px 24px rgba(16, 185, 129, 0.4)",
+                  boxShadow: !coords ? "none" : "0 6px 20px rgba(22, 101, 52, 0.3)",
                   transition: "all 0.2s ease",
                 }}
               >
@@ -479,8 +466,8 @@ export default function MobileAttendancePage() {
                   borderRadius: "16px",
                   border: "none",
                   background: !coords
-                    ? "rgba(245, 158, 11, 0.3)"
-                    : "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                    ? "#9ca3af"
+                    : "linear-gradient(135deg, #ca0b12 0%, #b00a10 100%)",
                   color: "#ffffff",
                   fontSize: "17px",
                   fontWeight: "700",
@@ -489,7 +476,7 @@ export default function MobileAttendancePage() {
                   justifyContent: "center",
                   gap: "10px",
                   cursor: !coords || busy ? "not-allowed" : "pointer",
-                  boxShadow: !coords ? "none" : "0 8px 24px rgba(245, 158, 11, 0.4)",
+                  boxShadow: !coords ? "none" : "0 6px 20px rgba(202, 11, 18, 0.3)",
                   transition: "all 0.2s ease",
                 }}
               >
@@ -498,17 +485,17 @@ export default function MobileAttendancePage() {
               </button>
             ) : (
               <div style={{
-                background: "rgba(16, 185, 129, 0.1)",
-                border: "1px solid rgba(16, 185, 129, 0.3)",
+                background: "#f0fdf4",
+                border: "1px solid #bbf7d0",
                 borderRadius: "16px",
                 padding: "16px",
                 textAlign: "center",
-                color: "#34d399",
+                color: "#166534",
               }}>
-                <CheckCircle2 size={28} style={{ margin: "0 auto 6px" }} />
+                <CheckCircle2 size={28} style={{ margin: "0 auto 6px", color: "#166534" }} />
                 <div style={{ fontWeight: "700", fontSize: "15px" }}>Shift Completed Today</div>
-                <div style={{ fontSize: "12px", color: "#a7f3d0", marginTop: "2px" }}>
-                  Your clock-in and clock-out logs are securely saved.
+                <div style={{ fontSize: "12px", color: "#15803d", marginTop: "2px" }}>
+                  Your clock-in and clock-out timestamps are securely recorded.
                 </div>
               </div>
             )}
@@ -518,11 +505,11 @@ export default function MobileAttendancePage() {
         {/* 4. Shift Summary & Timeline */}
         {statusInfo && (
           <div style={{
-            background: "rgba(15, 23, 42, 0.7)",
-            backdropFilter: "blur(12px)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
+            background: "#ffffff",
+            border: "1px solid #e5e7eb",
             borderRadius: "16px",
             padding: "18px",
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
           }}>
             <div style={{
               display: "flex",
@@ -530,20 +517,20 @@ export default function MobileAttendancePage() {
               alignItems: "center",
               marginBottom: "14px",
               paddingBottom: "10px",
-              borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+              borderBottom: "1px solid #f3f4f6",
             }}>
-              <span style={{ fontSize: "13px", fontWeight: "700", color: "#ffffff", display: "flex", alignItems: "center", gap: "6px" }}>
-                <Clock size={15} style={{ color: "#3b82f6" }} />
+              <span style={{ fontSize: "13px", fontWeight: "700", color: "#111827", display: "flex", alignItems: "center", gap: "6px" }}>
+                <Clock size={15} style={{ color: "#ca0b12" }} />
                 Today's Shift Punch Logs
               </span>
               {isClockedIn && (
                 <span style={{
-                  background: "rgba(59, 130, 246, 0.15)",
-                  color: "#60a5fa",
+                  background: "rgba(202, 11, 18, 0.08)",
+                  color: "#ca0b12",
                   padding: "3px 10px",
                   borderRadius: "12px",
                   fontSize: "11px",
-                  fontWeight: "600",
+                  fontWeight: "700",
                 }}>
                   Duration: {statusInfo.shiftDurationFormatted}
                 </span>
@@ -558,12 +545,12 @@ export default function MobileAttendancePage() {
                     width: "10px",
                     height: "10px",
                     borderRadius: "50%",
-                    background: statusInfo.clockInAt ? "#10b981" : "#64748b",
+                    background: statusInfo.clockInAt ? "#166534" : "#9ca3af",
                   }} />
-                  <span style={{ color: "#94a3b8" }}>Clock In:</span>
+                  <span style={{ color: "#4b5563" }}>Clock In:</span>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <strong style={{ color: statusInfo.clockInAt ? "#ffffff" : "#64748b" }}>
+                  <strong style={{ color: statusInfo.clockInAt ? "#111827" : "#9ca3af" }}>
                     {statusInfo.clockInAt ? new Date(statusInfo.clockInAt).toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit" }) : "Not Clocked In"}
                   </strong>
                   {statusInfo.clockInLatitude && statusInfo.clockInLongitude && (
@@ -571,7 +558,7 @@ export default function MobileAttendancePage() {
                       href={`https://www.google.com/maps?q=${statusInfo.clockInLatitude},${statusInfo.clockInLongitude}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ display: "block", fontSize: "10px", color: "#60a5fa", textDecoration: "none", marginTop: "2px" }}
+                      style={{ display: "block", fontSize: "10px", color: "#ca0b12", textDecoration: "none", fontWeight: "600", marginTop: "2px" }}
                     >
                       View Map Pin ↗
                     </a>
@@ -586,12 +573,12 @@ export default function MobileAttendancePage() {
                     width: "10px",
                     height: "10px",
                     borderRadius: "50%",
-                    background: statusInfo.clockOutAt ? "#f59e0b" : "#64748b",
+                    background: statusInfo.clockOutAt ? "#ca0b12" : "#9ca3af",
                   }} />
-                  <span style={{ color: "#94a3b8" }}>Clock Out:</span>
+                  <span style={{ color: "#4b5563" }}>Clock Out:</span>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <strong style={{ color: statusInfo.clockOutAt ? "#ffffff" : "#64748b" }}>
+                  <strong style={{ color: statusInfo.clockOutAt ? "#111827" : "#9ca3af" }}>
                     {statusInfo.clockOutAt ? new Date(statusInfo.clockOutAt).toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit" }) : "Not Clocked Out"}
                   </strong>
                   {statusInfo.clockOutLatitude && statusInfo.clockOutLongitude && (
@@ -599,7 +586,7 @@ export default function MobileAttendancePage() {
                       href={`https://www.google.com/maps?q=${statusInfo.clockOutLatitude},${statusInfo.clockOutLongitude}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ display: "block", fontSize: "10px", color: "#60a5fa", textDecoration: "none", marginTop: "2px" }}
+                      style={{ display: "block", fontSize: "10px", color: "#ca0b12", textDecoration: "none", fontWeight: "600", marginTop: "2px" }}
                     >
                       View Map Pin ↗
                     </a>
@@ -612,17 +599,17 @@ export default function MobileAttendancePage() {
 
         {/* 5. Mobile PWA Add To Home Screen Instructions */}
         <div style={{
-          background: "rgba(255, 255, 255, 0.03)",
-          border: "1px dashed rgba(255, 255, 255, 0.12)",
+          background: "#ffffff",
+          border: "1px dashed #d1d5db",
           borderRadius: "14px",
           padding: "12px 14px",
           display: "flex",
           alignItems: "center",
           gap: "10px",
-          color: "#94a3b8",
+          color: "#4b5563",
           fontSize: "11px",
         }}>
-          <Smartphone size={18} style={{ color: "#10b981", flexShrink: 0 }} />
+          <Smartphone size={18} style={{ color: "#ca0b12", flexShrink: 0 }} />
           <div>
             <strong>Install on your Phone:</strong> Tap your mobile browser menu (Share or ⋮) and select <strong>"Add to Home Screen"</strong> to use as a native app.
           </div>
@@ -635,12 +622,12 @@ export default function MobileAttendancePage() {
         marginTop: "32px",
         textAlign: "center",
         fontSize: "11px",
-        color: "#64748b",
+        color: "#9ca3af",
         display: "flex",
         alignItems: "center",
         gap: "6px",
       }}>
-        <ShieldCheck size={13} style={{ color: "#10b981" }} />
+        <ShieldCheck size={13} style={{ color: "#ca0b12" }} />
         <span>AAU Chamo Security & Audit Trail Active</span>
       </footer>
     </div>
