@@ -158,7 +158,7 @@ type ProductRecord = {
 type PurchaseRecord = { id: string; orderNumber: string; status: string; total: string; expectedDate: string | null; createdAt: string; supplier: { name: string }; station: AllowedStation; lines: Array<{ id: string; quantityOrdered: string; quantityReceived: string; product: { name: string; trackBatches: boolean; trackExpiry: boolean } }> };
 type SaleRecord = { id: string; saleNumber: string; postedAt: string; status: string; total: string; paidTotal: string; outstandingTotal: string; customer: { displayName: string }; station: AllowedStation; businessUnit: { name: string }; allocations: Array<{ payment: { paymentMethod: { name: string } } }> };
 type CargoRecord = { id: string; awbNumber: string; senderName: string; senderPhone: string; receiverName: string; receiverPhone: string; receiverAddress: string | null; origin: string; destination: string; pieces: number; weightKg: string; commodity: string; airline: string | null; flightNumber: string | null; flightDate: string | null; handlingNotes: string | null; declaredValue: string | null; status: string; labelVersion: number; reprintCount: number; createdAt: string; customer: { id: string; displayName: string; primaryPhone: string }; station: AllowedStation };
-type AgentRecord = { id: string; agentNumber: string; name: string; contactName: string; phone: string; creditLimit: string; status: string; homeStation: AllowedStation; wallet: { balance: string } | null; _count: { sales: number; bookings: number } };
+type AgentRecord = { id: string; agentNumber: string; name: string; contactName: string; phone: string; email: string | null; address: string | null; creditLimit: string; status: string; homeStation: AllowedStation; wallet: { balance: string } | null; _count: { sales: number; bookings: number } };
 type FinanceRecord = { id: string; entryNumber: string; direction: string; amount: string; description: string; status: string; createdAt: string; account: { name: string }; category: { name: string }; station: AllowedStation };
 type TicketRecord = { id: string; bookingNumber: string; pnr: string; passengerName: string; origin: string; destination: string; airline: string; travelDate: string; fare: string; sellingPrice: string; profit: string; status: string; station: AllowedStation };
 type POSBootstrap = { permissions: string[]; products: Array<{ id: string; code: string; name: string; sellingPrice: string; available: number; unit: { code: string } }>; customers: Array<{ id: string; customerNumber: string; displayName: string; primaryPhone: string }>; paymentMethods: Array<{ id: string; name: string; type: string; requiresReference: boolean; requiresTerminal: boolean }>; businessUnits: Array<{ id: string; code: string; name: string }>; agents: Array<{ id: string; name: string; agentNumber: string; wallet: { balance: string } | null }> };
@@ -821,14 +821,14 @@ function ModuleView({
     case "pos":
       return <POSView key={station} allowedStations={allowedStations} selectedStation={station} onModal={onModal} onToast={onToast} />;
     case "sales":
-      return <SalesView station={station} allowedStations={allowedStations} />;
+      return <SalesView station={station} allowedStations={allowedStations} identity={identity} />;
     case "inventory":
     case "purchases":
       return <InventoryView purchases={active === "purchases"} onModal={onModal} allowedStations={allowedStations} identity={identity} />;
     case "cargo":
       return <CargoView onModal={onModal} onToast={onToast} allowedStations={allowedStations} />;
     case "agents":
-      return <AgentsView onModal={onModal} />;
+      return <AgentsView onModal={onModal} allowedStations={allowedStations} onToast={onToast} />;
     case "customers":
       return <CustomersView onModal={onModal} allowedStations={allowedStations} onToast={onToast} />;
     case "finance":
@@ -2337,33 +2337,592 @@ function POSView({
   );
 }
 
-function SalesView({ station, allowedStations }: { station: string; allowedStations: AllowedStation[] }) {
+function SaleDetailModal({ saleId, onClose, canViewProfit }: { saleId: string; onClose: () => void; canViewProfit: boolean }) {
+  const { data: sale, loading, error } = useApiData<any>(`/api/sales/${saleId}`);
+
+  if (loading) {
+    return (
+      <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+        <div className="workflow-dialog" style={{ maxWidth: "600px" }}>
+          <EmptyState icon={RefreshCcw} title="Loading details" detail="Retrieving sale transaction record." compact />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !sale) {
+    return (
+      <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+        <div className="workflow-dialog" style={{ maxWidth: "600px" }}>
+          <EmptyState icon={AlertTriangle} title="Could not load sale" detail={error || "Sale not found."} compact />
+        </div>
+      </div>
+    );
+  }
+
+  let saleCost = 0;
+  for (const line of sale.lines) {
+    saleCost += Number(line.costPrice) * Number(line.quantity);
+  }
+  const profit = canViewProfit ? Number(sale.total) - saleCost : null;
+
+  return (
+    <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="workflow-dialog" style={{ maxWidth: "800px" }}>
+        <div className="workflow-header">
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>Transaction Number</span>
+            <h2 style={{ fontSize: "18px", fontWeight: "bold", margin: "2px 0 0 0" }}>{sale.saleNumber}</h2>
+            <span style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px" }}>
+              Posted at: {new Date(sale.postedAt).toLocaleString("en-NG")}
+            </span>
+          </div>
+          <button onClick={onClose} aria-label="Close modal">
+            <X size={19} />
+          </button>
+        </div>
+
+        <div className="workflow-body" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", background: "var(--panel-bg, #fafafa)", padding: "16px", borderRadius: "8px" }}>
+            <div>
+              <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block" }}>Station</span>
+              <strong>{sale.station.name}</strong>
+            </div>
+            <div>
+              <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block" }}>Business Unit</span>
+              <strong>{sale.businessUnit.name}</strong>
+            </div>
+            <div>
+              <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block" }}>Status</span>
+              <StatusPill value={sale.status} />
+            </div>
+          </div>
+
+          <div>
+            <h3 style={{ fontSize: "13px", fontWeight: "600", marginBottom: "8px", borderBottom: "1px solid var(--border-color, #eee)", paddingBottom: "4px" }}>Customer Details</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "12px" }}>
+              <div>
+                <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block" }}>Name</span>
+                <span>{sale.customer.displayName}</span>
+              </div>
+              <div>
+                <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block" }}>Phone</span>
+                <span>{sale.customer.primaryPhone}</span>
+              </div>
+              {sale.customer.email && (
+                <div>
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block" }}>Email</span>
+                  <span>{sale.customer.email}</span>
+                </div>
+              )}
+              {sale.customer.defaultAirline && (
+                <div>
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block" }}>Default Airline</span>
+                  <span>{sale.customer.defaultAirline}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h3 style={{ fontSize: "13px", fontWeight: "600", marginBottom: "8px", borderBottom: "1px solid var(--border-color, #eee)", paddingBottom: "4px" }}>Line Items</h3>
+            <div className="table-wrap">
+              <table className="data-table" style={{ width: "100%" }}>
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th style={{ textAlign: "right" }}>Qty</th>
+                    <th style={{ textAlign: "right" }}>Unit Price</th>
+                    <th style={{ textAlign: "right" }}>Discount</th>
+                    <th style={{ textAlign: "right" }}>Tax</th>
+                    <th style={{ textAlign: "right" }}>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sale.lines.map((line: any) => (
+                    <tr key={line.id}>
+                      <td>{line.productName} ({line.productCode})</td>
+                      <td style={{ textAlign: "right" }}>{Number(line.quantity)}</td>
+                      <td style={{ textAlign: "right" }}>{formatNaira(Number(line.unitPrice))}</td>
+                      <td style={{ textAlign: "right" }}>{formatNaira(Number(line.discountAmount))}</td>
+                      <td style={{ textAlign: "right" }}>{formatNaira(Number(line.taxAmount))}</td>
+                      <td style={{ textAlign: "right", fontWeight: "600" }}>{formatNaira(Number(line.lineTotal))}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "24px" }}>
+            <div>
+              <h3 style={{ fontSize: "13px", fontWeight: "600", marginBottom: "8px", borderBottom: "1px solid var(--border-color, #eee)", paddingBottom: "4px" }}>Payment Allocations</h3>
+              {sale.allocations.length === 0 ? (
+                <div style={{ padding: "8px 0", color: "var(--text-muted)" }}>No payments allocated.</div>
+              ) : (
+                <div className="table-wrap">
+                  <table className="data-table" style={{ width: "100%" }}>
+                    <thead>
+                      <tr>
+                        <th>Method</th>
+                        <th style={{ textAlign: "right" }}>Amount</th>
+                        <th>Reference</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sale.allocations.map((alloc: any) => (
+                        <tr key={alloc.id}>
+                          <td>{alloc.payment.paymentMethod.name}</td>
+                          <td style={{ textAlign: "right" }}>{formatNaira(Number(alloc.amount))}</td>
+                          <td>{alloc.payment.reference || "-"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div style={{ background: "var(--panel-bg, #fcfcfc)", padding: "16px", borderRadius: "8px", border: "1px solid var(--border-color, #f0f0f0)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "12px" }}>
+                <span>Subtotal:</span>
+                <span>{formatNaira(Number(sale.subtotal))}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "12px" }}>
+                <span>Tax:</span>
+                <span style={{ color: "green" }}>+{formatNaira(Number(sale.taxTotal))}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "12px" }}>
+                <span>Discount:</span>
+                <span style={{ color: "red" }}>-{formatNaira(Number(sale.discountTotal))}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontWeight: "bold", borderTop: "1px solid var(--border-color, #eee)", paddingTop: "8px" }}>
+                <span>Total:</span>
+                <span>{formatNaira(Number(sale.total))}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", color: "green", fontSize: "12px" }}>
+                <span>Paid:</span>
+                <span>{formatNaira(Number(sale.paidTotal))}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", color: "red", fontSize: "12px" }}>
+                <span>Outstanding:</span>
+                <span>{formatNaira(Number(sale.outstandingTotal))}</span>
+              </div>
+              {canViewProfit && (
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: "12px", borderTop: "2px dashed var(--border-color, #ddd)", paddingTop: "12px", color: "var(--primary-color, #0066cc)", fontWeight: "bold" }}>
+                  <span>Gross Profit:</span>
+                  <span>{formatNaira(profit || 0)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {sale.refunds && sale.refunds.length > 0 && (
+            <div>
+              <h3 style={{ fontSize: "13px", fontWeight: "600", marginBottom: "8px", borderBottom: "1px solid var(--border-color, #eee)", paddingBottom: "4px", color: "red" }}>Linked Refunds</h3>
+              <div className="table-wrap">
+                <table className="data-table" style={{ width: "100%" }}>
+                  <thead>
+                    <tr>
+                      <th>Refund Number</th>
+                      <th>Date</th>
+                      <th>Reason</th>
+                      <th style={{ textAlign: "right" }}>Amount</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sale.refunds.map((ref: any) => (
+                      <tr key={ref.id}>
+                        <td>{ref.refundNumber}</td>
+                        <td>{new Date(ref.postedAt || ref.createdAt).toLocaleString("en-NG")}</td>
+                        <td>{ref.reason}</td>
+                        <td style={{ textAlign: "right", color: "red" }}>{formatNaira(Number(ref.amount))}</td>
+                        <td><StatusPill value={ref.status} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {sale.status === "CANCELLED" && (
+            <div style={{ background: "#fff5f5", border: "1px solid #ffd8d8", padding: "12px", borderRadius: "6px" }}>
+              <span style={{ fontWeight: "bold", color: "#c9302c", display: "block" }}>Transaction Cancelled</span>
+              <p style={{ margin: "4px 0 0 0", fontSize: "12px" }}>
+                <strong>Reason: </strong> {sale.cancellationReason || "No reason specified."}
+              </p>
+            </div>
+          )}
+        </div>
+        <div className="workflow-footer" style={{ justifyContent: "flex-end" }}>
+          <button type="button" className="secondary-button" onClick={onClose}>Close</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SalesView({ station, allowedStations, identity }: { station: string; allowedStations: AllowedStation[]; identity: WorkspaceIdentity }) {
   const [tab, setTab] = useState("All sales");
   const stationId = allowedStations.find((item) => item.name === station)?.id;
-  const { data, total, loading, error, reload } = useApiData<SaleRecord[]>(`/api/sales?pageSize=100${stationId ? `&stationId=${stationId}` : ""}`);
-  const sales = data ?? [];
-  const tabFiltered = sales.filter((sale) => tab === "Completed" ? ["PAID", "POSTED"].includes(sale.status) : tab === "Pending" ? sale.status === "PARTIALLY_PAID" : tab === "Refunded" ? sale.status.includes("REFUND") : true);
-  const table = useTableControls(tabFiltered, (sale, q) => `${sale.saleNumber} ${sale.customer.displayName} ${sale.station.name} ${sale.businessUnit.name} ${sale.status}`.toLowerCase().includes(q));
-  const gross = sales.reduce((sum, sale) => sum + Number(sale.total), 0); const outstanding = sales.reduce((sum, sale) => sum + Number(sale.outstandingTotal), 0); const average = sales.length ? gross / sales.length : 0;
-  const refundSale = async (sale: SaleRecord) => { const reason = window.prompt(`Reason for refunding ${sale.saleNumber}`); if (!reason?.trim()) return; const response = await fetch(`/api/sales/${sale.id}`); const envelope = await response.json() as ApiEnvelope<SaleDetailRecord>; if (!response.ok || !envelope.ok || !envelope.data) return; const detail = envelope.data; const lines = detail.lines.map((line) => ({ saleLineId: line.id, quantity: (Number(line.quantity) - Number(line.quantityRefunded)).toString() })).filter((line) => Number(line.quantity) > 0); const method = detail.allocations[0]?.payment.paymentMethod; if (!method || !lines.length) return; const paymentReference = method.requiresReference ? window.prompt(`Refund reference for ${method.name}`)?.trim() : undefined; if (method.requiresReference && !paymentReference) return; if (!window.confirm(`Refund all remaining quantities on ${sale.saleNumber}?`)) return; await workflowPost("/api/refunds", { saleId: sale.id, paymentMethodId: method.id, paymentReference, reason, returnToStock: true, lines }); reload(); };
+
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [compareStartDate, setCompareStartDate] = useState("");
+  const [compareEndDate, setCompareEndDate] = useState("");
+  const [airline, setAirline] = useState("");
+  const [officerId, setOfficerId] = useState("");
+  const [customerId, setCustomerId] = useState("");
+  const [businessUnitId, setBusinessUnitId] = useState("");
+  const [interval, setInterval] = useState("daily");
+  const [compareActive, setCompareActive] = useState(false);
+  const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
+
+  const canViewProfit = identity.permissions.includes("sales.view_profit");
+
+  const buApi = useApiData<{ businessUnits: Array<{ id: string; name: string }> }>("/api/stations/setup");
+
+  // Query Params
+  const filterParams = new URLSearchParams();
+  if (stationId) filterParams.set("stationId", stationId);
+  if (businessUnitId) filterParams.set("businessUnitId", businessUnitId);
+  if (officerId) filterParams.set("officerId", officerId);
+  if (customerId) filterParams.set("customerId", customerId);
+  if (airline) filterParams.set("airline", airline);
+  if (startDate) filterParams.set("startDate", startDate);
+  if (endDate) filterParams.set("endDate", endDate);
+  if (compareActive && compareStartDate) filterParams.set("compareStartDate", compareStartDate);
+  if (compareActive && compareEndDate) filterParams.set("compareEndDate", compareEndDate);
+  filterParams.set("interval", interval);
+
+  const summaryUrl = `/api/sales/summary?${filterParams.toString()}`;
+  const trendUrl = `/api/sales/trend?${filterParams.toString()}`;
+  const listUrl = `/api/sales?pageSize=100&${filterParams.toString()}`;
+
+  const summaryApi = useApiData<any>(summaryUrl);
+  const trendApi = useApiData<any>(trendUrl);
+  const listApi = useApiData<SaleRecord[]>(listUrl);
+
+  const sales = listApi.data ?? [];
+  const tabFiltered = sales.filter((sale) =>
+    tab === "Completed"
+      ? ["PAID", "POSTED"].includes(sale.status)
+      : tab === "Pending"
+      ? sale.status === "PARTIALLY_PAID"
+      : tab === "Refunded"
+      ? sale.status.includes("REFUND")
+      : true
+  );
+
+  const table = useTableControls(tabFiltered, (sale, q) =>
+    `${sale.saleNumber} ${sale.customer.displayName} ${sale.station.name} ${sale.businessUnit.name} ${sale.status}`
+      .toLowerCase()
+      .includes(q)
+  );
+
+  const chartData = (trendApi.data?.trend ?? []).map((t: any) => ({
+    date: t.bucket,
+    sales: t.grossSales,
+    refunds: t.refunds,
+  }));
+
+  const compareChartData = (trendApi.data?.compareTrend ?? []).map((t: any) => ({
+    date: t.bucket,
+    sales: t.grossSales,
+    refunds: t.refunds,
+  }));
+
+  const refundSale = async (sale: SaleRecord) => {
+    const reason = window.prompt(`Reason for refunding ${sale.saleNumber}`);
+    if (!reason?.trim()) return;
+    const response = await fetch(`/api/sales/${sale.id}`);
+    const envelope = (await response.json()) as ApiEnvelope<SaleDetailRecord>;
+    if (!response.ok || !envelope.ok || !envelope.data) return;
+    const detail = envelope.data;
+    const lines = detail.lines
+      .map((line) => ({
+        saleLineId: line.id,
+        quantity: (Number(line.quantity) - Number(line.quantityRefunded)).toString(),
+      }))
+      .filter((line) => Number(line.quantity) > 0);
+    const method = detail.allocations[0]?.payment.paymentMethod;
+    if (!method || !lines.length) return;
+    const paymentReference = method.requiresReference
+      ? window.prompt(`Refund reference for ${method.name}`)?.trim()
+      : undefined;
+    if (method.requiresReference && !paymentReference) return;
+    if (!window.confirm(`Refund all remaining quantities on ${sale.saleNumber}?`)) return;
+    await workflowPost("/api/refunds", {
+      saleId: sale.id,
+      paymentMethodId: method.id,
+      paymentReference,
+      reason,
+      returnToStock: true,
+      lines,
+    });
+    listApi.reload();
+    summaryApi.reload();
+    trendApi.reload();
+  };
+
   return (
     <div className="content-stack">
-      <section className="summary-strip">
-        <SummaryItem label="Gross sales" value={formatNaira(gross)} detail={`${sales.length} loaded sales`} icon={TrendingUp} tone="success" />
-        <SummaryItem label="Paid" value={formatNaira(sales.reduce((sum, sale) => sum + Number(sale.paidTotal), 0))} detail="Persisted payments" icon={BadgeCheck} tone="success" />
-        <SummaryItem label="Outstanding" value={formatNaira(outstanding)} detail={`${sales.filter((sale) => Number(sale.outstandingTotal) > 0).length} invoices`} icon={Clock3} tone="danger" />
-        <SummaryItem label="Avg. transaction" value={formatNaira(average)} detail={`${total} total records`} icon={Banknote} tone="info" />
-      </section>
+      {/* Search and Filters Strip */}
       <Panel>
-        <TableToolbar tabs={["All sales", "Completed", "Pending", "Refunded"]} activeTab={tab} onTab={(value) => { setTab(value); table.resetPage(); }} placeholder="Search transaction, customer or station" exportable search={table.search} onSearch={table.setSearch} onExport={() => window.open("/api/reports/export", "_blank", "noopener,noreferrer")} />
-        {error ? <EmptyState icon={AlertTriangle} title="Sales could not be loaded" detail={error} /> : loading ? <EmptyState icon={RefreshCcw} title="Loading posted sales" detail="Retrieving sale, payment and station records." compact /> : table.filtered.length ? <div className="table-wrap">
-          <table className="data-table">
-            <thead><tr><th>Transaction</th><th>Customer</th><th>Business unit</th><th>Station</th><th>Payment</th><th>Amount</th><th>Status</th><th /></tr></thead>
-            <tbody>{table.pageRows.map((sale) => <tr key={sale.id}><td><div className="primary-cell"><strong>{sale.saleNumber}</strong><span>{formatDate(sale.postedAt)}</span></div></td><td>{sale.customer.displayName}</td><td>{sale.businessUnit.name}</td><td>{sale.station.name}</td><td>{sale.allocations.map((item) => item.payment.paymentMethod.name).join(" + ") || "Outstanding"}</td><td className="number-cell strong-number">{formatNaira(Number(sale.total))}</td><td><StatusPill value={sale.status.replaceAll("_", " ")} /></td><td><div className="row-actions">{!["REFUNDED", "CANCELLED"].includes(sale.status) && <button className="row-button" onClick={() => refundSale(sale)}>Refund</button>}<button className="icon-ghost" onClick={() => window.open(`/api/sales/${sale.id}`, "_blank")}><MoreHorizontal size={17} /></button></div></td></tr>)}</tbody>
-          </table>
-        </div> : <EmptyState icon={ShoppingCart} title={table.search ? "No matching sales" : "No sales found"} detail={table.search ? "Try a different transaction number, customer or station." : "Posted POS transactions will appear here immediately."} />}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+          <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "600" }}>Search Filters</h3>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "16px" }}>
+          <Field label="Business Unit">
+            <select value={businessUnitId} onChange={(e) => setBusinessUnitId(e.target.value)}>
+              <option value="">All business units</option>
+              {buApi.data?.businessUnits.map((bu) => (
+                <option key={bu.id} value={bu.id}>
+                  {bu.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Airline">
+            <input
+              type="text"
+              placeholder="e.g. Binani, Air Peace"
+              value={airline}
+              onChange={(e) => setAirline(e.target.value)}
+            />
+          </Field>
+          <Field label="Sales Officer">
+            <input
+              type="text"
+              placeholder="Search officer name/ID"
+              value={officerId}
+              onChange={(e) => setOfficerId(e.target.value)}
+            />
+          </Field>
+          <Field label="Customer">
+            <input
+              type="text"
+              placeholder="Search customer name/ID"
+              value={customerId}
+              onChange={(e) => setCustomerId(e.target.value)}
+            />
+          </Field>
+          <Field label="Start Date">
+            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+          </Field>
+          <Field label="End Date">
+            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          </Field>
+        </div>
+
+        <div style={{ display: "flex", gap: "24px", alignItems: "center", marginTop: "16px", borderTop: "1px solid var(--border-color, #eee)", paddingTop: "16px" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "13px" }}>
+            <input
+              type="checkbox"
+              checked={compareActive}
+              onChange={(e) => setCompareActive(e.target.checked)}
+            />
+            <strong>Enable comparative period</strong>
+          </label>
+          <Field label="Trend Interval" style={{ margin: 0 }}>
+            <select value={interval} onChange={(e) => setInterval(e.target.value)} style={{ padding: "4px 8px" }}>
+              <option value="hourly">Hourly</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </Field>
+        </div>
+
+        {compareActive && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px", marginTop: "16px", background: "var(--panel-bg, #fafafa)", padding: "16px", borderRadius: "8px" }}>
+            <Field label="Compare Start Date">
+              <input type="date" value={compareStartDate} onChange={(e) => setCompareStartDate(e.target.value)} />
+            </Field>
+            <Field label="Compare End Date">
+              <input type="date" value={compareEndDate} onChange={(e) => setCompareEndDate(e.target.value)} />
+            </Field>
+          </div>
+        )}
+      </Panel>
+
+      {/* Summary Cards strip */}
+      <section className="summary-strip">
+        <SummaryItem
+          label="Gross sales"
+          value={formatNaira(summaryApi.data?.summary?.grossSales || 0)}
+          detail={
+            compareActive
+              ? `vs ${formatNaira(summaryApi.data?.compareSummary?.grossSales || 0)}`
+              : `${sales.length} loaded sales`
+          }
+          icon={TrendingUp}
+          tone="success"
+        />
+        <SummaryItem
+          label="Net sales"
+          value={formatNaira(summaryApi.data?.summary?.netSales || 0)}
+          detail={
+            compareActive
+              ? `vs ${formatNaira(summaryApi.data?.compareSummary?.netSales || 0)}`
+              : "After refunds & discounts"
+          }
+          icon={BadgeCheck}
+          tone="success"
+        />
+        <SummaryItem
+          label="Outstanding"
+          value={formatNaira(summaryApi.data?.summary?.outstandingTotal || 0)}
+          detail={
+            compareActive
+              ? `vs ${formatNaira(summaryApi.data?.compareSummary?.outstandingTotal || 0)}`
+              : `${sales.filter((sale) => Number(sale.outstandingTotal) > 0).length} invoices`
+          }
+          icon={Clock3}
+          tone="danger"
+        />
+        {canViewProfit ? (
+          <SummaryItem
+            label="Gross profit"
+            value={formatNaira(summaryApi.data?.summary?.profit || 0)}
+            detail={
+              compareActive
+                ? `vs ${formatNaira(summaryApi.data?.compareSummary?.profit || 0)}`
+                : "Sales minus cost price"
+            }
+            icon={Banknote}
+            tone="info"
+          />
+        ) : (
+          <SummaryItem
+            label="Avg. transaction"
+            value={formatNaira(sales.length ? (summaryApi.data?.summary?.grossSales || 0) / sales.length : 0)}
+            detail={`${listApi.total || 0} total records`}
+            icon={Banknote}
+            tone="info"
+          />
+        )}
+      </section>
+
+      {/* Visual Analytics */}
+      <div style={{ display: "grid", gridTemplateColumns: compareActive ? "1fr 1fr" : "1fr", gap: "20px" }}>
+        <Panel>
+          <div style={{ marginBottom: "12px" }}>
+            <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "600" }}>Sales Trend</h3>
+          </div>
+          <SalesTrendChart data={chartData} />
+        </Panel>
+        {compareActive && (
+          <Panel>
+            <div style={{ marginBottom: "12px" }}>
+              <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "600" }}>Comparative Trend</h3>
+            </div>
+            <SalesTrendChart data={compareChartData} />
+          </Panel>
+        )}
+      </div>
+
+      {/* Data Table */}
+      <Panel>
+        <TableToolbar
+          tabs={["All sales", "Completed", "Pending", "Refunded"]}
+          activeTab={tab}
+          onTab={(value) => {
+            setTab(value);
+            table.resetPage();
+          }}
+          placeholder="Search transaction, customer or station"
+          exportable
+          search={table.search}
+          onSearch={table.setSearch}
+          onExport={() => window.open(`/api/sales/export?${filterParams.toString()}`, "_blank", "noopener,noreferrer")}
+        />
+        {listApi.error ? (
+          <EmptyState icon={AlertTriangle} title="Sales could not be loaded" detail={listApi.error} />
+        ) : listApi.loading ? (
+          <EmptyState
+            icon={RefreshCcw}
+            title="Loading posted sales"
+            detail="Retrieving sale, payment and station records."
+            compact
+          />
+        ) : table.filtered.length ? (
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Transaction</th>
+                  <th>Customer</th>
+                  <th>Business unit</th>
+                  <th>Station</th>
+                  <th>Payment</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {table.pageRows.map((sale) => (
+                  <tr key={sale.id}>
+                    <td>
+                      <div className="primary-cell">
+                        <strong>{sale.saleNumber}</strong>
+                        <span>{formatDate(sale.postedAt)}</span>
+                      </div>
+                    </td>
+                    <td>{sale.customer.displayName}</td>
+                    <td>{sale.businessUnit.name}</td>
+                    <td>{sale.station.name}</td>
+                    <td>
+                      {sale.allocations.map((item: any) => item.payment.paymentMethod.name).join(" + ") ||
+                        "Outstanding"}
+                    </td>
+                    <td className="number-cell strong-number">{formatNaira(Number(sale.total))}</td>
+                    <td>
+                      <StatusPill value={sale.status.replaceAll("_", " ")} />
+                    </td>
+                    <td>
+                      <div className="row-actions">
+                        {!["REFUNDED", "CANCELLED"].includes(sale.status) && (
+                          <button className="row-button" onClick={() => refundSale(sale)}>
+                            Refund
+                          </button>
+                        )}
+                        <button className="icon-ghost" onClick={() => setSelectedSaleId(sale.id)}>
+                          <MoreHorizontal size={17} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState
+            icon={ShoppingCart}
+            title={table.search ? "No matching sales" : "No sales found"}
+            detail={
+              table.search
+                ? "Try a different transaction number, customer or station."
+                : "Posted POS transactions will appear here immediately."
+            }
+          />
+        )}
         <Pagination total={table.total} page={table.page} pageSize={table.pageSize} onPage={table.setPage} />
       </Panel>
+
+      {/* Drill-down Detail Modal */}
+      {selectedSaleId && (
+        <SaleDetailModal
+          saleId={selectedSaleId}
+          onClose={() => setSelectedSaleId(null)}
+          canViewProfit={canViewProfit}
+        />
+      )}
     </div>
   );
 }
@@ -4011,27 +4570,878 @@ function CargoView({
   );
 }
 
-function AgentsView({ onModal }: { onModal: (modal: ModalKind) => void }) {
+function AgentsView({
+  onModal,
+  allowedStations,
+  onToast,
+}: {
+  onModal: (modal: ModalKind) => void;
+  allowedStations: AllowedStation[];
+  onToast: (toast: Toast) => void;
+}) {
   const [tab, setTab] = useState("All agents");
-  const { data, total, loading, error } = useApiData<AgentRecord[]>("/api/agents?pageSize=100"); const agentRecords = data ?? []; const visible = agentRecords.filter((agent) => tab === "Healthy" ? Number(agent.wallet?.balance ?? 0) > 0 && agent.status === "ACTIVE" : tab === "Low balance" ? Number(agent.wallet?.balance ?? 0) <= Number(agent.creditLimit) * .2 : tab === "Overdue" ? Number(agent.wallet?.balance ?? 0) < 0 : true);
-  const table = useTableControls(visible, (agent, q) => `${agent.name} ${agent.agentNumber} ${agent.contactName} ${agent.phone} ${agent.homeStation.name}`.toLowerCase().includes(q));
-  const liability = agentRecords.reduce((sum, agent) => sum + Number(agent.wallet?.balance ?? 0), 0); const exposure = agentRecords.reduce((sum, agent) => sum + Number(agent.creditLimit), 0);
+  const [selectedAgent, setSelectedAgent] = useState<AgentRecord | null>(null);
+  const [depositingAgent, setDepositingAgent] = useState<AgentRecord | null>(null);
+
+  const { data, total, loading, error, reload } = useApiData<AgentRecord[]>("/api/agents?pageSize=100");
+  const agentRecords = data ?? [];
+
+  const visible = agentRecords.filter((agent) =>
+    tab === "Healthy"
+      ? Number(agent.wallet?.balance ?? 0) > 0 && agent.status === "ACTIVE"
+      : tab === "Low balance"
+      ? Number(agent.wallet?.balance ?? 0) <= Number(agent.creditLimit) * 0.2
+      : tab === "Overdue"
+      ? Number(agent.wallet?.balance ?? 0) < 0
+      : true
+  );
+
+  const table = useTableControls(visible, (agent, q) =>
+    `${agent.name} ${agent.agentNumber} ${agent.contactName} ${agent.phone} ${agent.homeStation.name}`
+      .toLowerCase()
+      .includes(q)
+  );
+
+  const liability = agentRecords.reduce((sum, agent) => sum + Number(agent.wallet?.balance ?? 0), 0);
+  const exposure = agentRecords.reduce((sum, agent) => sum + Number(agent.creditLimit), 0);
+
   return (
     <div className="content-stack">
       <section className="summary-strip">
-        <SummaryItem label="Wallet liability" value={formatNaira(liability)} detail={`Across ${total} agents`} icon={WalletCards} tone="info" />
-        <SummaryItem label="Active agents" value={agentRecords.filter((agent) => agent.status === "ACTIVE").length.toString()} detail="Operational accounts" icon={UserCheck} tone="success" />
-        <SummaryItem label="Credit exposure" value={formatNaira(exposure)} detail="Configured limits" icon={CircleDollarSign} tone="warning" />
-        <SummaryItem label="Negative wallets" value={agentRecords.filter((agent) => Number(agent.wallet?.balance ?? 0) < 0).length.toString()} detail="Requires attention" icon={AlertTriangle} tone="danger" />
+        <SummaryItem
+          label="Wallet liability"
+          value={formatNaira(liability)}
+          detail={`Across ${total} agents`}
+          icon={WalletCards}
+          tone="info"
+        />
+        <SummaryItem
+          label="Active agents"
+          value={agentRecords.filter((agent) => agent.status === "ACTIVE").length.toString()}
+          detail="Operational accounts"
+          icon={UserCheck}
+          tone="success"
+        />
+        <SummaryItem
+          label="Credit exposure"
+          value={formatNaira(exposure)}
+          detail="Configured limits"
+          icon={CircleDollarSign}
+          tone="warning"
+        />
+        <SummaryItem
+          label="Negative wallets"
+          value={agentRecords.filter((agent) => Number(agent.wallet?.balance ?? 0) < 0).length.toString()}
+          detail="Requires attention"
+          icon={AlertTriangle}
+          tone="danger"
+        />
       </section>
+
       <Panel>
-        <TableToolbar tabs={["All agents", "Healthy", "Low balance", "Overdue"]} activeTab={tab} onTab={(value) => { setTab(value); table.resetPage(); }} placeholder="Search agent, company or contact" search={table.search} onSearch={table.setSearch} />
-        {error ? <EmptyState icon={AlertTriangle} title="Agents could not be loaded" detail={error} /> : loading ? <EmptyState icon={RefreshCcw} title="Loading agent wallets" detail="Retrieving live wallet balances and credit limits." compact /> : table.filtered.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>Agent</th><th>Contact</th><th>Station</th><th>Wallet balance</th><th>Credit limit</th><th>Activity</th><th>Status</th><th /></tr></thead><tbody>{table.pageRows.map((agent) => <tr key={agent.id}><td><div className="agent-cell"><span>{agent.name.split(" ").map((part) => part[0]).join("").slice(0, 2)}</span><div><strong>{agent.name}</strong><small>{agent.agentNumber}</small></div></div></td><td>{agent.contactName}<br /><small>{agent.phone}</small></td><td>{agent.homeStation.name}</td><td className={classNames("number-cell", Number(agent.wallet?.balance ?? 0) < 0 && "negative-number")}>{formatNaira(Number(agent.wallet?.balance ?? 0))}</td><td className="number-cell">{formatNaira(Number(agent.creditLimit))}</td><td>{agent._count.sales} sales · {agent._count.bookings} tickets</td><td><StatusPill value={agent.status} /></td><td><button className="row-button" onClick={() => onModal("deposit")}>Deposit</button></td></tr>)}</tbody></table></div> : <EmptyState icon={WalletCards} title={table.search ? "No matching agents" : "No agents found"} detail={table.search ? "Try a different agent, company or contact name." : "Create an agent to provision a controlled wallet account."} />}
+        <TableToolbar
+          tabs={["All agents", "Healthy", "Low balance", "Overdue"]}
+          activeTab={tab}
+          onTab={(value) => {
+            setTab(value);
+            table.resetPage();
+          }}
+          placeholder="Search agent, company or contact"
+          search={table.search}
+          onSearch={table.setSearch}
+        />
+        {error ? (
+          <EmptyState icon={AlertTriangle} title="Agents could not be loaded" detail={error} />
+        ) : loading ? (
+          <EmptyState
+            icon={RefreshCcw}
+            title="Loading agent wallets"
+            detail="Retrieving live wallet balances and credit limits."
+            compact
+          />
+        ) : table.filtered.length ? (
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Agent</th>
+                  <th>Contact</th>
+                  <th>Station</th>
+                  <th>Wallet balance</th>
+                  <th>Credit limit</th>
+                  <th>Activity</th>
+                  <th>Status</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {table.pageRows.map((agent) => (
+                  <tr
+                    key={agent.id}
+                    className="clickable-row"
+                    onClick={(e) => {
+                      if ((e.target as HTMLElement).closest("button")) return;
+                      setSelectedAgent(agent);
+                    }}
+                  >
+                    <td>
+                      <div className="agent-cell">
+                        <span>
+                          {agent.name
+                            .split(" ")
+                            .map((part) => part[0])
+                            .join("")
+                            .slice(0, 2)}
+                        </span>
+                        <div>
+                          <strong>{agent.name}</strong>
+                          <small>{agent.agentNumber}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      {agent.contactName}
+                      <br />
+                      <small>{agent.phone}</small>
+                    </td>
+                    <td>{agent.homeStation.name}</td>
+                    <td className={classNames("number-cell", Number(agent.wallet?.balance ?? 0) < 0 && "negative-number")}>
+                      {formatNaira(Number(agent.wallet?.balance ?? 0))}
+                    </td>
+                    <td className="number-cell">{formatNaira(Number(agent.creditLimit))}</td>
+                    <td>
+                      {agent._count.sales} sales · {agent._count.bookings} tickets
+                    </td>
+                    <td>
+                      <StatusPill value={agent.status} />
+                    </td>
+                    <td>
+                      <button
+                        className="row-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDepositingAgent(agent);
+                        }}
+                      >
+                        Deposit
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState
+            icon={WalletCards}
+            title={table.search ? "No matching agents" : "No agents found"}
+            detail={
+              table.search
+                ? "Try a different agent, company or contact name."
+                : "Create an agent to provision a controlled wallet account."
+            }
+          />
+        )}
         <Pagination total={table.total} page={table.page} pageSize={table.pageSize} onPage={table.setPage} />
       </Panel>
+
+      {selectedAgent && (
+        <AgentDetailModal
+          agent={selectedAgent}
+          allowedStations={allowedStations}
+          onClose={() => {
+            setSelectedAgent(null);
+            reload();
+          }}
+          onComplete={(title, detail) => {
+            onToast({ title, detail });
+            reload();
+          }}
+        />
+      )}
+
+      {depositingAgent && (
+        <div
+          className="modal-layer"
+          role="dialog"
+          aria-modal="true"
+          onMouseDown={(e) => e.target === e.currentTarget && setDepositingAgent(null)}
+        >
+          <div className="workflow-dialog" style={{ maxWidth: "550px" }}>
+            <div className="workflow-header">
+              <div>
+                <span>Wallet Account</span>
+                <h2>Post Agent Deposit</h2>
+                <p>Credit funds to selected agent wallet.</p>
+              </div>
+              <button onClick={() => setDepositingAgent(null)}>
+                <X size={19} />
+              </button>
+            </div>
+            <DepositForm
+              allowedStations={allowedStations}
+              initialAgentId={depositingAgent.id}
+              onClose={() => setDepositingAgent(null)}
+              onComplete={(title, detail) => {
+                setDepositingAgent(null);
+                reload();
+                onToast({ title, detail });
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+function AgentDetailModal({
+  agent,
+  allowedStations,
+  onClose,
+  onComplete,
+}: {
+  agent: AgentRecord;
+  allowedStations: AllowedStation[];
+  onClose: () => void;
+  onComplete: (title: string, detail: string) => void;
+}) {
+  const [tab, setTab] = useState("profile");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [name, setName] = useState(agent.name);
+  const [contactName, setContactName] = useState(agent.contactName);
+  const [phone, setPhone] = useState(agent.phone);
+  const [email, setEmail] = useState(agent.email ?? "");
+  const [address, setAddress] = useState(agent.address ?? "");
+  const [status, setStatus] = useState(agent.status);
+  const [creditLimit, setCreditLimit] = useState(agent.creditLimit);
+
+  const [startDate, setStartDate] = useState(() => {
+    const d = new Date();
+    d.setDate(1);
+    return d.toISOString().slice(0, 10);
+  });
+  const [endDate, setEndDate] = useState(() => new Date().toISOString().slice(0, 10));
+
+  const { data: agentDetails, reload: reloadDetails } = useApiData<any>(`/api/agents/${agent.id}`);
+  const { data: ledger, loading: ledgerLoading, reload: reloadLedger } = useApiData<any>(`/api/agents/${agent.id}/wallet?pageSize=100`);
+  const { data: statementResponse, loading: statementLoading, reload: reloadStatement } = useApiData<any>(
+    `/api/agents/${agent.id}/wallet/statement?startDate=${startDate}&endDate=${endDate}`
+  );
+  const statement = statementResponse;
+
+  const [adjusting, setAdjusting] = useState(false);
+  const [depositing, setDepositing] = useState(false);
+
+  const saveProfile = async (e: FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/agents/${agent.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          name,
+          contactName,
+          phone,
+          email: email || null,
+          address: address || null,
+          status,
+          creditLimit,
+        }),
+      });
+      const body = (await response.json()) as ApiEnvelope<any>;
+      if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Failed to save profile.");
+
+      window.dispatchEvent(new Event("erp-data-changed"));
+      onComplete("Agent updated", "Agent profile has been updated successfully.");
+      reloadDetails();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Failed to update profile.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const reverseEntry = async (entryId: string) => {
+    const reason = window.prompt("Reason for reversing this wallet entry?", "Typographical error correction");
+    if (!reason?.trim()) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/agents/${agent.id}/wallet/reverse`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "idempotency-key": crypto.randomUUID() },
+        body: JSON.stringify({ entryId, reason }),
+      });
+      const body = (await response.json()) as ApiEnvelope<any>;
+      if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Reversal failed.");
+
+      window.dispatchEvent(new Event("erp-data-changed"));
+      onComplete("Entry reversed", "A compensating ledger entry has been posted.");
+      reloadDetails();
+      reloadLedger();
+      reloadStatement();
+    } catch (reason_) {
+      setError(reason_ instanceof Error ? reason_.message : "Reversal failed.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const exportStatementCSV = () => {
+    if (!statement || !statement.entries) return;
+    const headers = ["Date", "Entry Number", "Description", "Method", "Debit", "Credit", "Balance After"];
+    const rows = statement.entries.map((entry: any) => [
+      new Date(entry.postedAt).toLocaleString("en-NG"),
+      entry.entryNumber,
+      entry.reason || entry.referenceType,
+      entry.paymentMethod?.name || "System",
+      entry.type.includes("DEBIT") ? entry.amount : "",
+      !entry.type.includes("DEBIT") ? entry.amount : "",
+      entry.balanceAfter,
+    ]);
+
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [
+        ["AAU Chamo - Agent Account Statement"],
+        [`Agent Name: ${agent.name} (${agent.agentNumber})`],
+        [`Date Range: ${startDate} to ${endDate}`],
+        [`Opening Balance: NGN ${statement.openingBalance}`],
+        [`Closing Balance: NGN ${statement.closingBalance}`],
+        [],
+        headers,
+        ...rows,
+      ]
+        .map((e) => e.map((val: any) => `"${String(val).replace(/"/g, '""')}"`).join(","))
+        .join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `statement_${agent.agentNumber}_${startDate}_${endDate}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const currentAgent = agentDetails ?? agent;
+  const currentWallet = currentAgent.wallet ?? { balance: "0.00" };
+  const utilization =
+    Number(currentAgent.creditLimit) > 0
+      ? (Math.max(0, -Number(currentWallet.balance)) / Number(currentAgent.creditLimit)) * 100
+      : 0;
+
+  return (
+    <div
+      className="modal-layer"
+      role="dialog"
+      aria-modal="true"
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="workflow-dialog" style={{ maxWidth: "900px" }}>
+        <div className="workflow-header">
+          <div className="agent-cell" style={{ gap: "16px" }}>
+            <span className="avatar large">
+              {currentAgent.name
+                .split(" ")
+                .map((p: string) => p[0])
+                .join("")
+                .slice(0, 2)}
+            </span>
+            <div>
+              <span>Agent ID: {currentAgent.agentNumber}</span>
+              <h2>{currentAgent.name}</h2>
+              <p>Home station: {currentAgent.homeStation?.name}</p>
+            </div>
+          </div>
+          <button onClick={onClose} aria-label="Close modal">
+            <X size={19} />
+          </button>
+        </div>
+
+        <div className="tab-strip" style={{ padding: "0 24px", borderBottom: "1px solid var(--border-color)" }}>
+          <button
+            className={classNames("tab-button", tab === "profile" && "active")}
+            onClick={() => setTab("profile")}
+          >
+            Profile Settings
+          </button>
+          <button className={classNames("tab-button", tab === "ledger" && "active")} onClick={() => setTab("ledger")}>
+            Wallet Ledger
+          </button>
+          <button
+            className={classNames("tab-button", tab === "statement" && "active")}
+            onClick={() => setTab("statement")}
+          >
+            Period Statements
+          </button>
+        </div>
+
+        <div className="workflow-body" style={{ minHeight: "350px" }}>
+          {tab === "profile" && (
+            <form onSubmit={saveProfile}>
+              <div className="form-grid">
+                <Field label="Agent name">
+                  <input value={name} onChange={(e) => setName(e.target.value)} required />
+                </Field>
+                <Field label="Contact person">
+                  <input value={contactName} onChange={(e) => setContactName(e.target.value)} required />
+                </Field>
+                <Field label="Phone number">
+                  <input value={phone} onChange={(e) => setPhone(e.target.value)} required autoComplete="tel" />
+                </Field>
+                <Field label="Email address">
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                </Field>
+                <Field label="Physical address" full>
+                  <input value={address} onChange={(e) => setAddress(e.target.value)} />
+                </Field>
+                <Field label="Account status">
+                  <select value={status} onChange={(e) => setStatus(e.target.value as any)}>
+                    <option value="ACTIVE">Active</option>
+                    <option value="SUSPENDED">Suspended</option>
+                    <option value="TERMINATED">Terminated</option>
+                  </select>
+                </Field>
+                <Field label="Credit limit (NGN)">
+                  <div className="money-input">
+                    <span>₦</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={creditLimit}
+                      onChange={(e) => setCreditLimit(e.target.value)}
+                    />
+                  </div>
+                </Field>
+              </div>
+              <div style={{ marginTop: "20px", display: "flex", justifyContent: "flex-end" }}>
+                <button type="submit" className="primary-button" disabled={busy}>
+                  {busy ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {tab === "ledger" && (
+            <div className="content-stack">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ display: "flex", gap: "24px" }}>
+                  <div>
+                    <span style={{ fontSize: "11px", color: "var(--muted-color)", display: "block" }}>
+                      Wallet Balance
+                    </span>
+                    <strong
+                      style={{ fontSize: "18px", color: Number(currentWallet.balance) < 0 ? "red" : "green" }}
+                    >
+                      {formatNaira(Number(currentWallet.balance))}
+                    </strong>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: "11px", color: "var(--muted-color)", display: "block" }}>
+                      Credit Limit
+                    </span>
+                    <strong style={{ fontSize: "18px" }}>{formatNaira(Number(currentAgent.creditLimit))}</strong>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: "11px", color: "var(--muted-color)", display: "block" }}>
+                      Credit Utilization
+                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
+                      <div
+                        style={{
+                          width: "80px",
+                          height: "8px",
+                          background: "#eee",
+                          borderRadius: "4px",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: `${Math.min(100, utilization)}%`,
+                            height: "100%",
+                            background: utilization > 80 ? "red" : "orange",
+                          }}
+                        />
+                      </div>
+                      <span style={{ fontSize: "11px" }}>{utilization.toFixed(1)}%</span>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button className="secondary-button" onClick={() => setAdjusting(true)}>
+                    Wallet Adjust
+                  </button>
+                  <button className="primary-button" onClick={() => setDepositing(true)}>
+                    Post Deposit
+                  </button>
+                </div>
+              </div>
+
+              {ledgerLoading ? (
+                <EmptyState icon={RefreshCcw} title="Loading ledger" detail="Syncing ledger timeline." compact />
+              ) : (
+                <div className="table-wrap">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Reference</th>
+                        <th>Description</th>
+                        <th>Method</th>
+                        <th style={{ textAlign: "right" }}>Debit</th>
+                        <th style={{ textAlign: "right" }}>Credit</th>
+                        <th style={{ textAlign: "right" }}>Balance after</th>
+                        <th />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(() => {
+                        const entries = ledger?.wallet?.entries ?? [];
+                        const reversedEntryIds = new Set(entries.map((e: any) => e.reversedEntryId).filter(Boolean));
+                        return entries.map((entry: any) => {
+                          const isReversal = !!entry.reversedEntryId;
+                          const isReversed = reversedEntryIds.has(entry.id);
+                          return (
+                            <tr key={entry.id}>
+                              <td>{new Date(entry.postedAt).toLocaleString("en-NG")}</td>
+                              <td>
+                                <strong>{entry.entryNumber}</strong>
+                              </td>
+                              <td>
+                                {entry.reason || entry.referenceType}
+                                {(isReversal || isReversed) && (
+                                  <span style={{ color: "red", fontSize: "10px", marginLeft: "6px" }}>
+                                    ({isReversal ? "Reversal" : "Reversed"})
+                                  </span>
+                                )}
+                              </td>
+                              <td>{entry.paymentMethod?.name || "System"}</td>
+                              <td style={{ textAlign: "right", color: "red" }}>
+                                {entry.type.includes("DEBIT") ? formatNaira(Number(entry.amount)) : ""}
+                              </td>
+                              <td style={{ textAlign: "right", color: "green" }}>
+                                {!entry.type.includes("DEBIT") ? formatNaira(Number(entry.amount)) : ""}
+                              </td>
+                              <td style={{ textAlign: "right", fontWeight: "bold" }}>
+                                {formatNaira(Number(entry.balanceAfter))}
+                              </td>
+                              <td>
+                                {!isReversal && !isReversed && (
+                                  <button
+                                    className="text-action"
+                                    style={{ color: "red" }}
+                                    onClick={() => reverseEntry(entry.id)}
+                                    disabled={busy}
+                                  >
+                                    Reverse
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        });
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {tab === "statement" && (
+            <div className="content-stack">
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-end",
+                  gap: "16px",
+                  background: "#f9f9f9",
+                  padding: "16px",
+                  borderRadius: "6px",
+                }}
+              >
+                <div style={{ display: "flex", gap: "16px" }}>
+                  <Field label="Start date">
+                    <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                  </Field>
+                  <Field label="End date">
+                    <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                  </Field>
+                </div>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button className="secondary-button" onClick={() => reloadStatement()}>
+                    Refresh Summary
+                  </button>
+                  <button className="secondary-button" onClick={exportStatementCSV} disabled={!statement}>
+                    Download CSV
+                  </button>
+                  <button
+                    className="primary-button"
+                    onClick={() =>
+                      window.open(
+                        `/print/statement/${agent.id}?startDate=${startDate}&endDate=${endDate}`,
+                        "_blank",
+                        "noopener,noreferrer"
+                      )
+                    }
+                  >
+                    Print statement
+                  </button>
+                </div>
+              </div>
+
+              {statementLoading ? (
+                <EmptyState
+                  icon={RefreshCcw}
+                  title="Loading period summary"
+                  detail="Compiling opening/closing continuity."
+                  compact
+                />
+              ) : statement ? (
+                <div className="form-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+                  <div
+                    style={{ border: "1px solid #ccc", padding: "16px", borderRadius: "6px", backgroundColor: "#fff" }}
+                  >
+                    <span style={{ fontSize: "11px", color: "#666" }}>Opening balance brought forward</span>
+                    <strong style={{ display: "block", fontSize: "20px", marginTop: "4px" }}>
+                      {formatNaira(Number(statement.openingBalance))}
+                    </strong>
+                  </div>
+                  <div
+                    style={{ border: "1px solid #ccc", padding: "16px", borderRadius: "6px", backgroundColor: "#fff" }}
+                  >
+                    <span style={{ fontSize: "11px", color: "#666" }}>Period movements (credits - debits)</span>
+                    <strong
+                      style={{
+                        display: "block",
+                        fontSize: "20px",
+                        marginTop: "4px",
+                        color: Number(statement.closingBalance) - Number(statement.openingBalance) >= 0 ? "green" : "red",
+                      }}
+                    >
+                      {formatNaira(Number(statement.closingBalance) - Number(statement.openingBalance))}
+                    </strong>
+                  </div>
+                  <div
+                    style={{ border: "1px solid #ccc", padding: "16px", borderRadius: "6px", backgroundColor: "#fff" }}
+                  >
+                    <span style={{ fontSize: "11px", color: "#666" }}>Closing balance carried forward</span>
+                    <strong style={{ display: "block", fontSize: "20px", marginTop: "4px" }}>
+                      {formatNaira(Number(statement.closingBalance))}
+                    </strong>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          )}
+
+          {error && (
+            <div className="form-note">
+              <AlertTriangle size={16} />
+              <span>{error}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {adjusting && (
+        <AgentAdjustModal
+          agent={agent}
+          allowedStations={allowedStations}
+          onClose={() => setAdjusting(false)}
+          onComplete={(title, detail) => {
+            setAdjusting(false);
+            reloadDetails();
+            reloadLedger();
+            reloadStatement();
+            onComplete(title, detail);
+          }}
+        />
+      )}
+
+      {depositing && (
+        <div
+          className="modal-layer"
+          role="dialog"
+          aria-modal="true"
+          onMouseDown={(e) => e.target === e.currentTarget && setDepositing(false)}
+        >
+          <div className="workflow-dialog" style={{ maxWidth: "550px" }}>
+            <div className="workflow-header">
+              <div>
+                <span>Wallet Account</span>
+                <h2>Post Agent Deposit</h2>
+                <p>Credit funds to selected agent wallet.</p>
+              </div>
+              <button onClick={() => setDepositing(false)}>
+                <X size={19} />
+              </button>
+            </div>
+            <DepositForm
+              allowedStations={allowedStations}
+              initialAgentId={agent.id}
+              onClose={() => setDepositing(false)}
+              onComplete={(title, detail) => {
+                setDepositing(false);
+                reloadDetails();
+                reloadLedger();
+                reloadStatement();
+                onComplete(title, detail);
+              }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AgentAdjustModal({
+  agent,
+  allowedStations,
+  onClose,
+  onComplete,
+}: {
+  agent: AgentRecord;
+  allowedStations: AllowedStation[];
+  onClose: () => void;
+  onComplete: (title: string, detail: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const bootstrapApi = useApiData<POSBootstrap>("/api/pos/bootstrap");
+
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    const form = new FormData(e.currentTarget);
+    const optional = (name: string) => String(form.get(name) ?? "").trim() || undefined;
+
+    try {
+      const response = await fetch(`/api/agents/${agent.id}/wallet/adjust`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "idempotency-key": crypto.randomUUID() },
+        body: JSON.stringify({
+          stationId: String(form.get("stationId")),
+          type: String(form.get("type")),
+          amount: String(form.get("amount")),
+          reason: String(form.get("reason")),
+          paymentMethodId: optional("paymentMethodId"),
+          reference: optional("reference"),
+        }),
+      });
+      const body = (await response.json()) as ApiEnvelope<any>;
+      if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Adjustment failed.");
+
+      onComplete(
+        "Wallet adjusted",
+        `Entry ${body.data.entryNumber} posted. Verified balance: ${formatNaira(Number(body.data.balance))}`
+      );
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Adjustment failed.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const paymentMethods = bootstrapApi.data?.paymentMethods.filter((item) => item.type !== "WALLET") ?? [];
+
+  return (
+    <div
+      className="modal-layer"
+      role="dialog"
+      aria-modal="true"
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="workflow-dialog" style={{ maxWidth: "550px" }}>
+        <div className="workflow-header">
+          <div>
+            <span>Wallet Adjustment</span>
+            <h2>Post Credit / Debit</h2>
+            <p>Perform controlled wallet account posting for {agent.name}.</p>
+          </div>
+          <button onClick={onClose}>
+            <X size={19} />
+          </button>
+        </div>
+
+        <form onSubmit={submit}>
+          <div className="workflow-body">
+            <div className="form-grid">
+              <Field label="Posting station">
+                <select name="stationId" required defaultValue={allowedStations[0]?.id}>
+                  {allowedStations.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.code} · {item.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Adjustment type">
+                <select name="type" required defaultValue="ADJUSTMENT_CREDIT">
+                  <option value="ADJUSTMENT_CREDIT">Adjustment Credit (Add funds)</option>
+                  <option value="ADJUSTMENT_DEBIT">Adjustment Debit (Deduct funds)</option>
+                </select>
+              </Field>
+              <Field label="Amount">
+                <div className="money-input">
+                  <span>₦</span>
+                  <input name="amount" type="number" step="0.01" min="0.01" required />
+                </div>
+              </Field>
+              <Field label="Payment method (Optional)">
+                <select name="paymentMethodId" defaultValue="">
+                  <option value="">No financial impact (Book entry)</option>
+                  {paymentMethods.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Payment reference (Optional)" full>
+                <input name="reference" placeholder="Enter bank reference if applicable" />
+              </Field>
+              <Field label="Posting reason / note" full>
+                <textarea name="reason" required placeholder="Enter description and reason for adjustment" />
+              </Field>
+            </div>
+            {error && (
+              <div className="form-note">
+                <AlertTriangle size={16} />
+                <span>{error}</span>
+              </div>
+            )}
+          </div>
+          <div className="workflow-footer">
+            <span>
+              <ShieldCheck size={14} /> Subject to credit limit controls
+            </span>
+            <div>
+              <button type="button" className="secondary-button" onClick={onClose}>
+                Cancel
+              </button>
+              <button type="submit" className="primary-button" disabled={busy}>
+                {busy ? "Posting..." : "Confirm Post"}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 
 function CustomerDetailModal({
   customer,
@@ -7258,9 +8668,9 @@ function CargoForm({ onComplete, onClose, allowedStations }: { onComplete: (titl
   return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="Station"><select name="stationId" required defaultValue={allowedStations[0]?.id}>{allowedStations.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select></Field><Field label="Customer"><select name="customerId" required defaultValue=""><option value="" disabled>Select customer</option>{customerData?.map((item) => <option key={item.id} value={item.id}>{item.displayName} · {item.primaryPhone}</option>)}</select></Field><Field label="Sender name"><input name="senderName" required /></Field><Field label="Sender phone"><input name="senderPhone" required autoComplete="tel" /></Field><Field label="Receiver"><input name="receiverName" required /></Field><Field label="Receiver phone"><input name="receiverPhone" required autoComplete="tel" /></Field><Field label="Receiver address" full><input name="receiverAddress" /></Field><Field label="Origin"><input name="origin" required placeholder="Kano (KAN)" /></Field><Field label="Destination"><input name="destination" required placeholder="Lagos (LOS)" /></Field><Field label="Weight (kg)"><input name="weightKg" type="number" step="0.001" min="0.001" required /></Field><Field label="Pieces"><input name="pieces" type="number" min="1" defaultValue="1" required /></Field><Field label="Commodity" full><input name="commodity" required placeholder="Describe the cargo contents" /></Field><Field label="Declared value"><div className="money-input"><span>₦</span><input name="declaredValue" type="number" step="0.01" min="0" /></div></Field><Field label="Airline"><input name="airline" /></Field><Field label="Flight number"><input name="flightNumber" placeholder="e.g. VM-1642" /></Field><Field label="Handling notes" full><textarea name="handlingNotes" placeholder="Fragile, orientation, special handling..." /></Field></div>{(error || customerError) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? customerError}</span></div>}</div><ModalFooter onClose={onClose} submitLabel={busy ? "Creating…" : loading ? "Loading customers…" : "Create & print label"} icon={Printer} disabled={busy || loading || !customerData?.length || !allowedStations.length} /></form>;
 }
 
-function DepositForm({ onComplete, onClose, allowedStations }: { onComplete: (title: string, detail: string) => void; onClose: () => void; allowedStations: AllowedStation[] }) {
+function DepositForm({ onComplete, onClose, allowedStations, initialAgentId }: { onComplete: (title: string, detail: string) => void; onClose: () => void; allowedStations: AllowedStation[]; initialAgentId?: string }) {
   const { data: agentData, loading: agentsLoading, error: agentsError } = useApiData<AgentRecord[]>("/api/agents?pageSize=100"); const { data: setup, loading: setupLoading, error: setupError } = useApiData<FinanceSetup>("/api/finance/setup");
-  const [amount, setAmount] = useState("500000"); const [agentId, setAgentId] = useState(""); const [busy, setBusy] = useState(false); const [error, setError] = useState<string | null>(null); const selected = agentData?.find((item) => item.id === agentId);
+  const [amount, setAmount] = useState("500000"); const [agentId, setAgentId] = useState(initialAgentId ?? ""); const [busy, setBusy] = useState(false); const [error, setError] = useState<string | null>(null); const selected = agentData?.find((item) => item.id === agentId);
   const submit = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setBusy(true); setError(null); const form = new FormData(event.currentTarget); try { const response = await fetch(`/api/agents/${agentId}/wallet`, { method: "POST", headers: { "content-type": "application/json", "idempotency-key": crypto.randomUUID() }, body: JSON.stringify({ stationId: String(form.get("stationId")), paymentMethodId: String(form.get("paymentMethodId")), amount, reference: String(form.get("reference")), reason: String(form.get("reason") || "") || undefined }) }); const body = await response.json() as ApiEnvelope<{ entryNumber: string; balance: string; amount: string }>; if (!response.ok || !body.ok || !body.data) throw new Error(body.error?.message ?? "Deposit could not be posted."); onComplete("Deposit posted", `${body.data.entryNumber} credited ${formatNaira(Number(body.data.amount))}; the verified balance is ${formatNaira(Number(body.data.balance))}.`); } catch (reason) { setError(reason instanceof Error ? reason.message : "Deposit could not be posted."); } finally { setBusy(false); } };
   return <form onSubmit={submit}><div className="workflow-body">{selected && <div className="agent-deposit-summary"><span className="avatar large">{selected.name.split(" ").map((item) => item[0]).join("").slice(0, 2)}</span><div><strong>{selected.name}</strong><span>{selected.agentNumber} · Current balance {formatNaira(Number(selected.wallet?.balance ?? 0))}</span></div><StatusPill value={Number(selected.wallet?.balance ?? 0) <= 100000 ? "Low balance" : "Active"} /></div>}<div className="form-grid"><Field label="Agent"><select required value={agentId} onChange={(event) => setAgentId(event.target.value)}><option value="" disabled>Select agent wallet</option>{agentData?.map((item) => <option key={item.id} value={item.id}>{item.agentNumber} · {item.name}</option>)}</select></Field><Field label="Posting station"><select name="stationId" required defaultValue={allowedStations[0]?.id}>{allowedStations.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select></Field><Field label="Deposit amount"><div className="money-input"><span>₦</span><input value={amount} onChange={(event) => setAmount(event.target.value.replace(/[^0-9.]/g, ""))} inputMode="decimal" required /></div></Field><Field label="Payment method"><select name="paymentMethodId" required defaultValue=""><option value="" disabled>Select verified method</option>{setup?.paymentMethods.filter((item) => item.type !== "WALLET").map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field><Field label="Payment reference" full><input name="reference" required placeholder="Enter verified bank or terminal reference" /></Field><Field label="Posting note" full><textarea name="reason" placeholder="Optional finance note" /></Field></div>{selected && <div className="transaction-summary"><div><span>Expected wallet balance</span><strong>{formatNaira(Number(selected.wallet?.balance ?? 0) + Number(amount || 0))}</strong></div><span><ShieldCheck size={14} /> Idempotency, optimistic locking, cashbook posting and audit are committed together.</span></div>}{(error || agentsError || setupError) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? agentsError ?? setupError}</span></div>}</div><ModalFooter onClose={onClose} submitLabel={busy ? "Posting…" : "Post deposit"} icon={WalletCards} disabled={busy || agentsLoading || setupLoading || !agentId || !allowedStations.length} /></form>;
 }

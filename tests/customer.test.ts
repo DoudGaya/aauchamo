@@ -44,19 +44,10 @@ beforeAll(async () => {
     select: { id: true }
   });
   const testIds = testCustomers.map((c) => c.id);
-  if (testIds.length > 0) {
-    await db.customerMerge.deleteMany({
-      where: {
-        OR: [
-          { sourceCustomerId: { in: testIds } },
-          { targetCustomerId: { in: testIds } }
-        ]
-      }
-    });
-    await db.customer.deleteMany({
-      where: {
-        id: { in: testIds }
-      }
+  for (const id of testIds) {
+    await db.customer.update({
+      where: { id },
+      data: { customerNumber: `OLD-CUST-${Math.random().toString(36).slice(2, 9)}` }
     });
   }
 

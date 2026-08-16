@@ -58,6 +58,7 @@ export const PERMISSIONS = [
   ["wallet.view", "wallet", "view", "View agent wallet balances", true],
   ["wallet.post", "wallet", "post", "Post wallet deposits and debits", true],
   ["wallet.adjust", "wallet", "adjust", "Adjust or reverse wallet entries", true],
+  ["wallet.change_credit_limit", "wallet", "change_credit_limit", "Change agent wallet credit limits", true],
   ["finance.view", "finance", "view", "View cashbook and finance", true],
   ["finance.post_income", "finance", "post_income", "Post income", true],
   ["finance.post_expense", "finance", "post_expense", "Post expenses", true],
