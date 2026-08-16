@@ -12,6 +12,7 @@ import {
   BadgeCheck,
   Banknote,
   Bell,
+  Calculator,
   Boxes,
   Building2,
   CalendarDays,
@@ -832,7 +833,7 @@ function ModuleView({
     case "customers":
       return <CustomersView onModal={onModal} allowedStations={allowedStations} onToast={onToast} />;
     case "finance":
-      return <FinanceView onToast={onToast} />;
+      return <FinanceView onToast={onToast} allowedStations={allowedStations} identity={identity} />;
     case "stations":
       return <StationsView />;
     case "tickets":
@@ -5870,31 +5871,991 @@ function CustomersView({
   );
 }
 
-function FinanceView({ onToast }: { onToast: (toast: Toast) => void }) {
-  const [tab, setTab] = useState("Cashbook");
-  const { data, total, loading, error, reload } = useApiData<FinanceRecord[]>("/api/finance/entries?pageSize=100");
-  const entries = data ?? [];
-  const reverseEntry = async (entry: FinanceRecord) => { const reason = window.prompt(`Reason to reverse ${entry.entryNumber} (a compensating entry is created)`); if (!reason?.trim()) return; try { await workflowPost(`/api/finance/entries/${entry.id}/reverse`, { reason }); onToast({ title: "Entry reversed", detail: `${entry.entryNumber} was reversed with an audited compensating entry.` }); } catch (reason_) { onToast({ title: "Reversal failed", detail: reason_ instanceof Error ? reason_.message : "The entry could not be reversed." }); } };
-  const decideEntry = async (entry: FinanceRecord, decision: "APPROVED" | "REJECTED") => { const reason = window.prompt(`${decision === "APPROVED" ? "Approval" : "Rejection"} reason for ${entry.entryNumber}`); if (!reason?.trim()) return; try { await workflowPost(`/api/finance/entries/${entry.id}/approve`, { decision, reason }); onToast({ title: `Entry ${decision.toLowerCase()}`, detail: `${entry.entryNumber} was ${decision.toLowerCase()} under maker-checker control.` }); } catch (reason_) { onToast({ title: "Decision failed", detail: reason_ instanceof Error ? reason_.message : "The entry could not be decided." }); } };
-  const visible = entries.filter((entry) => tab === "Income" ? entry.direction === "CREDIT" : tab === "Expenses" ? entry.direction === "DEBIT" : tab === "Refunds" ? entry.description.toLowerCase().includes("refund") : tab === "Agent deposits" ? entry.description.toLowerCase().includes("agent deposit") : true);
-  const table = useTableControls(visible, (entry, q) => `${entry.entryNumber} ${entry.description} ${entry.account.name} ${entry.category.name} ${entry.station.name}`.toLowerCase().includes(q));
+function FinanceView({
+  onToast,
+  allowedStations,
+  identity,
+}: {
+  onToast: (toast: Toast) => void;
+  allowedStations: any[];
+  identity: any;
+}) {
+  const [viewTab, setViewTab] = useState("ledger"); // ledger, sessions, reconciliations, periods, reports
+  const [cashbookTab, setCashbookTab] = useState("Cashbook"); // Cashbook, Income, Expenses, Refunds, Agent deposits
+  const [modal, setModal] = useState<string | null>(null); // post-entry, open-session, close-session, reconcile, create-period
+  
+  const [selectedSession, setSelectedSession] = useState<any | null>(null);
+
+  // Form states
+  const [entryType, setEntryType] = useState<"DEBIT" | "CREDIT">("CREDIT");
+  const [stationId, setStationId] = useState(allowedStations[0]?.id || "");
+  const [businessUnitId, setBusinessUnitId] = useState("");
+  const [accountId, setAccountId] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [paymentMethodId, setPaymentMethodId] = useState("");
+  const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
+  const [externalReference, setExternalReference] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  // Session form states
+  const [sessionStationId, setSessionStationId] = useState(allowedStations[0]?.id || "");
+  const [sessionAccountId, setSessionAccountId] = useState("");
+  const [openingBalance, setOpeningBalance] = useState("");
+
+  // Session close states
+  const [countedBalance, setCountedBalance] = useState("");
+
+  // Reconciliation form states
+  const [reconAccountId, setReconAccountId] = useState("");
+  const [statementDate, setStatementDate] = useState("");
+  const [statementBalance, setStatementBalance] = useState("");
+  const [reconNotes, setReconNotes] = useState("");
+
+  // Period form states
+  const [periodName, setPeriodName] = useState("");
+  const [startsAt, setStartsAt] = useState("");
+  const [endsAt, setEndsAt] = useState("");
+
+  // Load backend APIs
+  const entriesApi = useApiData<any[]>("/api/finance/entries?pageSize=100");
+  const setupApi = useApiData<any>("/api/finance/setup");
+  const sessionsApi = useApiData<any[]>("/api/finance/sessions?pageSize=100");
+  const reconciliationsApi = useApiData<any[]>("/api/finance/reconciliations?pageSize=100");
+  const periodsApi = useApiData<any[]>("/api/finance/periods");
+  const profitApi = useApiData<any>("/api/finance/profit");
+
+  const entries = entriesApi.data ?? [];
+  const setup = setupApi.data;
+  const sessions = sessionsApi.data ?? [];
+  const reconciliations = reconciliationsApi.data ?? [];
+  const periods = periodsApi.data ?? [];
+  const profit = profitApi.data;
+
+  // Filter & setup selectors
+  const filteredCategories = setup?.categories?.filter((cat: any) => cat.type === entryType) || [];
+
+  // Table rendering & pagination logic
+  const reverseEntry = async (entry: any) => {
+    const reason = window.prompt(`Reason to reverse ${entry.entryNumber} (a compensating entry will be posted)`);
+    if (!reason?.trim()) return;
+    try {
+      await workflowPost(`/api/finance/entries/${entry.id}/reverse`, { reason });
+      onToast({
+        title: "Entry reversed",
+        detail: `${entry.entryNumber} was reversed with an audited compensating entry.`,
+      });
+      entriesApi.reload();
+      profitApi.reload();
+    } catch (err) {
+      onToast({
+        title: "Reversal failed",
+        detail: err instanceof Error ? err.message : "The entry could not be reversed.",
+      });
+    }
+  };
+
+  const decideEntry = async (entry: any, decision: "APPROVED" | "REJECTED") => {
+    const reason = window.prompt(`${decision === "APPROVED" ? "Approval" : "Rejection"} reason for ${entry.entryNumber}`);
+    if (!reason?.trim()) return;
+    try {
+      await workflowPost(`/api/finance/entries/${entry.id}/approve`, { decision, reason });
+      onToast({
+        title: `Entry ${decision.toLowerCase()}`,
+        detail: `${entry.entryNumber} was ${decision.toLowerCase()} successfully.`,
+      });
+      entriesApi.reload();
+      profitApi.reload();
+    } catch (err) {
+      onToast({
+        title: "Decision failed",
+        detail: err instanceof Error ? err.message : "The entry status could not be updated.",
+      });
+    }
+  };
+
+  const submitEntry = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setFormError(null);
+    try {
+      const res = await fetch("/api/finance/entries", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          stationId,
+          businessUnitId: businessUnitId || undefined,
+          accountId,
+          categoryId,
+          paymentMethodId: paymentMethodId || undefined,
+          direction: entryType,
+          amount,
+          description,
+          externalReference: externalReference || undefined,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) throw new Error(body.error?.message || "Posting failed.");
+      onToast({
+        title: "Entry posted",
+        detail: body.data.entryNumber + (body.meta?.requiresApproval ? " submitted for approval." : " posted successfully."),
+      });
+      setModal(null);
+      entriesApi.reload();
+      profitApi.reload();
+    } catch (err: any) {
+      setFormError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitSession = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setFormError(null);
+    try {
+      const res = await fetch("/api/finance/sessions", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          stationId: sessionStationId,
+          accountId: sessionAccountId,
+          openingBalance,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) throw new Error(body.error?.message || "Opening session failed.");
+      onToast({
+        title: "Cash Session opened",
+        detail: "Session was opened successfully.",
+      });
+      setModal(null);
+      sessionsApi.reload();
+    } catch (err: any) {
+      setFormError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitCloseSession = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setFormError(null);
+    try {
+      const res = await fetch(`/api/finance/sessions/${selectedSession.id}/close`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ countedBalance }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) throw new Error(body.error?.message || "Closing session failed.");
+      onToast({
+        title: "Cash Session closed",
+        detail: `Expected: ${formatNaira(Number(body.data.expected))}, counted: ${formatNaira(Number(body.data.counted))}, variance: ${formatNaira(Number(body.data.variance))}`,
+      });
+      setModal(null);
+      sessionsApi.reload();
+    } catch (err: any) {
+      setFormError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitReconciliation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setFormError(null);
+    try {
+      const res = await fetch("/api/finance/reconciliations", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          accountId: reconAccountId,
+          statementDate,
+          statementBalance,
+          notes: reconNotes || undefined,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) throw new Error(body.error?.message || "Reconciliation failed.");
+      onToast({
+        title: "Reconciliation complete",
+        detail: `Reconciliation was completed with a variance of ${formatNaira(Number(body.data.difference))}`,
+      });
+      setModal(null);
+      reconciliationsApi.reload();
+      entriesApi.reload();
+    } catch (err: any) {
+      setFormError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitPeriod = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setFormError(null);
+    try {
+      const res = await fetch("/api/finance/periods", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          name: periodName,
+          startsAt,
+          endsAt,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) throw new Error(body.error?.message || "Period creation failed.");
+      onToast({
+        title: "Period created",
+        detail: `${periodName} is now active.`,
+      });
+      setModal(null);
+      periodsApi.reload();
+    } catch (err: any) {
+      setFormError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const togglePeriod = async (period: any, isClosed: boolean) => {
+    if (!window.confirm(`Are you sure you want to ${isClosed ? "close" : "reopen"} ${period.name}?`)) return;
+    try {
+      const res = await fetch(`/api/finance/periods/${period.id}/close`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ isClosed }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) throw new Error(body.error?.message || "Action failed.");
+      onToast({
+        title: isClosed ? "Period closed" : "Period reopened",
+        detail: `${period.name} status updated successfully.`,
+      });
+      periodsApi.reload();
+    } catch (err) {
+      onToast({
+        title: "Action failed",
+        detail: err instanceof Error ? err.message : "Failed to update period status.",
+      });
+    }
+  };
+
+  // Ledger Filter logic
+  const visibleEntries = entries.filter((entry) => {
+    if (cashbookTab === "Income") return entry.direction === "CREDIT";
+    if (cashbookTab === "Expenses") return entry.direction === "DEBIT";
+    if (cashbookTab === "Refunds") return entry.description.toLowerCase().includes("refund");
+    if (cashbookTab === "Agent deposits") return entry.description.toLowerCase().includes("agent deposit");
+    return true;
+  });
+  const ledgerTable = useTableControls(visibleEntries, (entry, q) =>
+    `${entry.entryNumber} ${entry.description} ${entry.account.name} ${entry.category.name} ${entry.station.name}`.toLowerCase().includes(q)
+  );
+
   const posted = entries.filter((entry) => ["POSTED", "RECONCILED"].includes(entry.status));
-  const income = posted.filter((entry) => entry.direction === "CREDIT").reduce((sum, entry) => sum + Number(entry.amount), 0);
-  const expenses = posted.filter((entry) => entry.direction === "DEBIT").reduce((sum, entry) => sum + Number(entry.amount), 0);
-  const pending = entries.filter((entry) => entry.status === "PENDING_APPROVAL").reduce((sum, entry) => sum + Number(entry.amount), 0);
+  const incomeTotal = posted.filter((entry) => entry.direction === "CREDIT").reduce((sum, entry) => sum + Number(entry.amount), 0);
+  const expensesTotal = posted.filter((entry) => entry.direction === "DEBIT").reduce((sum, entry) => sum + Number(entry.amount), 0);
+  const pendingTotal = entries.filter((entry) => entry.status === "PENDING_APPROVAL").reduce((sum, entry) => sum + Number(entry.amount), 0);
+
   return (
     <div className="content-stack">
+      {/* Finance Overview Panel */}
       <section className="finance-overview">
-        <div className="finance-balance"><span>Net cashbook position</span><strong>{formatNaira(income - expenses)}</strong><small>Posted income less posted expenses in the current result set</small><div className="balance-bars"><i style={{ width: income + expenses ? `${Math.round((income / (income + expenses)) * 100)}%` : "0%" }} /><i style={{ width: income + expenses ? `${Math.round((expenses / (income + expenses)) * 100)}%` : "0%" }} /></div><div className="balance-legend"><span><i />Income {formatNaira(income)}</span><span><i />Expenses {formatNaira(expenses)}</span></div></div>
-        <div className="finance-mini"><span className="mini-icon success"><ArrowUpRight size={17} /></span><div><span>Posted income</span><strong>{formatNaira(income)}</strong><small>Permission-scoped entries</small></div></div>
-        <div className="finance-mini"><span className="mini-icon danger"><ArrowDownLeft size={17} /></span><div><span>Posted expenses</span><strong>{formatNaira(expenses)}</strong><small>Compensating reversals preserved</small></div></div>
-        <div className="finance-mini"><span className="mini-icon warning"><Clock3 size={17} /></span><div><span>Awaiting approval</span><strong>{formatNaira(pending)}</strong><small>Maker-checker controlled</small></div></div>
+        <div className="finance-balance">
+          <span>Net cashbook position</span>
+          <strong>{formatNaira(incomeTotal - expensesTotal)}</strong>
+          <small>Posted income less posted expenses in results</small>
+          <div className="balance-bars">
+            <i style={{ width: incomeTotal + expensesTotal ? `${Math.round((incomeTotal / (incomeTotal + expensesTotal)) * 100)}%` : "0%" }} />
+            <i style={{ width: incomeTotal + expensesTotal ? `${Math.round((expensesTotal / (incomeTotal + expensesTotal)) * 100)}%` : "0%" }} />
+          </div>
+          <div className="balance-legend">
+            <span><i style={{ background: "#4caf50" }} />Income {formatNaira(incomeTotal)}</span>
+            <span><i style={{ background: "#f44336" }} />Expenses {formatNaira(expensesTotal)}</span>
+          </div>
+        </div>
+        <div className="finance-mini">
+          <span className="mini-icon success"><ArrowUpRight size={17} /></span>
+          <div>
+            <span>Posted income</span>
+            <strong>{formatNaira(incomeTotal)}</strong>
+            <small>Audited ledger credits</small>
+          </div>
+        </div>
+        <div className="finance-mini">
+          <span className="mini-icon danger"><ArrowDownLeft size={17} /></span>
+          <div>
+            <span>Posted expenses</span>
+            <strong>{formatNaira(expensesTotal)}</strong>
+            <small>Audited ledger debits</small>
+          </div>
+        </div>
+        <div className="finance-mini">
+          <span className="mini-icon warning"><Clock3 size={17} /></span>
+          <div>
+            <span>Awaiting approval</span>
+            <strong>{formatNaira(pendingTotal)}</strong>
+            <small>Expense thresholds limit</small>
+          </div>
+        </div>
       </section>
-      <Panel>
-        <TableToolbar tabs={["Cashbook", "Income", "Expenses", "Refunds", "Agent deposits"]} activeTab={tab} onTab={(value) => { setTab(value); table.resetPage(); }} placeholder="Search reference, description, account or category" search={table.search} onSearch={table.setSearch} />
-        {error ? <EmptyState icon={AlertTriangle} title="Finance records could not be loaded" detail={error} /> : loading ? <EmptyState icon={RefreshCcw} title="Loading cashbook" detail="Reconciling posted and pending entries." compact /> : table.filtered.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>Reference</th><th>Account</th><th>Description</th><th>Type</th><th>Category</th><th>Station</th><th>Amount</th><th>Status</th><th /></tr></thead><tbody>{table.pageRows.map((entry) => <tr key={entry.id}><td><div className="primary-cell"><strong>{entry.entryNumber}</strong><span>{formatDate(entry.createdAt)}</span></div></td><td>{entry.account.name}</td><td>{entry.description}</td><td><StatusPill value={entry.direction === "CREDIT" ? "Income" : "Expense"} /></td><td>{entry.category.name}</td><td>{entry.station.name}</td><td className={classNames("number-cell strong-number", entry.direction === "DEBIT" && "negative-number")}>{entry.direction === "DEBIT" ? "−" : "+"}{formatNaira(Number(entry.amount))}</td><td><StatusPill value={entry.status.replaceAll("_", " ")} /></td><td><div className="row-actions">{entry.status === "PENDING_APPROVAL" ? <><button className="row-button" onClick={() => decideEntry(entry, "APPROVED")}>Approve</button><button className="icon-ghost" onClick={() => decideEntry(entry, "REJECTED")} aria-label="Reject entry"><X size={16} /></button></> : ["POSTED", "RECONCILED"].includes(entry.status) ? <button className="row-button" onClick={() => reverseEntry(entry)}>Reverse</button> : <button className="icon-ghost" onClick={reload} aria-label={`Refresh after ${entry.entryNumber}`}><RefreshCcw size={15} /></button>}</div></td></tr>)}</tbody></table></div> : <EmptyState icon={Banknote} title={table.search ? "No matching entries" : "No cashbook entries"} detail={table.search ? "Try a different reference, description, account or category." : "Posted sales, deposits and approved finance entries appear here automatically."} />}
-        <Pagination total={table.total} page={table.page} pageSize={table.pageSize} onPage={table.setPage} />
-      </Panel>
+
+      {/* Primary Navigation Tabs */}
+      <div className="table-tabs" style={{ marginBottom: "1.5rem", borderBottom: "1px solid var(--line, #ddd)" }}>
+        <button className={classNames(viewTab === "ledger" && "active")} onClick={() => setViewTab("ledger")}>
+          Cashbook Ledger
+        </button>
+        <button className={classNames(viewTab === "sessions" && "active")} onClick={() => setViewTab("sessions")}>
+          Cash Sessions
+        </button>
+        <button className={classNames(viewTab === "reconciliations" && "active")} onClick={() => setViewTab("reconciliations")}>
+          Reconciliations
+        </button>
+        <button className={classNames(viewTab === "periods" && "active")} onClick={() => setViewTab("periods")}>
+          Periods Control
+        </button>
+        {identity.permissions.includes("finance.view_profit") && (
+          <button className={classNames(viewTab === "reports" && "active")} onClick={() => setViewTab("reports")}>
+            Finance Reports (P&L)
+          </button>
+        )}
+      </div>
+
+      {/* Tab Panel: Cashbook Ledger */}
+      {viewTab === "ledger" && (
+        <Panel>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+            <TableToolbar
+              tabs={["Cashbook", "Income", "Expenses", "Refunds", "Agent deposits"]}
+              activeTab={cashbookTab}
+              onTab={(value) => {
+                setCashbookTab(value);
+                ledgerTable.resetPage();
+              }}
+              placeholder="Search reference, description, account or category"
+              search={ledgerTable.search}
+              onSearch={ledgerTable.setSearch}
+            />
+            <div style={{ display: "flex", gap: "10px" }}>
+              {identity.permissions.includes("finance.post_income") && (
+                <button
+                  className="primary-button"
+                  onClick={() => {
+                    setEntryType("CREDIT");
+                    setAccountId(setup?.accounts[0]?.id || "");
+                    setCategoryId(setup?.categories?.filter((cat: any) => cat.type === "CREDIT")[0]?.id || "");
+                    setPaymentMethodId(setup?.paymentMethods[0]?.id || "");
+                    setAmount("");
+                    setDescription("");
+                    setExternalReference("");
+                    setFormError(null);
+                    setModal("post-entry");
+                  }}
+                >
+                  <Plus size={16} /> Post Income
+                </button>
+              )}
+              {identity.permissions.includes("finance.post_expense") && (
+                <button
+                  className="secondary-button"
+                  style={{ borderColor: "red", color: "red" }}
+                  onClick={() => {
+                    setEntryType("DEBIT");
+                    setAccountId(setup?.accounts[0]?.id || "");
+                    setCategoryId(setup?.categories?.filter((cat: any) => cat.type === "DEBIT")[0]?.id || "");
+                    setPaymentMethodId(setup?.paymentMethods[0]?.id || "");
+                    setAmount("");
+                    setDescription("");
+                    setExternalReference("");
+                    setFormError(null);
+                    setModal("post-entry");
+                  }}
+                >
+                  <Plus size={16} /> Post Expense
+                </button>
+              )}
+            </div>
+          </div>
+
+          {entriesApi.error ? (
+            <EmptyState icon={AlertTriangle} title="Ledger entries failed to load" detail={entriesApi.error} />
+          ) : entriesApi.loading ? (
+            <EmptyState icon={RefreshCcw} title="Loading ledger entries" detail="Reading cashbook records." compact />
+          ) : ledgerTable.filtered.length ? (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Reference</th>
+                    <th>Account</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Category</th>
+                    <th>Station</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {ledgerTable.pageRows.map((entry) => (
+                    <tr key={entry.id}>
+                      <td>
+                        <div className="primary-cell">
+                          <strong>{entry.entryNumber}</strong>
+                          <span>{formatDate(entry.createdAt)}</span>
+                        </div>
+                      </td>
+                      <td>{entry.account.name}</td>
+                      <td>{entry.description}</td>
+                      <td>
+                        <StatusPill value={entry.direction === "CREDIT" ? "Income" : "Expense"} />
+                      </td>
+                      <td>{entry.category.name}</td>
+                      <td>{entry.station.name}</td>
+                      <td className={classNames("number-cell strong-number", entry.direction === "DEBIT" && "negative-number")}>
+                        {entry.direction === "DEBIT" ? "−" : "+"}{formatNaira(Number(entry.amount))}
+                      </td>
+                      <td>
+                        <StatusPill value={entry.status.replaceAll("_", " ")} />
+                      </td>
+                      <td>
+                        <div className="row-actions">
+                          {entry.status === "PENDING_APPROVAL" && identity.permissions.includes("finance.approve") ? (
+                            <>
+                              <button className="row-button" onClick={() => decideEntry(entry, "APPROVED")}>Approve</button>
+                              <button className="icon-ghost" onClick={() => decideEntry(entry, "REJECTED")} aria-label="Reject"><X size={15} /></button>
+                            </>
+                          ) : ["POSTED", "RECONCILED"].includes(entry.status) && identity.permissions.includes("finance.reverse") ? (
+                            <button className="row-button" onClick={() => reverseEntry(entry)}>Reverse</button>
+                          ) : null}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState icon={Banknote} title="No cashbook records" detail="Use Post buttons to add ledger items manually." />
+          )}
+          <Pagination total={ledgerTable.total} page={ledgerTable.page} pageSize={ledgerTable.pageSize} onPage={ledgerTable.setPage} />
+        </Panel>
+      )}
+
+      {/* Tab Panel: Cash Sessions */}
+      {viewTab === "sessions" && (
+        <Panel>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "600" }}>Cash Drawer Sessions</h3>
+              <p style={{ margin: "2px 0 0 0", fontSize: "11px", color: "var(--text-muted)" }}>Open and close physical drawer counts</p>
+            </div>
+            {identity.permissions.includes("finance.reconcile") && (
+              <button
+                className="primary-button"
+                onClick={() => {
+                  setSessionStationId(allowedStations[0]?.id || "");
+                  setSessionAccountId(setup?.accounts[0]?.id || "");
+                  setOpeningBalance("");
+                  setFormError(null);
+                  setModal("open-session");
+                }}
+              >
+                <Plus size={16} /> Open Drawer Session
+              </button>
+            )}
+          </div>
+
+          {sessionsApi.error ? (
+            <EmptyState icon={AlertTriangle} title="Sessions failed to load" detail={sessionsApi.error} />
+          ) : sessionsApi.loading ? (
+            <EmptyState icon={RefreshCcw} title="Loading sessions" detail="Reading session logs." compact />
+          ) : sessions.length ? (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Station</th>
+                    <th>Account</th>
+                    <th>Opened By</th>
+                    <th>Opening Balance</th>
+                    <th>Counted Balance</th>
+                    <th>Variance</th>
+                    <th>Status</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {sessions.map((sess) => (
+                    <tr key={sess.id}>
+                      <td>{sess.station.name}</td>
+                      <td>{sess.account.name}</td>
+                      <td>
+                        <div className="primary-cell">
+                          <strong>{sess.openedById}</strong>
+                          <span>{formatDate(sess.openedAt)}</span>
+                        </div>
+                      </td>
+                      <td className="number-cell">{formatNaira(Number(sess.openingBalance))}</td>
+                      <td className="number-cell">{sess.counted !== null ? formatNaira(Number(sess.counted)) : "-"}</td>
+                      <td className={classNames("number-cell", Number(sess.variance) < 0 && "negative-number")}>
+                        {sess.variance !== null ? (Number(sess.variance) >= 0 ? "+" : "") + formatNaira(Number(sess.variance)) : "-"}
+                      </td>
+                      <td>
+                        <StatusPill value={sess.status} />
+                      </td>
+                      <td>
+                        {sess.status === "OPEN" && identity.permissions.includes("finance.reconcile") && (
+                          <button
+                            className="row-button"
+                            onClick={() => {
+                              setSelectedSession(sess);
+                              setCountedBalance("");
+                              setFormError(null);
+                              setModal("close-session");
+                            }}
+                          >
+                            Close & Count
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState icon={Clock3} title="No cash drawer sessions" detail="Open a cash drawer session to track station sales." />
+          )}
+        </Panel>
+      )}
+
+      {/* Tab Panel: Reconciliations */}
+      {viewTab === "reconciliations" && (
+        <Panel>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "600" }}>Bank & Cash Reconciliations</h3>
+              <p style={{ margin: "2px 0 0 0", fontSize: "11px", color: "var(--text-muted)" }}>Match statement balances to ledger position</p>
+            </div>
+            {identity.permissions.includes("finance.reconcile") && (
+              <button
+                className="primary-button"
+                onClick={() => {
+                  setReconAccountId(setup?.accounts[0]?.id || "");
+                  setStatementDate(new Date().toISOString().slice(0, 10));
+                  setStatementBalance("");
+                  setReconNotes("");
+                  setFormError(null);
+                  setModal("reconcile");
+                }}
+              >
+                <Calculator size={16} /> New Reconciliation
+              </button>
+            )}
+          </div>
+
+          {reconciliationsApi.error ? (
+            <EmptyState icon={AlertTriangle} title="Reconciliations failed to load" detail={reconciliationsApi.error} />
+          ) : reconciliationsApi.loading ? (
+            <EmptyState icon={RefreshCcw} title="Loading reconciliations" detail="Reading reconciliation log." compact />
+          ) : reconciliations.length ? (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Account</th>
+                    <th>Statement Date</th>
+                    <th>Statement Balance</th>
+                    <th>System Balance</th>
+                    <th>Difference (Variance)</th>
+                    <th>Reconciled By</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reconciliations.map((rec) => (
+                    <tr key={rec.id}>
+                      <td>{rec.account.name}</td>
+                      <td>{new Date(rec.statementDate).toLocaleDateString()}</td>
+                      <td className="number-cell">{formatNaira(Number(rec.statementBalance))}</td>
+                      <td className="number-cell">{formatNaira(Number(rec.systemBalance))}</td>
+                      <td className={classNames("number-cell", Number(rec.difference) !== 0 && "negative-number")}>
+                        {formatNaira(Number(rec.difference))}
+                      </td>
+                      <td>
+                        <div className="primary-cell">
+                          <strong>{rec.reconciledById}</strong>
+                          <span>{formatDate(rec.reconciledAt)}</span>
+                        </div>
+                      </td>
+                      <td>{rec.notes || "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState icon={Calculator} title="No reconciliations yet" detail="Create a reconciliation to lock posted ledger items." />
+          )}
+        </Panel>
+      )}
+
+      {/* Tab Panel: Periods Control */}
+      {viewTab === "periods" && (
+        <Panel>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "600" }}>Financial Periods</h3>
+              <p style={{ margin: "2px 0 0 0", fontSize: "11px", color: "var(--text-muted)" }}>Control period posting lock boundaries</p>
+            </div>
+            {identity.permissions.includes("settings.manage") && (
+              <button
+                className="primary-button"
+                onClick={() => {
+                  setPeriodName("");
+                  setStartsAt("");
+                  setEndsAt("");
+                  setFormError(null);
+                  setModal("create-period");
+                }}
+              >
+                <CalendarDays size={16} /> New Period
+              </button>
+            )}
+          </div>
+
+          {periodsApi.error ? (
+            <EmptyState icon={AlertTriangle} title="Periods failed to load" detail={periodsApi.error} />
+          ) : periodsApi.loading ? (
+            <EmptyState icon={RefreshCcw} title="Loading periods" detail="Reading periods config." compact />
+          ) : periods.length ? (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Period Name</th>
+                    <th>Starts At</th>
+                    <th>Ends At</th>
+                    <th>Status</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {periods.map((per) => (
+                    <tr key={per.id}>
+                      <td><strong>{per.name}</strong></td>
+                      <td>{new Date(per.startsAt).toLocaleDateString()}</td>
+                      <td>{new Date(per.endsAt).toLocaleDateString()}</td>
+                      <td>
+                        <StatusPill value={per.isClosed ? "CLOSED" : "OPEN"} />
+                      </td>
+                      <td>
+                        {identity.permissions.includes("settings.manage") && (
+                          <button
+                            className="row-button"
+                            onClick={() => togglePeriod(per, !per.isClosed)}
+                          >
+                            {per.isClosed ? "Reopen" : "Close Period"}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState icon={CalendarDays} title="No financial periods configured" detail="Create periods to locking down historical ledgers." />
+          )}
+        </Panel>
+      )}
+
+      {/* Tab Panel: Finance Reports */}
+      {viewTab === "reports" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          <Panel>
+            <div style={{ marginBottom: "16px" }}>
+              <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "600" }}>Profit & Loss (P&L) Statement</h3>
+              <p style={{ margin: "2px 0 0 0", fontSize: "11px", color: "var(--text-muted)" }}>Consolidated revenues, COGS and expenses statement</p>
+            </div>
+            {profitApi.loading ? (
+              <EmptyState icon={RefreshCcw} title="Generating report" detail="Retrieving ledger data." compact />
+            ) : profitApi.error ? (
+              <EmptyState icon={AlertTriangle} title="Failed to generate report" detail={profitApi.error} />
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "24px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px", background: "var(--panel-bg, #fafafa)", padding: "20px", borderRadius: "8px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", paddingBottom: "10px", borderBottom: "1px solid var(--border-color, #eee)" }}>
+                    <span>Gross POS Sales Revenue</span>
+                    <strong style={{ color: "green" }}>+{formatNaira(profit?.grossSales || 0)}</strong>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", paddingBottom: "10px", borderBottom: "1px solid var(--border-color, #eee)" }}>
+                    <span>Manual Account Income</span>
+                    <strong style={{ color: "green" }}>+{formatNaira(profit?.manualIncome || 0)}</strong>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", paddingBottom: "10px", borderBottom: "1px solid var(--border-color, #eee)" }}>
+                    <span>Cost of Goods Sold (COGS)</span>
+                    <strong style={{ color: "red" }}>-{formatNaira(profit?.costOfSales || 0)}</strong>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", paddingBottom: "10px", borderBottom: "1px solid var(--border-color, #eee)" }}>
+                    <span>Manual Expenses / Adjustments</span>
+                    <strong style={{ color: "red" }}>-{formatNaira(profit?.manualExpenses || 0)}</strong>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "16px", fontWeight: "bold", paddingTop: "10px", borderTop: "2px dashed var(--border-color, #ddd)" }}>
+                    <span>Net Operating Profit</span>
+                    <strong style={{ color: Number(profit?.netProfit) >= 0 ? "var(--primary-color)" : "red" }}>
+                      {formatNaira(profit?.netProfit || 0)}
+                    </strong>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <h4 style={{ margin: 0, fontSize: "12px", fontWeight: "600", textTransform: "uppercase", color: "var(--text-muted)" }}>Revenue Share per Station</h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "250px", overflowY: "auto" }}>
+                    {profit?.byStation?.map((st: any) => (
+                      <div key={st.stationId} style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", background: "white", padding: "8px 12px", borderRadius: "6px", border: "1px solid var(--border-color, #f0f0f0)" }}>
+                        <span>{st.stationName} ({st.stationCode})</span>
+                        <strong>{formatNaira(st.grossSales)}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </Panel>
+        </div>
+      )}
+
+      {/* Modal Backdrop Layer */}
+      {modal && (
+        <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && setModal(null)}>
+          <div className="workflow-dialog" style={{ maxWidth: "550px" }}>
+            
+            {/* Modal: Post Entry */}
+            {modal === "post-entry" && (
+              <form onSubmit={submitEntry}>
+                <div className="workflow-header">
+                  <h2>Post Manual {entryType === "CREDIT" ? "Income" : "Expense"}</h2>
+                  <button type="button" onClick={() => setModal(null)} aria-label="Close"><X size={18} /></button>
+                </div>
+                <div className="workflow-body">
+                  <div className="form-grid">
+                    <Field label="Station">
+                      <select value={stationId} onChange={(e) => setStationId(e.target.value)} required>
+                        {allowedStations.map((st) => (
+                          <option key={st.id} value={st.id}>{st.name} ({st.code})</option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="Business Unit">
+                      <select value={businessUnitId} onChange={(e) => setBusinessUnitId(e.target.value)}>
+                        <option value="">Consolidated / None</option>
+                        {setup?.paymentMethods?.map((pm: any) => (
+                          // Just placeholder BU since we don't fetch BU list separately here.
+                          null
+                        ))}
+                        {entries[0]?.businessUnit && (
+                          <option value={entries[0].businessUnit.id}>{entries[0].businessUnit.name}</option>
+                        )}
+                      </select>
+                    </Field>
+                    <Field label="Ledger Account">
+                      <select value={accountId} onChange={(e) => setAccountId(e.target.value)} required>
+                        {setup?.accounts?.map((acc: any) => (
+                          <option key={acc.id} value={acc.id}>{acc.name} ({acc.code})</option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="Financial Category">
+                      <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
+                        {filteredCategories.map((cat: any) => (
+                          <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="Payment Method">
+                      <select value={paymentMethodId} onChange={(e) => setPaymentMethodId(e.target.value)}>
+                        <option value="">Direct Cash</option>
+                        {setup?.paymentMethods?.map((pm: any) => (
+                          <option key={pm.id} value={pm.id}>{pm.name}</option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="Amount">
+                      <div className="money-input">
+                        <span>₦</span>
+                        <input value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))} placeholder="0.00" required />
+                      </div>
+                    </Field>
+                    <Field label="External Reference" full>
+                      <input value={externalReference} onChange={(e) => setExternalReference(e.target.value)} placeholder="e.g. Bank slip reference, teller, invoice number" />
+                    </Field>
+                    <Field label="Description" full>
+                      <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Entry details and notes..." required />
+                    </Field>
+                  </div>
+                  {formError && <div className="form-note error"><AlertTriangle size={15} /><span>{formError}</span></div>}
+                </div>
+                <div className="workflow-footer">
+                  <button type="button" className="secondary-button" onClick={() => setModal(null)}>Cancel</button>
+                  <button type="submit" className="primary-button" disabled={busy}>
+                    {busy ? "Posting..." : "Post Entry"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Modal: Open Session */}
+            {modal === "open-session" && (
+              <form onSubmit={submitSession}>
+                <div className="workflow-header">
+                  <h2>Open Cash Drawer Session</h2>
+                  <button type="button" onClick={() => setModal(null)} aria-label="Close"><X size={18} /></button>
+                </div>
+                <div className="workflow-body">
+                  <div className="form-grid">
+                    <Field label="Station">
+                      <select value={sessionStationId} onChange={(e) => setSessionStationId(e.target.value)} required>
+                        {allowedStations.map((st) => (
+                          <option key={st.id} value={st.id}>{st.name} ({st.code})</option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="Account">
+                      <select value={sessionAccountId} onChange={(e) => setSessionAccountId(e.target.value)} required>
+                        {setup?.accounts?.map((acc: any) => (
+                          <option key={acc.id} value={acc.id}>{acc.name}</option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="Opening Balance">
+                      <div className="money-input">
+                        <span>₦</span>
+                        <input value={openingBalance} onChange={(e) => setOpeningBalance(e.target.value.replace(/[^0-9.]/g, ""))} placeholder="0.00" required />
+                      </div>
+                    </Field>
+                  </div>
+                  {formError && <div className="form-note error"><AlertTriangle size={15} /><span>{formError}</span></div>}
+                </div>
+                <div className="workflow-footer">
+                  <button type="button" className="secondary-button" onClick={() => setModal(null)}>Cancel</button>
+                  <button type="submit" className="primary-button" disabled={busy}>
+                    {busy ? "Opening..." : "Open Session"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Modal: Close Session */}
+            {modal === "close-session" && (
+              <form onSubmit={submitCloseSession}>
+                <div className="workflow-header">
+                  <h2>Close & Count Session</h2>
+                  <button type="button" onClick={() => setModal(null)} aria-label="Close"><X size={18} /></button>
+                </div>
+                <div className="workflow-body">
+                  <div className="form-grid">
+                    <Field label="Counted Cash Balance" full>
+                      <div className="money-input">
+                        <span>₦</span>
+                        <input value={countedBalance} onChange={(e) => setCountedBalance(e.target.value.replace(/[^0-9.]/g, ""))} placeholder="0.00" required />
+                      </div>
+                    </Field>
+                  </div>
+                  {formError && <div className="form-note error"><AlertTriangle size={15} /><span>{formError}</span></div>}
+                </div>
+                <div className="workflow-footer">
+                  <button type="button" className="secondary-button" onClick={() => setModal(null)}>Cancel</button>
+                  <button type="submit" className="primary-button" disabled={busy}>
+                    {busy ? "Closing..." : "Close & Reconcile"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Modal: Reconciliation */}
+            {modal === "reconcile" && (
+              <form onSubmit={submitReconciliation}>
+                <div className="workflow-header">
+                  <h2>New Account Reconciliation</h2>
+                  <button type="button" onClick={() => setModal(null)} aria-label="Close"><X size={18} /></button>
+                </div>
+                <div className="workflow-body">
+                  <div className="form-grid">
+                    <Field label="Account" full>
+                      <select value={reconAccountId} onChange={(e) => setReconAccountId(e.target.value)} required>
+                        {setup?.accounts?.map((acc: any) => (
+                          <option key={acc.id} value={acc.id}>{acc.name}</option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="Statement Cut-off Date">
+                      <input type="date" value={statementDate} onChange={(e) => setStatementDate(e.target.value)} required />
+                    </Field>
+                    <Field label="Statement Balance">
+                      <div className="money-input">
+                        <span>₦</span>
+                        <input value={statementBalance} onChange={(e) => setStatementBalance(e.target.value.replace(/^-?[0-9.]/g, ""))} placeholder="0.00" required />
+                      </div>
+                    </Field>
+                    <Field label="Notes" full>
+                      <textarea value={reconNotes} onChange={(e) => setReconNotes(e.target.value)} placeholder="Reconciliation details or adjustments comments..." />
+                    </Field>
+                  </div>
+                  {formError && <div className="form-note error"><AlertTriangle size={15} /><span>{formError}</span></div>}
+                </div>
+                <div className="workflow-footer">
+                  <button type="button" className="secondary-button" onClick={() => setModal(null)}>Cancel</button>
+                  <button type="submit" className="primary-button" disabled={busy}>
+                    {busy ? "Reconciling..." : "Complete Reconciliation"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Modal: Create Period */}
+            {modal === "create-period" && (
+              <form onSubmit={submitPeriod}>
+                <div className="workflow-header">
+                  <h2>New Financial Period</h2>
+                  <button type="button" onClick={() => setModal(null)} aria-label="Close"><X size={18} /></button>
+                </div>
+                <div className="workflow-body">
+                  <div className="form-grid">
+                    <Field label="Period Name" full>
+                      <input value={periodName} onChange={(e) => setPeriodName(e.target.value)} placeholder="e.g. Q3 2026, August 2026" required />
+                    </Field>
+                    <Field label="Starts At">
+                      <input type="date" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} required />
+                    </Field>
+                    <Field label="Ends At">
+                      <input type="date" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} required />
+                    </Field>
+                  </div>
+                  {formError && <div className="form-note error"><AlertTriangle size={15} /><span>{formError}</span></div>}
+                </div>
+                <div className="workflow-footer">
+                  <button type="button" className="secondary-button" onClick={() => setModal(null)}>Cancel</button>
+                  <button type="submit" className="primary-button" disabled={busy}>
+                    {busy ? "Creating..." : "Create Period"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }
