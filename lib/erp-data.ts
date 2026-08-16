@@ -12,10 +12,13 @@ import {
   Clock,
   ContactRound,
   FileChartColumn,
+  FileText,
   Landmark,
+  PackageOpen,
   PackageSearch,
   Plane,
   ReceiptText,
+  RotateCcw,
   SearchCheck,
   Settings2,
   ShieldCheck,
@@ -23,7 +26,9 @@ import {
   Store,
   Tags,
   TicketCheck,
+  TrendingDown,
   UserCog,
+  Users,
   UsersRound,
   WalletCards,
 } from "lucide-react";
@@ -205,13 +210,185 @@ export const moduleMeta: Record<string, { eyebrow: string; title: string; descri
   },
 };
 
-export const reportCatalogue = [
-  { title: "Consolidated sales performance", category: "Sales", description: "Revenue, refunds and payment mix by station and business unit.", icon: ChartNoAxesCombined },
-  { title: "Stock valuation & movement", category: "Inventory", description: "Opening, movement, closing quantity and current stock valuation.", icon: PackageSearch },
-  { title: "Agent wallet reconciliation", category: "Finance", description: "Deposits, credits, debits and exposure with ledger verification.", icon: WalletCards },
-  { title: "Station profitability", category: "Management", description: "Revenue, direct cost, expenses and contribution by station.", icon: Banknote },
-  { title: "Audit access review", category: "Governance", description: "User access, privileged actions and permission changes over time.", icon: ShieldCheck },
-  { title: "Customer transaction history", category: "Customers", description: "Sales, cargo, bookings, outstanding balances and lifetime value.", icon: Building2 },
+export type ReportEntry = {
+  key: string;
+  title: string;
+  category: string;
+  description: string;
+  icon: LucideIcon;
+  formats: ("csv" | "json")[];
+  permission: string;
+};
+
+export const reportCatalogue: ReportEntry[] = [
+  // ── Sales ────────────────────────────────────────────────────────────
+  {
+    key: "consolidated_sales",
+    title: "Consolidated sales performance",
+    category: "Sales",
+    description: "Revenue, refunds and payment mix by station and business unit.",
+    icon: ChartNoAxesCombined,
+    formats: ["csv", "json"],
+    permission: "reports.view",
+  },
+  {
+    key: "station_sales_breakdown",
+    title: "Station sales breakdown",
+    category: "Sales",
+    description: "Per-station revenue totals, ticket counts and outstanding balances for the period.",
+    icon: Store,
+    formats: ["csv", "json"],
+    permission: "reports.view",
+  },
+  {
+    key: "payment_mix",
+    title: "Payment mix analysis",
+    category: "Sales",
+    description: "Breakdown of sales by payment method: cash, transfer, POS card, wallet, and credit.",
+    icon: Landmark,
+    formats: ["csv", "json"],
+    permission: "reports.view",
+  },
+  {
+    key: "refunds_cancellations",
+    title: "Refunds & cancellations",
+    category: "Sales",
+    description: "All reversed, cancelled and refunded transactions with reason codes and officer.",
+    icon: RotateCcw,
+    formats: ["csv", "json"],
+    permission: "reports.view",
+  },
+  {
+    key: "outstanding_balances",
+    title: "Outstanding balances",
+    category: "Sales",
+    description: "Open invoice balances by customer showing amount due and days overdue.",
+    icon: TrendingDown,
+    formats: ["csv", "json"],
+    permission: "reports.view",
+  },
+  // ── Inventory ─────────────────────────────────────────────────────────
+  {
+    key: "stock_valuation",
+    title: "Stock valuation & movement",
+    category: "Inventory",
+    description: "Opening, movement, closing quantity and current stock valuation.",
+    icon: PackageSearch,
+    formats: ["csv", "json"],
+    permission: "reports.view",
+  },
+  {
+    key: "stock_movement_log",
+    title: "Stock movement log",
+    category: "Inventory",
+    description: "Detailed record of every IN, OUT, ADJUST and TRANSFER movement with officer and reference.",
+    icon: PackageOpen,
+    formats: ["csv", "json"],
+    permission: "reports.view",
+  },
+  {
+    key: "low_stock_alert",
+    title: "Low stock alert",
+    category: "Inventory",
+    description: "Products at or below reorder level grouped by station and category.",
+    icon: Tags,
+    formats: ["csv", "json"],
+    permission: "reports.view",
+  },
+  {
+    key: "purchase_history",
+    title: "Purchase history",
+    category: "Inventory",
+    description: "All purchase orders with supplier, GRN status, cost and unit breakdown.",
+    icon: Archive,
+    formats: ["csv", "json"],
+    permission: "reports.view",
+  },
+  // ── Cargo ─────────────────────────────────────────────────────────────
+  {
+    key: "cargo_manifest",
+    title: "Cargo manifest & status",
+    category: "Cargo",
+    description: "AWB summary, weight, origin/destination, route status and delivery confirmation.",
+    icon: Plane,
+    formats: ["csv", "json"],
+    permission: "reports.view",
+  },
+  // ── Finance ───────────────────────────────────────────────────────────
+  {
+    key: "cashbook_ledger",
+    title: "Cashbook ledger",
+    category: "Finance",
+    description: "All posted and reconciled cashbook entries with direction, category and account.",
+    icon: FileChartColumn,
+    formats: ["csv", "json"],
+    permission: "reports.view_financial",
+  },
+  {
+    key: "income_expense",
+    title: "Income vs expense summary",
+    category: "Finance",
+    description: "Aggregate credit and debit totals grouped by category and station for the period.",
+    icon: Banknote,
+    formats: ["csv", "json"],
+    permission: "reports.view_financial",
+  },
+  {
+    key: "station_profitability",
+    title: "Station profitability",
+    category: "Finance",
+    description: "Revenue, direct cost, manual expenses and net contribution per station.",
+    icon: ChartNoAxesCombined,
+    formats: ["csv", "json"],
+    permission: "reports.view_financial",
+  },
+  {
+    key: "agent_wallet_reconciliation",
+    title: "Agent wallet reconciliation",
+    category: "Finance",
+    description: "Deposits, credits, debits and exposure with ledger verification.",
+    icon: WalletCards,
+    formats: ["csv", "json"],
+    permission: "reports.view_financial",
+  },
+  // ── Staff ─────────────────────────────────────────────────────────────
+  {
+    key: "staff_directory",
+    title: "Staff directory",
+    category: "Staff",
+    description: "Active employees with roles, station assignments, employment type and contact details.",
+    icon: Users,
+    formats: ["csv", "json"],
+    permission: "reports.view",
+  },
+  {
+    key: "user_activity",
+    title: "User activity log",
+    category: "Staff",
+    description: "Login events, module access and key actions performed by each user in the period.",
+    icon: UserCog,
+    formats: ["csv", "json"],
+    permission: "reports.view",
+  },
+  // ── Audit ─────────────────────────────────────────────────────────────
+  {
+    key: "audit_access_review",
+    title: "Audit access review",
+    category: "Governance",
+    description: "User access, privileged actions and permission changes with IP and device info.",
+    icon: ShieldCheck,
+    formats: ["csv", "json"],
+    permission: "reports.view",
+  },
+  {
+    key: "customer_transaction_history",
+    title: "Customer transaction history",
+    category: "Customers",
+    description: "Sales, cargo, bookings, outstanding balances and lifetime value per customer.",
+    icon: Building2,
+    formats: ["csv", "json"],
+    permission: "reports.view",
+  },
 ];
 
 export const formatNaira = (amount: number, compact = false) => {

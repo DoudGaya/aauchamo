@@ -843,7 +843,7 @@ function ModuleView({
     case "attendance":
       return <AttendanceView allowedStations={allowedStations} onToast={onToast} />;
     case "reports":
-      return <ReportsView period={period} onToast={onToast} />;
+      return <ReportsView period={period} onToast={onToast} allowedStations={allowedStations} identity={identity} />;
     case "access":
       return <AccessView onToast={onToast} onModal={onModal} allowedStations={allowedStations} />;
     case "audit":
@@ -8531,24 +8531,431 @@ function AttendanceView({
   );
 }
 
-function ReportsView({ period, onToast }: { period: string; onToast: (toast: Toast) => void }) {
-  const { data, loading, error, reload } = useApiData<{ sales: { _count: number; _sum: { total: string | null; paidTotal: string | null; outstandingTotal: string | null } }; refunds: { _count: number; _sum: { amount: string | null } }; cargo: Array<{ status: string; _count: number }>; tickets: { _count: number; _sum: { sellingPrice: string | null; profit?: string | null } } }>("/api/reports/summary");
-  const runReport = (title: string) => { window.open("/api/reports/export", "_blank", "noopener,noreferrer"); onToast({ title: "Report export started", detail: `${title} is being generated from permission-scoped ledgers.` }); };
+type ReportSummaryData = {
+  sales: { _count: number; _sum: { total: string | null; paidTotal: string | null; outstandingTotal: string | null } };
+  refunds: { _count: number; _sum: { amount: string | null } };
+  cargo: Array<{ status: string; _count: number }>;
+  tickets: { _count: number; _sum: { sellingPrice: string | null; profit?: string | null } };
+  inventoryMovements?: Array<{ movementType: string; _count: number }>;
+};
+
+type ReportPreviewData = {
+  reportKey: string;
+  columns: string[];
+  rows: Record<string, string>[];
+  totalRows: number;
+  truncated: boolean;
+  filters: { stationId?: string; businessUnitId?: string; startDate?: string; endDate?: string };
+};
+
+type RecentRun = {
+  id: string;
+  key: string;
+  title: string;
+  timestamp: string;
+  downloadUrl: string;
+  rowCount: number;
+  filters: { stationId?: string; startDate?: string; endDate?: string };
+};
+
+function ReportsView({
+  period,
+  onToast,
+  allowedStations,
+  identity,
+}: {
+  period: string;
+  onToast: (toast: Toast) => void;
+  allowedStations: AllowedStation[];
+  identity: WorkspaceIdentity;
+}) {
+  const summaryApi = useApiData<ReportSummaryData>("/api/reports/summary");
+  const [viewTab, setViewTab] = useState<"overview" | "catalogue" | "preview" | "recent">("overview");
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+
+  // Per-report filter state
+  const [selectedReport, setSelectedReport] = useState<(typeof reportCatalogue)[0] | null>(null);
+  const [filterStation, setFilterStation] = useState("");
+  const [filterStartDate, setFilterStartDate] = useState("");
+  const [filterEndDate, setFilterEndDate] = useState("");
+  const [filterFormat, setFilterFormat] = useState<"csv" | "json">("csv");
+  const [showFilterModal, setShowFilterModal] = useState(false);
+
+  // Preview state
+  const [preview, setPreview] = useState<ReportPreviewData | null>(null);
+  const [previewBusy, setPreviewBusy] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+
+  // Recent runs
+  const [recentRuns, setRecentRuns] = useState<RecentRun[]>([]);
+
+  const categories = ["All", ...Array.from(new Set(reportCatalogue.map((r) => r.category)))];
+
+  const visibleReports = reportCatalogue.filter((r) => {
+    const matchSearch = !search || r.title.toLowerCase().includes(search.toLowerCase()) || r.description.toLowerCase().includes(search.toLowerCase());
+    const matchCat = categoryFilter === "All" || r.category === categoryFilter;
+    const hasPermission = identity.permissions.includes(r.permission) || identity.permissions.includes("reports.view");
+    return matchSearch && matchCat && hasPermission;
+  });
+
+  const openFilterModal = (report: typeof reportCatalogue[0]) => {
+    setSelectedReport(report);
+    setShowFilterModal(true);
+    setFilterFormat("csv");
+  };
+
+  const buildExportUrl = (key: string, fmt: string) => {
+    const url = new URL("/api/reports/export", window.location.origin);
+    url.searchParams.set("report", key);
+    url.searchParams.set("format", fmt);
+    if (filterStation) url.searchParams.set("stationId", filterStation);
+    if (filterStartDate) url.searchParams.set("startDate", filterStartDate);
+    if (filterEndDate) url.searchParams.set("endDate", filterEndDate);
+    return url.toString();
+  };
+
+  const downloadReport = () => {
+    if (!selectedReport) return;
+    const url = buildExportUrl(selectedReport.key, filterFormat);
+    window.open(url, "_blank", "noopener,noreferrer");
+    const run: RecentRun = {
+      id: Date.now().toString(),
+      key: selectedReport.key,
+      title: selectedReport.title,
+      timestamp: new Date().toISOString(),
+      downloadUrl: url,
+      rowCount: 0,
+      filters: { stationId: filterStation || undefined, startDate: filterStartDate || undefined, endDate: filterEndDate || undefined },
+    };
+    setRecentRuns((prev) => [run, ...prev].slice(0, 20));
+    onToast({ title: "Export started", detail: `${selectedReport.title} is being downloaded as ${filterFormat.toUpperCase()}.` });
+    setShowFilterModal(false);
+  };
+
+  const previewReport = async () => {
+    if (!selectedReport) return;
+    setPreviewBusy(true);
+    setPreviewError(null);
+    try {
+      const res = await fetch("/api/reports/run", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          reportKey: selectedReport.key,
+          format: "json",
+          stationId: filterStation || undefined,
+          startDate: filterStartDate || undefined,
+          endDate: filterEndDate || undefined,
+        }),
+      });
+      const body = await res.json() as ApiEnvelope<ReportPreviewData>;
+      if (!res.ok || !body.ok) throw new Error(body.error?.message ?? "Preview failed.");
+      setPreview(body.data!);
+      setViewTab("preview");
+      setShowFilterModal(false);
+    } catch (e) {
+      setPreviewError(e instanceof Error ? e.message : "Preview failed.");
+    } finally {
+      setPreviewBusy(false);
+    }
+  };
+
+  const data = summaryApi.data;
+
   return (
     <div className="content-stack">
+      {/* Hero + Tab Nav */}
       <section className="report-hero">
-        <div><span className="report-hero-icon"><FileSearch size={23} /></span><div><span>Reporting period</span><strong>{period} · All stations</strong><small>Data is permission-scoped and refreshed in real time.</small></div></div>
-        <div className="report-hero-stats"><div><strong>{data?.sales._count ?? 0}</strong><span>Sales records</span></div><div><strong>{data?.tickets._count ?? 0}</strong><span>Bookings</span></div><div><strong>{loading ? "Syncing" : "Live"}</strong><span>Ledger state</span></div></div>
+        <div>
+          <span className="report-hero-icon"><FileSearch size={23} /></span>
+          <div>
+            <span>Reporting & Analytics</span>
+            <strong>{period} · Permission-scoped</strong>
+            <small>17 reports available. Data is audited and refreshed in real time.</small>
+          </div>
+        </div>
+        <div className="report-hero-stats">
+          <div><strong>{data?.sales._count ?? "—"}</strong><span>Sales records</span></div>
+          <div><strong>{data?.tickets._count ?? "—"}</strong><span>Bookings</span></div>
+          <div><strong>{data?.cargo.reduce((s, c) => s + c._count, 0) ?? "—"}</strong><span>Cargo AWBs</span></div>
+          <div><strong>{summaryApi.loading ? "Syncing" : "Live"}</strong><span>Ledger state</span></div>
+        </div>
       </section>
-      {error && <EmptyState icon={AlertTriangle} title="Report totals could not be loaded" detail={error} compact />}
-      <section className="summary-strip"><SummaryItem label="Sales value" value={formatNaira(Number(data?.sales._sum.total ?? 0))} icon={CircleDollarSign} tone="success" /><SummaryItem label="Outstanding" value={formatNaira(Number(data?.sales._sum.outstandingTotal ?? 0))} icon={Clock3} tone="warning" /><SummaryItem label="Refunds" value={formatNaira(Number(data?.refunds._sum.amount ?? 0))} icon={RotateCcw} tone="danger" /><SummaryItem label="Ticket revenue" value={formatNaira(Number(data?.tickets._sum.sellingPrice ?? 0))} icon={TicketCheck} tone="info" /></section>
-      <section className="report-catalogue">
-        {reportCatalogue.map((report) => { const Icon = report.icon; return <article className="report-card" key={report.title}><div className="report-card-top"><span><Icon size={19} /></span><em>{report.category}</em></div><h2>{report.title}</h2><p>{report.description}</p><div className="report-card-bottom"><span>Audited CSV export</span><button onClick={() => runReport(report.title)}>Run report <ArrowRight size={14} /></button></div></article>; })}
-      </section>
-      <Panel><PanelHeader title="Report integrity" subtitle="Source-ledger status for the selected period" right={<button className="text-action" onClick={reload}><RefreshCcw size={14} />Refresh</button>} /><div className="document-rows"><DocumentRow icon={FileCheck2} name="Sales ledger" meta={`${data?.sales._count ?? 0} records · ${formatNaira(Number(data?.sales._sum.paidTotal ?? 0))} collected`} status="Live" /><DocumentRow icon={Plane} name="Cargo ledger" meta={`${data?.cargo.reduce((sum, item) => sum + item._count, 0) ?? 0} shipments`} status="Live" /><DocumentRow icon={TicketCheck} name="Ticket booking ledger" meta={`${data?.tickets._count ?? 0} records`} status="Live" /></div></Panel>
+
+      {/* Tab Bar */}
+      <div className="tab-bar" role="tablist">
+        {(["overview", "catalogue", "preview", "recent"] as const).map((tab) => (
+          <button
+            key={tab}
+            role="tab"
+            aria-selected={viewTab === tab}
+            className={`tab-btn${viewTab === tab ? " active" : ""}`}
+            onClick={() => setViewTab(tab)}
+          >
+            {tab === "overview" && <Activity size={14} />}
+            {tab === "catalogue" && <FileSearch size={14} />}
+            {tab === "preview" && <FileDown size={14} />}
+            {tab === "recent" && <History size={14} />}
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {tab === "recent" && recentRuns.length > 0 && (
+              <span className="tab-badge">{recentRuns.length}</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab: Overview */}
+      {viewTab === "overview" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          {summaryApi.error && <EmptyState icon={AlertTriangle} title="Summary could not be loaded" detail={summaryApi.error} compact />}
+          <section className="summary-strip">
+            <SummaryItem label="Sales value" value={formatNaira(Number(data?.sales._sum.total ?? 0))} icon={CircleDollarSign} tone="success" />
+            <SummaryItem label="Collected" value={formatNaira(Number(data?.sales._sum.paidTotal ?? 0))} icon={BadgeCheck} tone="success" />
+            <SummaryItem label="Outstanding" value={formatNaira(Number(data?.sales._sum.outstandingTotal ?? 0))} icon={Clock3} tone="warning" />
+            <SummaryItem label="Refunds" value={formatNaira(Number(data?.refunds._sum.amount ?? 0))} icon={RotateCcw} tone="danger" />
+            <SummaryItem label="Ticket revenue" value={formatNaira(Number(data?.tickets._sum.sellingPrice ?? 0))} icon={TicketCheck} tone="info" />
+          </section>
+          <Panel>
+            <PanelHeader
+              title="Ledger integrity"
+              subtitle="Source-module status for the selected period"
+              right={<button className="text-action" onClick={summaryApi.reload}><RefreshCcw size={14} />Refresh</button>}
+            />
+            <div className="document-rows">
+              <DocumentRow icon={FileCheck2} name="Sales ledger" meta={`${data?.sales._count ?? 0} records · ${formatNaira(Number(data?.sales._sum.paidTotal ?? 0))} collected`} status="Live" />
+              <DocumentRow icon={Plane} name="Cargo ledger" meta={`${data?.cargo.reduce((s, c) => s + c._count, 0) ?? 0} shipments`} status="Live" />
+              <DocumentRow icon={TicketCheck} name="Ticket booking ledger" meta={`${data?.tickets._count ?? 0} records`} status="Live" />
+              <DocumentRow icon={RotateCcw} name="Refunds ledger" meta={`${data?.refunds._count ?? 0} processed · ${formatNaira(Number(data?.refunds._sum.amount ?? 0))}`} status="Live" />
+            </div>
+          </Panel>
+          <Panel>
+            <PanelHeader title="Quick export" subtitle="Download common reports for the current period" />
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", padding: "12px 16px" }}>
+              {reportCatalogue.slice(0, 6).map((r) => {
+                const Icon = r.icon;
+                return (
+                  <button
+                    key={r.key}
+                    className="secondary-button"
+                    style={{ display: "flex", alignItems: "center", gap: "6px" }}
+                    onClick={() => openFilterModal(r)}
+                  >
+                    <Icon size={14} />{r.title}
+                  </button>
+                );
+              })}
+            </div>
+          </Panel>
+        </div>
+      )}
+
+      {/* Tab: Catalogue */}
+      {viewTab === "catalogue" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          {/* Search + Category Filter */}
+          <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+            <div style={{ position: "relative", flex: 1, minWidth: "200px" }}>
+              <Search size={14} style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", opacity: 0.5 }} />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search reports…"
+                style={{ paddingLeft: "32px", width: "100%", height: "36px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--surface-2)", color: "var(--text-1)", fontSize: "13px" }}
+              />
+            </div>
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  className={`filter-chip${categoryFilter === cat ? " active" : ""}`}
+                  onClick={() => setCategoryFilter(cat)}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Report Grid */}
+          {visibleReports.length === 0 ? (
+            <EmptyState icon={FileSearch} title="No matching reports" detail="Try a different search term or category filter." />
+          ) : (
+            <section className="report-catalogue">
+              {visibleReports.map((report) => {
+                const Icon = report.icon;
+                return (
+                  <article className="report-card" key={report.key}>
+                    <div className="report-card-top">
+                      <span><Icon size={19} /></span>
+                      <em>{report.category}</em>
+                    </div>
+                    <h2>{report.title}</h2>
+                    <p>{report.description}</p>
+                    <div className="report-card-bottom">
+                      <span>CSV · Preview</span>
+                      <button onClick={() => openFilterModal(report)}>
+                        Run report <ArrowRight size={14} />
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </section>
+          )}
+        </div>
+      )}
+
+      {/* Tab: Preview */}
+      {viewTab === "preview" && (
+        <Panel>
+          <PanelHeader
+            title={preview ? reportCatalogue.find((r) => r.key === preview.reportKey)?.title ?? "Report preview" : "Report preview"}
+            subtitle={preview ? `Showing first ${preview.rows.length} of ${preview.totalRows} rows${preview.truncated ? " — download for full data" : ""}` : "Run a report to see a preview here"}
+            right={
+              preview ? (
+                <button
+                  className="primary-button"
+                  onClick={() => {
+                    const url = buildExportUrl(preview.reportKey, "csv");
+                    window.open(url, "_blank", "noopener,noreferrer");
+                  }}
+                >
+                  <FileDown size={14} /> Download CSV
+                </button>
+              ) : null
+            }
+          />
+          {previewError && (
+            <div style={{ padding: "12px 16px" }}>
+              <EmptyState icon={AlertTriangle} title="Preview failed" detail={previewError} compact />
+            </div>
+          )}
+          {!preview && !previewError && !previewBusy && (
+            <EmptyState icon={FileSearch} title="No preview loaded" detail="Go to the Catalogue tab, open any report and click Preview to see rows here." />
+          )}
+          {previewBusy && <EmptyState icon={RefreshCcw} title="Generating preview" detail="Querying ledgers…" compact />}
+          {preview && preview.rows.length > 0 && (
+            <div className="table-wrap">
+              <table className="data-table" style={{ fontSize: "12px" }}>
+                <thead>
+                  <tr>{preview.columns.map((col) => <th key={col}>{col}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {preview.rows.map((row, i) => (
+                    <tr key={i}>
+                      {preview.columns.map((col) => <td key={col}>{row[col] ?? ""}</td>)}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {preview && preview.rows.length === 0 && (
+            <EmptyState icon={FileSearch} title="No data for this report" detail="Try adjusting the filters or date range." />
+          )}
+        </Panel>
+      )}
+
+      {/* Tab: Recent Runs */}
+      {viewTab === "recent" && (
+        <Panel>
+          <PanelHeader title="Recent report runs" subtitle="Exports generated in this session" />
+          {recentRuns.length === 0 ? (
+            <EmptyState icon={History} title="No recent runs" detail="Reports you export during this session will appear here." />
+          ) : (
+            <div className="document-rows">
+              {recentRuns.map((run) => (
+                <DocumentRow
+                  key={run.id}
+                  icon={FileDown}
+                  name={run.title}
+                  meta={`${new Date(run.timestamp).toLocaleTimeString()} · ${[run.filters.stationId, run.filters.startDate, run.filters.endDate].filter(Boolean).join(" · ") || "All stations, full period"}`}
+                  status="Ready"
+                  action={
+                    <a href={run.downloadUrl} target="_blank" rel="noopener noreferrer" className="text-action">
+                      <FileDown size={14} /> Re-download
+                    </a>
+                  }
+                />
+              ))}
+            </div>
+          )}
+        </Panel>
+      )}
+
+      {/* Modal: Report Filters */}
+      {showFilterModal && selectedReport && (
+        <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && setShowFilterModal(false)}>
+          <div className="workflow-dialog" style={{ maxWidth: "500px" }}>
+            <div className="workflow-header">
+              <div>
+                <span>{selectedReport.category}</span>
+                <h2>{selectedReport.title}</h2>
+                <p>{selectedReport.description}</p>
+              </div>
+              <button onClick={() => setShowFilterModal(false)} aria-label="Close"><X size={18} /></button>
+            </div>
+            <div className="workflow-body">
+              <div className="form-grid">
+                <Field label="Station" full>
+                  <select value={filterStation} onChange={(e) => setFilterStation(e.target.value)}>
+                    <option value="">All stations</option>
+                    {allowedStations.map((s) => (
+                      <option key={s.id} value={s.id}>{s.code} — {s.name}</option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Start Date">
+                  <input type="date" value={filterStartDate} onChange={(e) => setFilterStartDate(e.target.value)} />
+                </Field>
+                <Field label="End Date">
+                  <input type="date" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)} />
+                </Field>
+                <Field label="Export Format" full>
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    {(["csv", "json"] as const).map((fmt) => (
+                      <label key={fmt} style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "13px" }}>
+                        <input
+                          type="radio"
+                          name="format"
+                          value={fmt}
+                          checked={filterFormat === fmt}
+                          onChange={() => setFilterFormat(fmt)}
+                        />
+                        {fmt.toUpperCase()}
+                      </label>
+                    ))}
+                  </div>
+                </Field>
+              </div>
+              {previewError && <div className="form-note error"><AlertTriangle size={15} /><span>{previewError}</span></div>}
+            </div>
+            <div className="workflow-footer">
+              <button type="button" className="secondary-button" onClick={() => setShowFilterModal(false)}>Cancel</button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={previewReport}
+                disabled={previewBusy}
+              >
+                {previewBusy ? "Loading…" : "Preview (100 rows)"}
+              </button>
+              <button
+                type="button"
+                className="primary-button"
+                onClick={downloadReport}
+              >
+                <FileDown size={14} /> Download {filterFormat.toUpperCase()}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 
 function UserEditModal({
   user,
