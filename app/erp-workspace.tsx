@@ -851,7 +851,7 @@ function ModuleView({
     case "management":
       return <ManagementView onNavigate={onNavigate} />;
     case "notifications":
-      return <NotificationsView />;
+      return <NotificationsView onNavigate={onNavigate} onToast={onToast} />;
     case "documents":
       return <DocumentsView onToast={onToast} />;
     case "settings":
@@ -9305,13 +9305,257 @@ function ManagementView({ onNavigate }: { onNavigate: (id: string) => void }) {
   return <div className="content-stack"><section className="protected-banner"><LockKeyhole size={22} /><div><strong>Protected administration area</strong><span>Every action here requires a reason, elevated permission and immutable audit record.</span></div><StatusPill value="Elevated access" /></section><section className="management-grid">{tools.map((tool) => { const Icon = tool.icon; return <article className="management-card" key={tool.title}><div><span><Icon size={19} /></span><em>{tool.risk}</em></div><h2>{tool.title}</h2><p>{tool.detail}</p><button onClick={() => tool.module === "management" ? healthApi.reload() : onNavigate(tool.module)}>Open tool <ArrowRight size={14} /></button></article>; })}</section><Panel><PanelHeader title="System diagnostics" subtitle="Live application and database readiness" right={<button className="text-action" onClick={healthApi.reload}><RefreshCcw size={12} /> Check now</button>} />{healthApi.error ? <EmptyState icon={AlertTriangle} title="Readiness check failed" detail={healthApi.error} /> : healthApi.loading ? <EmptyState icon={RefreshCcw} title="Checking production dependencies" detail="Running the application readiness probe." compact /> : <div className="diagnostic-grid"><DiagnosticItem label="Application" detail="Next.js production runtime" latency={healthApi.data?.status ?? "unknown"} /><DiagnosticItem label="PostgreSQL" detail="Primary database connection" latency={healthApi.data ? `${healthApi.data.latencyMs} ms` : "unknown"} /><DiagnosticItem label="Audit chain" detail="Append-only evidence ledger" latency="Enabled" /><DiagnosticItem label="Posting controls" detail="Stock, wallet and cashbook ledgers" latency="Enabled" /></div>}</Panel></div>;
 }
 
-function NotificationsView() {
+type PreferenceRecord = {
+  id: string;
+  userId: string;
+  type: string;
+  channel: "IN_APP" | "EMAIL" | "SMS";
+  enabled: boolean;
+  quietFrom?: string | null;
+  quietTo?: string | null;
+};
+
+const MANDATORY_TYPES = new Set([
+  "auth.login_failed",
+  "users.created",
+  "security.access_changed",
+  "security.session_revoked",
+  "security.password_reset",
+]);
+
+function NotificationsView({ onNavigate, onToast }: { onNavigate?: (targetId: string) => void; onToast?: (toast: Toast) => void }) {
   const [scope, setScope] = useState("Unread");
-  const status = scope === "Unread" ? "UNREAD" : ""; const api = useApiData<NotificationRecord[]>(`/api/notifications?pageSize=100${status ? `&status=${status}` : ""}`); const items = (api.data ?? []).filter((item) => scope === "Security" ? item.type.toLowerCase().includes("security") || item.type.toLowerCase().includes("auth") : true);
-  const table = useTableControls(items, (item, q) => `${item.title} ${item.message} ${item.type}`.toLowerCase().includes(q));
-  const update = async (id: string) => { await fetch(`/api/notifications/${id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ status: "READ" }) }); api.reload(); }; const markAll = async () => { await fetch("/api/notifications", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "MARK_ALL_READ" }) }); api.reload(); };
-  return <div className="content-stack"><div className="notification-layout"><Panel><TableToolbar tabs={["Unread", "All", "Operational", "Security"]} activeTab={scope} onTab={(value) => { setScope(value); table.resetPage(); }} placeholder="Search notifications" search={table.search} onSearch={table.setSearch} />{api.error ? <EmptyState icon={AlertTriangle} title="Notifications could not be loaded" detail={api.error} /> : api.loading ? <EmptyState icon={RefreshCcw} title="Loading inbox" detail="Retrieving your personal notification stream." compact /> : table.filtered.length ? <div className="notification-centre-list">{table.pageRows.map((item) => { const tone: Tone = item.severity === "ERROR" || item.severity === "DANGER" ? "danger" : item.severity === "WARNING" ? "warning" : item.severity === "SUCCESS" ? "success" : "info"; return <button key={item.id} onClick={() => update(item.id)}><span className={classNames("centre-notification-icon", tone)}>{tone === "danger" ? <AlertTriangle size={17} /> : tone === "warning" ? <Clock3 size={17} /> : <CheckCircle2 size={17} />}</span><div><strong>{item.title}</strong><span>{item.message}</span><small>{new Date(item.createdAt).toLocaleString("en-NG")}</small></div>{item.status === "UNREAD" && <span className="unread-marker" />}<ChevronRight size={16} /></button>; })}</div> : <EmptyState icon={Bell} title={table.search ? "No matching notifications" : "Inbox is clear"} detail={table.search ? "Try a different keyword." : "There are no notifications in this view."} />}<Pagination total={table.total} page={table.page} pageSize={table.pageSize} onPage={table.setPage} /></Panel><aside className="notification-preferences panel"><h2>Inbox controls</h2><p>Notification state is stored per user and synchronized across sessions.</p><SummaryItem label="Visible records" value={items.length.toString()} icon={Bell} tone="info" /><SummaryItem label="Unread" value={items.filter((item) => item.status === "UNREAD").length.toString()} icon={Clock3} tone="warning" /><button onClick={markAll}>Mark all as read</button></aside></div></div>;
+  const statusParam = scope === "Unread" ? "UNREAD" : "";
+  const api = useApiData<NotificationRecord[]>(`/api/notifications?pageSize=100${statusParam ? `&status=${statusParam}` : ""}`);
+  const prefApi = useApiData<PreferenceRecord[]>("/api/notifications/preferences");
+
+  const [savingPref, setSavingPref] = useState(false);
+  const [processingWorker, setProcessingWorker] = useState(false);
+
+  const items = (api.data ?? []).filter((item) => {
+    if (scope === "Security") return item.type.toLowerCase().includes("security") || item.type.toLowerCase().includes("auth");
+    if (scope === "Operational") return item.type.includes("inventory") || item.type.includes("sales") || item.type.includes("agents");
+    if (scope === "Approvals") return item.type.includes("approval");
+    return true;
+  });
+
+  const table = useTableControls(items, (item, q) =>
+    `${item.title} ${item.message} ${item.type}`.toLowerCase().includes(q)
+  );
+
+  const updateStatus = async (id: string, targetHref?: string | null) => {
+    await fetch(`/api/notifications/${id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ status: "READ" }),
+    });
+    api.reload();
+
+    if (targetHref && onNavigate) {
+      if (targetHref.includes("inventory")) onNavigate("inventory");
+      else if (targetHref.includes("sales")) onNavigate("sales");
+      else if (targetHref.includes("agents")) onNavigate("agents");
+      else if (targetHref.includes("approvals")) onNavigate("approvals");
+      else if (targetHref.includes("audit")) onNavigate("audit");
+      else if (targetHref.includes("access")) onNavigate("access");
+    }
+  };
+
+  const markAll = async () => {
+    await fetch("/api/notifications", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: "MARK_ALL_READ" }),
+    });
+    api.reload();
+    if (onToast) onToast({ title: "Notifications Updated", detail: "All unread items marked as read." });
+  };
+
+  const togglePreference = async (type: string, channel: "IN_APP" | "EMAIL" | "SMS", currentEnabled: boolean) => {
+    if (MANDATORY_TYPES.has(type) && !currentEnabled) {
+      if (onToast) onToast({ title: "Action Denied", detail: "Mandatory security alerts cannot be disabled." });
+      return;
+    }
+    setSavingPref(true);
+    try {
+      const res = await fetch("/api/notifications/preferences", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ type, channel, enabled: !currentEnabled }),
+      });
+      const body = await res.json() as ApiEnvelope<unknown>;
+      if (!res.ok || !body.ok) throw new Error(body.error?.message ?? "Preference update failed.");
+      prefApi.reload();
+      if (onToast) onToast({ title: "Preference Saved", detail: `Notification channel ${channel} updated for ${type}.` });
+    } catch (err) {
+      if (onToast) onToast({ title: "Update Failed", detail: err instanceof Error ? err.message : "Failed to update preference." });
+    } finally {
+      setSavingPref(false);
+    }
+  };
+
+  const triggerWorker = async () => {
+    setProcessingWorker(true);
+    try {
+      const res = await fetch("/api/notifications/process", { method: "POST" });
+      const body = await res.json() as ApiEnvelope<{ processed: number; published: number }>;
+      if (!res.ok || !body.ok) throw new Error(body.error?.message ?? "Worker processing failed.");
+      api.reload();
+      if (onToast) onToast({ title: "Outbox Processed", detail: `Processed ${body.data?.processed ?? 0} outbox events (${body.data?.published ?? 0} published).` });
+    } catch (err) {
+      if (onToast) onToast({ title: "Worker Error", detail: err instanceof Error ? err.message : "Failed to process outbox events." });
+    } finally {
+      setProcessingWorker(false);
+    }
+  };
+
+  const notificationTypes = [
+    { key: "inventory.low_stock", label: "Low Stock Alerts", category: "Operational" },
+    { key: "agents.low_balance", label: "Low Agent Balance", category: "Operational" },
+    { key: "sales.large_transaction", label: "Large Transactions", category: "Operational" },
+    { key: "approvals.pending", label: "Pending Approvals", category: "Operational" },
+    { key: "auth.login_failed", label: "Failed Login Attempts", category: "Security", mandatory: true },
+    { key: "users.created", label: "User Account Creation", category: "Security", mandatory: true },
+  ];
+
+  return (
+    <div className="content-stack">
+      <div className="notification-layout" style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "20px" }}>
+        {/* Main List */}
+        <Panel>
+          <TableToolbar
+            tabs={["Unread", "All", "Operational", "Security", "Approvals"]}
+            activeTab={scope}
+            onTab={(value) => {
+              setScope(value);
+              table.resetPage();
+            }}
+            placeholder="Search notifications by title or message..."
+            search={table.search}
+            onSearch={table.setSearch}
+          />
+          {api.error ? (
+            <EmptyState icon={AlertTriangle} title="Notifications could not be loaded" detail={api.error} />
+          ) : api.loading ? (
+            <EmptyState icon={RefreshCcw} title="Loading inbox" detail="Retrieving your personal notification stream." compact />
+          ) : table.filtered.length ? (
+            <div className="notification-centre-list">
+              {table.pageRows.map((item) => {
+                const tone: Tone =
+                  item.severity === "ERROR" || item.severity === "DANGER"
+                    ? "danger"
+                    : item.severity === "WARNING"
+                    ? "warning"
+                    : item.severity === "SUCCESS"
+                    ? "success"
+                    : "info";
+                return (
+                  <button key={item.id} onClick={() => updateStatus(item.id, item.href)}>
+                    <span className={classNames("centre-notification-icon", tone)}>
+                      {tone === "danger" ? <AlertTriangle size={17} /> : tone === "warning" ? <Clock3 size={17} /> : <CheckCircle2 size={17} />}
+                    </span>
+                    <div>
+                      <strong>{item.title}</strong>
+                      <span>{item.message}</span>
+                      <small>{new Date(item.createdAt).toLocaleString("en-NG")}</small>
+                    </div>
+                    {item.status === "UNREAD" && <span className="unread-marker" />}
+                    <ChevronRight size={16} />
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <EmptyState
+              icon={Bell}
+              title={table.search ? "No matching notifications" : "Inbox is clear"}
+              detail={table.search ? "Try a different keyword." : "There are no notifications in this view."}
+            />
+          )}
+          <Pagination total={table.total} page={table.page} pageSize={table.pageSize} onPage={table.setPage} />
+        </Panel>
+
+        {/* Sidebar Controls & Preferences */}
+        <aside className="notification-preferences panel" style={{ display: "flex", flexDirection: "column", gap: "16px", padding: "20px" }}>
+          <div>
+            <h2 style={{ fontSize: "16px", margin: "0 0 4px 0" }}>Inbox & Outbox Worker</h2>
+            <p style={{ fontSize: "12px", color: "var(--text-3)", margin: "0 0 14px 0" }}>
+              Outbox events process atomically with domain transactions and dispatch via provider-ready channels.
+            </p>
+            <SummaryItem label="Total Unread" value={items.filter((item) => item.status === "UNREAD").length.toString()} icon={Clock3} tone="warning" />
+            <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+              <button className="secondary-button" style={{ flex: 1 }} onClick={markAll}>Mark All Read</button>
+              <button className="primary-button" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }} onClick={triggerWorker} disabled={processingWorker}>
+                <RefreshCcw size={12} /> {processingWorker ? "Processing..." : "Run Outbox Worker"}
+              </button>
+            </div>
+          </div>
+
+          <div style={{ borderTop: "1px solid var(--border)", paddingTop: "14px" }}>
+            <h3 style={{ fontSize: "14px", margin: "0 0 8px 0" }}>Delivery Preferences</h3>
+            <p style={{ fontSize: "11px", color: "var(--text-3)", margin: "0 0 12px 0" }}>
+              Configure In-App, Email, and SMS channels per event type.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "300px", overflowY: "auto" }}>
+              {notificationTypes.map((nt) => {
+                const inAppPref = prefApi.data?.find((p) => p.type === nt.key && p.channel === "IN_APP");
+                const emailPref = prefApi.data?.find((p) => p.type === nt.key && p.channel === "EMAIL");
+                const smsPref = prefApi.data?.find((p) => p.type === nt.key && p.channel === "SMS");
+
+                const inAppEnabled = inAppPref ? inAppPref.enabled : true;
+                const emailEnabled = emailPref ? emailPref.enabled : true;
+                const smsEnabled = smsPref ? smsPref.enabled : false;
+
+                return (
+                  <div key={nt.key} style={{ background: "var(--surface-2)", padding: "10px", borderRadius: "6px", fontSize: "12px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                      <strong>{nt.label}</strong>
+                      {nt.mandatory && (
+                        <span style={{ fontSize: "10px", background: "var(--danger-subtle)", color: "var(--danger)", padding: "1px 6px", borderRadius: "8px", fontWeight: "bold" }}>
+                          Mandatory
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ display: "flex", gap: "10px", fontSize: "11px" }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: "4px", cursor: nt.mandatory ? "not-allowed" : "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={inAppEnabled}
+                          disabled={nt.mandatory || savingPref}
+                          onChange={() => togglePreference(nt.key, "IN_APP", inAppEnabled)}
+                        />
+                        In-App
+                      </label>
+                      <label style={{ display: "flex", alignItems: "center", gap: "4px", cursor: nt.mandatory ? "not-allowed" : "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={emailEnabled}
+                          disabled={nt.mandatory || savingPref}
+                          onChange={() => togglePreference(nt.key, "EMAIL", emailEnabled)}
+                        />
+                        Email
+                      </label>
+                      <label style={{ display: "flex", alignItems: "center", gap: "4px", cursor: nt.mandatory ? "not-allowed" : "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={smsEnabled}
+                          disabled={nt.mandatory || savingPref}
+                          onChange={() => togglePreference(nt.key, "SMS", smsEnabled)}
+                        />
+                        SMS
+                      </label>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
 }
+
 
 type DetailedDocument = DocumentRecord & {
   version?: number;
