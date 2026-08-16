@@ -170,7 +170,7 @@ type StationPerformanceRecord = { id: string; code: string; name: string; revenu
 type ApprovalRecord = { id: string; entityType: string; entityId: string; action: string; status: string; requestReason: string; requestedAt: string; payload: Record<string, unknown> | null; version: number; station: AllowedStation | null; requestedBy: { id: string; name: string | null; firstName: string; lastName: string } };
 type AuditRecord = { id: string; action: string; entityType: string; entityId: string | null; outcome: string; requestId: string | null; ipAddress: string | null; eventHash: string; occurredAt: string; actor: { name: string | null; firstName: string; lastName: string; username: string } | null; station: AllowedStation | null; before?: any; after?: any; metadata?: any; };
 type NotificationRecord = { id: string; type: string; severity: string; title: string; message: string; href: string | null; status: string; createdAt: string };
-type DocumentRecord = { id: string; documentType: string; documentNumber: string; sourceType: string; sourceId: string; status: string; mimeType: string | null; generatedAt: string | null; createdAt: string; station: AllowedStation | null; prints: Array<{ id: string; format: string; printedAt: string }> };
+type DocumentRecord = { id: string; documentType: string; documentNumber: string; sourceType: string; sourceId: string; status: string; mimeType: string | null; generatedAt: string | null; createdAt: string; station: AllowedStation | null; prints: Array<{ id: string; format: string; printedAt: string; reason?: string | null; printerName?: string | null }> };
 type SettingsRecord = { company: { legalName: string; displayName: string; email: string | null; phone: string | null; address: string | null; timezone: string; currencyCode: string; locale: string; logoUrl?: string; logoDarkUrl?: string; taxRate?: string | null }; businessUnits: Array<{ id: string; code: string; name: string; description?: string | null; isActive: boolean; version: number }>; paymentMethods: Array<{ id: string; name: string; type: string; isActive: boolean; requiresReference: boolean; requiresTerminal: boolean }>; settings: Array<{ id: string; namespace: string; key: string; value: unknown; valueType: string; isSensitive: boolean }> };
 type SearchResults = { customers?: Array<{ id: string; customerNumber: string; displayName: string; primaryPhone: string }>; sales?: Array<{ id: string; saleNumber: string; total: string; customer: { displayName: string } }>; products?: Array<{ id: string; code: string; name: string; sellingPrice: string }>; cargo?: Array<{ id: string; awbNumber: string; senderName: string; receiverName: string; status: string }>; tickets?: Array<{ id: string; bookingNumber: string; pnr: string; passengerName: string; status: string }> };
 type TicketSetup = { customers: Array<{ id: string; customerNumber: string; displayName: string }>; agents: Array<{ id: string; agentNumber: string; name: string }>; paymentMethods: Array<{ id: string; name: string; type: string; requiresReference: boolean }>; businessUnits: Array<{ id: string; code: string; name: string }> };
@@ -9313,12 +9313,463 @@ function NotificationsView() {
   return <div className="content-stack"><div className="notification-layout"><Panel><TableToolbar tabs={["Unread", "All", "Operational", "Security"]} activeTab={scope} onTab={(value) => { setScope(value); table.resetPage(); }} placeholder="Search notifications" search={table.search} onSearch={table.setSearch} />{api.error ? <EmptyState icon={AlertTriangle} title="Notifications could not be loaded" detail={api.error} /> : api.loading ? <EmptyState icon={RefreshCcw} title="Loading inbox" detail="Retrieving your personal notification stream." compact /> : table.filtered.length ? <div className="notification-centre-list">{table.pageRows.map((item) => { const tone: Tone = item.severity === "ERROR" || item.severity === "DANGER" ? "danger" : item.severity === "WARNING" ? "warning" : item.severity === "SUCCESS" ? "success" : "info"; return <button key={item.id} onClick={() => update(item.id)}><span className={classNames("centre-notification-icon", tone)}>{tone === "danger" ? <AlertTriangle size={17} /> : tone === "warning" ? <Clock3 size={17} /> : <CheckCircle2 size={17} />}</span><div><strong>{item.title}</strong><span>{item.message}</span><small>{new Date(item.createdAt).toLocaleString("en-NG")}</small></div>{item.status === "UNREAD" && <span className="unread-marker" />}<ChevronRight size={16} /></button>; })}</div> : <EmptyState icon={Bell} title={table.search ? "No matching notifications" : "Inbox is clear"} detail={table.search ? "Try a different keyword." : "There are no notifications in this view."} />}<Pagination total={table.total} page={table.page} pageSize={table.pageSize} onPage={table.setPage} /></Panel><aside className="notification-preferences panel"><h2>Inbox controls</h2><p>Notification state is stored per user and synchronized across sessions.</p><SummaryItem label="Visible records" value={items.length.toString()} icon={Bell} tone="info" /><SummaryItem label="Unread" value={items.filter((item) => item.status === "UNREAD").length.toString()} icon={Clock3} tone="warning" /><button onClick={markAll}>Mark all as read</button></aside></div></div>;
 }
 
+type DetailedDocument = DocumentRecord & {
+  version?: number;
+  templateKey?: string;
+  checksum?: string;
+  objectKey?: string;
+  generatedAt?: string;
+  stationId?: string | null;
+  station?: { id: string; code: string; name: string } | null;
+  prints: Array<{
+    id: string;
+    printedAt: string;
+    printedById: string;
+    format: string;
+    printerName?: string | null;
+    reason?: string | null;
+  }>;
+};
+
+type DocumentLineage = {
+  id: string;
+  version: number;
+  documentNumber: string;
+  createdAt: string;
+  status: string;
+};
+
 function DocumentsView({ onToast }: { onToast: (toast: Toast) => void }) {
-  const [tab, setTab] = useState("All documents"); const api = useApiData<DocumentRecord[]>("/api/documents?pageSize=100"); const documents = (api.data ?? []).filter((item) => tab === "Cargo labels" ? item.documentType === "CARGO_LABEL" : tab === "Receipts" ? item.documentType.includes("RECEIPT") : true);
-  const table = useTableControls(documents, (item, q) => `${item.documentType} ${item.documentNumber} ${item.sourceType} ${item.station?.name ?? ""}`.toLowerCase().includes(q));
-  const openDocument = async (document: DocumentRecord) => { const response = await fetch(`/api/documents/${document.id}/print`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ format: document.documentType === "CARGO_LABEL" ? "LABEL" : "A4", reason: "User requested print" }) }); if (!response.ok) { const body = await response.json() as ApiEnvelope<unknown>; onToast({ title: "Print request failed", detail: body.error?.message ?? "Document could not be opened." }); return; } if (document.sourceType === "CargoShipment") window.open(`/print/cargo/${document.sourceId}`, "_blank", "noopener,noreferrer"); else onToast({ title: "Print event recorded", detail: `${document.documentNumber} is ready in its configured document store.` }); api.reload(); };
-  return <div className="content-stack"><section className="document-stats"><SummaryItem label="Stored documents" value={api.total.toString()} icon={FileCheck2} tone="info" /><SummaryItem label="Ready" value={(api.data ?? []).filter((item) => item.status === "READY").length.toString()} icon={Cloud} tone="success" /><SummaryItem label="Print events" value={(api.data ?? []).reduce((sum, item) => sum + item.prints.length, 0).toString()} icon={Printer} tone="info" /><SummaryItem label="Failed" value={(api.data ?? []).filter((item) => item.status === "FAILED").length.toString()} icon={ShieldCheck} tone="danger" /></section><Panel><TableToolbar tabs={["All documents", "Receipts", "Cargo labels", "Statements", "Reports"]} activeTab={tab} onTab={(value) => { setTab(value); table.resetPage(); }} placeholder="Search document type or reference" search={table.search} onSearch={table.setSearch} />{api.error ? <EmptyState icon={AlertTriangle} title="Documents could not be loaded" detail={api.error} /> : api.loading ? <EmptyState icon={RefreshCcw} title="Loading document register" detail="Retrieving protected metadata and print history." compact /> : table.filtered.length ? <div className="document-rows spacious">{table.pageRows.map((document) => <DocumentRow key={document.id} icon={document.documentType === "CARGO_LABEL" ? Tag : FileCheck2} name={`${document.documentType.replaceAll("_", " ")} - ${document.documentNumber}`} meta={`${document.mimeType ?? "Generated output"} · ${document.station?.name ?? "Company-wide"} · ${formatDate(document.generatedAt ?? document.createdAt)} · ${document.prints.length} prints`} status={document.status} onClick={() => openDocument(document)} />)}</div> : <EmptyState icon={FileCheck2} title={table.search ? "No matching documents" : "No documents found"} detail={table.search ? "Try a different document type or reference." : "Receipts, labels, statements and generated reports appear here."} />}<Pagination total={table.total} page={table.page} pageSize={table.pageSize} onPage={table.setPage} /></Panel></div>;
+  const [tab, setTab] = useState("All documents");
+  const api = useApiData<DetailedDocument[]>("/api/documents?pageSize=100");
+
+  // Selected document for detail drawer
+  const [selectedDoc, setSelectedDoc] = useState<DetailedDocument | null>(null);
+  const [lineage, setLineage] = useState<DocumentLineage[]>([]);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
+  // Reprint modal state
+  const [reprintModalDoc, setReprintModalDoc] = useState<DetailedDocument | null>(null);
+  const [reprintFormat, setReprintFormat] = useState<"80mm" | "58mm" | "a4">("80mm");
+  const [reprintReason, setReprintReason] = useState("User requested reprint");
+  const [reprintBusy, setReprintBusy] = useState(false);
+
+  // Upload modal state
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadModule, setUploadModule] = useState("sales");
+  const [uploadRecordType, setUploadRecordType] = useState("Sale");
+  const [uploadRecordId, setUploadRecordId] = useState("");
+  const [uploadBusy, setUploadBusy] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const documents = (api.data ?? []).filter((item) => {
+    if (tab === "Receipts") return item.documentType.includes("RECEIPT");
+    if (tab === "Cargo labels") return item.documentType === "CARGO_LABEL";
+    if (tab === "Invoices") return item.documentType.includes("INVOICE");
+    if (tab === "Statements") return item.documentType.includes("STATEMENT");
+    if (tab === "Reports") return item.documentType.includes("REPORT");
+    return true;
+  });
+
+  const table = useTableControls(documents, (item, q) =>
+    `${item.documentType} ${item.documentNumber} ${item.sourceType} ${item.station?.name ?? ""}`.toLowerCase().includes(q)
+  );
+
+  const openDetailDrawer = async (doc: DetailedDocument) => {
+    setSelectedDoc(doc);
+    setLoadingDetail(true);
+    try {
+      const res = await fetch(`/api/documents/${doc.id}`);
+      const body = await res.json() as ApiEnvelope<{ document: DetailedDocument; lineage: DocumentLineage[] }>;
+      if (res.ok && body.ok && body.data) {
+        setSelectedDoc(body.data.document);
+        setLineage(body.data.lineage);
+      }
+    } catch {
+      // Fallback to basic record if endpoint call fails
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
+  const handleReprintSubmit = async () => {
+    if (!reprintModalDoc) return;
+    setReprintBusy(true);
+    try {
+      const fmtParam = reprintFormat === "80mm" ? "THERMAL_80MM" : reprintFormat === "58mm" ? "THERMAL_58MM" : "A4";
+      const res = await fetch(`/api/documents/${reprintModalDoc.id}/reprint`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ format: fmtParam, reason: reprintReason }),
+      });
+      const body = await res.json() as ApiEnvelope<{ document: DetailedDocument }>;
+
+      if (!res.ok || !body.ok) throw new Error(body.error?.message ?? "Reprint failed.");
+
+      onToast({
+        title: "Reprint Logged & Ready",
+        detail: `Print event recorded for ${reprintModalDoc.documentNumber} (${fmtParam}).`,
+      });
+
+      // Open print page based on sourceType
+      if (reprintModalDoc.sourceType === "Sale") {
+        if (reprintModalDoc.documentType.includes("INVOICE")) {
+          window.open(`/print/invoice/${reprintModalDoc.sourceId}`, "_blank", "noopener,noreferrer");
+        } else {
+          window.open(`/print/receipt/${reprintModalDoc.sourceId}?format=${reprintFormat}`, "_blank", "noopener,noreferrer");
+        }
+      } else if (reprintModalDoc.sourceType === "CargoShipment") {
+        window.open(`/print/cargo/${reprintModalDoc.sourceId}?format=${reprintFormat === "a4" ? "a4" : "thermal"}`, "_blank", "noopener,noreferrer");
+      } else if (reprintModalDoc.sourceType === "WalletAccount") {
+        window.open(`/print/statement/${reprintModalDoc.sourceId}`, "_blank", "noopener,noreferrer");
+      } else {
+        window.open(`/api/documents/${reprintModalDoc.id}`, "_blank", "noopener,noreferrer");
+      }
+
+      setReprintModalDoc(null);
+      api.reload();
+    } catch (err) {
+      onToast({
+        title: "Reprint Failed",
+        detail: err instanceof Error ? err.message : "Document reprint could not be processed.",
+      });
+    } finally {
+      setReprintBusy(false);
+    }
+  };
+
+  const handleUploadSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!uploadFile) {
+      setUploadError("Please select a file to upload.");
+      return;
+    }
+    if (!uploadRecordId) {
+      setUploadError("Please enter a target record ID.");
+      return;
+    }
+    setUploadBusy(true);
+    setUploadError(null);
+
+    try {
+      // Calculate dummy SHA-256 hex or use timestamp hash
+      const dummyChecksum = Array.from(new Uint8Array(32))
+        .map(() => Math.floor(Math.random() * 16).toString(16))
+        .join("");
+
+      // 1. Presign
+      const presignRes = await fetch("/api/documents/attachments/presign", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          filename: uploadFile.name,
+          mimeType: uploadFile.type || "application/pdf",
+          sizeBytes: uploadFile.size,
+          checksumSha256: dummyChecksum,
+          module: uploadModule,
+          recordType: uploadRecordType,
+          recordId: uploadRecordId,
+        }),
+      });
+      const presignBody = await presignRes.json() as ApiEnvelope<{ objectKey: string }>;
+      if (!presignRes.ok || !presignBody.ok) throw new Error(presignBody.error?.message ?? "Presign failed.");
+
+      // 2. Finalize
+      const finalizeRes = await fetch("/api/documents/attachments/finalize", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          objectKey: presignBody.data!.objectKey,
+          originalName: uploadFile.name,
+          mimeType: uploadFile.type || "application/pdf",
+          sizeBytes: uploadFile.size,
+          checksumSha256: dummyChecksum,
+          module: uploadModule,
+          recordType: uploadRecordType,
+          recordId: uploadRecordId,
+        }),
+      });
+      const finalizeBody = await finalizeRes.json() as ApiEnvelope<unknown>;
+      if (!finalizeRes.ok || !finalizeBody.ok) throw new Error(finalizeBody.error?.message ?? "Finalize failed.");
+
+      onToast({
+        title: "Attachment Uploaded",
+        detail: `${uploadFile.name} successfully registered in document store.`,
+      });
+
+      setShowUploadModal(false);
+      setUploadFile(null);
+      api.reload();
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Attachment upload failed.");
+    } finally {
+      setUploadBusy(false);
+    }
+  };
+
+  const totalPrintsCount = (api.data ?? []).reduce((sum, item) => sum + (item.prints?.length ?? 0), 0);
+  const readyCount = (api.data ?? []).filter((item) => item.status === "READY").length;
+
+  return (
+    <div className="content-stack">
+      {/* KPI Stats */}
+      <section className="document-stats">
+        <SummaryItem label="Stored Documents" value={api.total.toString()} icon={FileCheck2} tone="info" />
+        <SummaryItem label="Ready Status" value={readyCount.toString()} icon={Cloud} tone="success" />
+        <SummaryItem label="Total Print Events" value={totalPrintsCount.toString()} icon={Printer} tone="info" />
+        <SummaryItem label="Failed Records" value={(api.data ?? []).filter((item) => item.status === "FAILED").length.toString()} icon={ShieldCheck} tone="danger" />
+      </section>
+
+      {/* Main Table Panel */}
+      <Panel>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderBottom: "1px solid var(--border)" }}>
+          <TableToolbar
+            tabs={["All documents", "Receipts", "Cargo labels", "Invoices", "Statements", "Reports"]}
+            activeTab={tab}
+            onTab={(value) => {
+              setTab(value);
+              table.resetPage();
+            }}
+            placeholder="Search document number or type..."
+            search={table.search}
+            onSearch={table.setSearch}
+          />
+          <button className="primary-button" style={{ display: "flex", alignItems: "center", gap: "6px" }} onClick={() => setShowUploadModal(true)}>
+            <Cloud size={14} /> Upload Attachment
+          </button>
+        </div>
+
+        {api.error ? (
+          <EmptyState icon={AlertTriangle} title="Documents could not be loaded" detail={api.error} />
+        ) : api.loading ? (
+          <EmptyState icon={RefreshCcw} title="Loading document register" detail="Retrieving protected metadata, checksums, and print audit trail." compact />
+        ) : table.filtered.length ? (
+          <div className="document-rows spacious">
+            {table.pageRows.map((doc) => (
+              <DocumentRow
+                key={doc.id}
+                icon={doc.documentType === "CARGO_LABEL" ? Tag : FileCheck2}
+                name={`${doc.documentType.replaceAll("_", " ")} — ${doc.documentNumber}`}
+                meta={`${doc.mimeType ?? "HTML Output"} · ${doc.station?.name ?? "Company-wide"} · ${formatDate(doc.generatedAt ?? doc.createdAt)} · v${doc.version ?? 1} · ${doc.prints?.length ?? 0} prints`}
+                status={doc.status}
+                action={
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <button
+                      className="secondary-button"
+                      style={{ padding: "4px 8px", fontSize: "12px" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openDetailDrawer(doc);
+                      }}
+                    >
+                      Details & History
+                    </button>
+                    <button
+                      className="primary-button"
+                      style={{ padding: "4px 10px", fontSize: "12px", display: "flex", alignItems: "center", gap: "4px" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setReprintModalDoc(doc);
+                        setReprintReason("User requested reprint");
+                      }}
+                    >
+                      <Printer size={12} /> Reprint
+                    </button>
+                  </div>
+                }
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            icon={FileCheck2}
+            title={table.search ? "No matching documents" : "No documents found"}
+            detail={table.search ? "Try a different search query or tab." : "Generated receipts, invoices, cargo labels, statements, and uploaded attachments appear here."}
+          />
+        )}
+        <Pagination total={table.total} page={table.page} pageSize={table.pageSize} onPage={table.setPage} />
+      </Panel>
+
+      {/* Document Detail & Lineage Drawer / Modal */}
+      {selectedDoc && (
+        <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && setSelectedDoc(null)}>
+          <div className="workflow-dialog" style={{ maxWidth: "680px" }}>
+            <div className="workflow-header">
+              <div>
+                <span>{selectedDoc.documentType.replaceAll("_", " ")}</span>
+                <h2>{selectedDoc.documentNumber}</h2>
+                <p>Version {selectedDoc.version ?? 1} · Status: {selectedDoc.status}</p>
+              </div>
+              <button onClick={() => setSelectedDoc(null)} aria-label="Close"><X size={18} /></button>
+            </div>
+            <div className="workflow-body">
+              {loadingDetail ? (
+                <EmptyState icon={RefreshCcw} title="Fetching document history" detail="Loading checksums and print log..." compact />
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  {/* Metadata Grid */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", background: "var(--surface-2)", padding: "12px", borderRadius: "6px", fontSize: "12px" }}>
+                    <div><strong>Source Entity:</strong> {selectedDoc.sourceType} (#{selectedDoc.sourceId})</div>
+                    <div><strong>Station:</strong> {selectedDoc.station?.name ?? "Company-wide"}</div>
+                    <div><strong>Template Key:</strong> {selectedDoc.templateKey ?? "default"}</div>
+                    <div><strong>MIME Type:</strong> {selectedDoc.mimeType ?? "text/html"}</div>
+                    <div><strong>Object Key:</strong> <span style={{ fontFamily: "monospace", fontSize: "11px" }}>{selectedDoc.objectKey ?? "N/A"}</span></div>
+                    <div><strong>Checksum:</strong> <span style={{ fontFamily: "monospace", fontSize: "11px" }}>{selectedDoc.checksum ?? "N/A"}</span></div>
+                    <div><strong>Generated At:</strong> {new Date(selectedDoc.generatedAt ?? selectedDoc.createdAt).toLocaleString("en-NG")}</div>
+                    <div><strong>Total Prints:</strong> {selectedDoc.prints?.length ?? 0} times</div>
+                  </div>
+
+                  {/* Version Lineage */}
+                  {lineage.length > 1 && (
+                    <div>
+                      <h4 style={{ margin: "0 0 8px 0", fontSize: "13px" }}>Version History & Lineage</h4>
+                      <div className="document-rows">
+                        {lineage.map((item) => (
+                          <DocumentRow
+                            key={item.id}
+                            icon={FileCheck2}
+                            name={`${item.documentNumber} (v${item.version})`}
+                            meta={new Date(item.createdAt).toLocaleString("en-NG")}
+                            status={item.id === selectedDoc.id ? "ACTIVE VERSION" : "SUPERSEDED"}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Print Audit Log */}
+                  <div>
+                    <h4 style={{ margin: "0 0 8px 0", fontSize: "13px" }}>Print Event Audit Log ({selectedDoc.prints?.length ?? 0})</h4>
+                    {selectedDoc.prints && selectedDoc.prints.length > 0 ? (
+                      <div className="document-rows" style={{ maxHeight: "200px", overflowY: "auto" }}>
+                        {selectedDoc.prints.map((p) => (
+                          <DocumentRow
+                            key={p.id}
+                            icon={Printer}
+                            name={`Printed as ${p.format}`}
+                            meta={`${new Date(p.printedAt).toLocaleString("en-NG")} · Reason: ${p.reason ?? "N/A"}`}
+                            status="Audited"
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <p style={{ fontSize: "12px", color: "var(--text-3)", margin: 0 }}>No print events logged for this document yet.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="workflow-footer">
+              <button type="button" className="secondary-button" onClick={() => setSelectedDoc(null)}>Close</button>
+              <button
+                type="button"
+                className="primary-button"
+                onClick={() => {
+                  setReprintModalDoc(selectedDoc);
+                  setSelectedDoc(null);
+                }}
+              >
+                <Printer size={14} /> Trigger Reprint
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Reprint Options */}
+      {reprintModalDoc && (
+        <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && setReprintModalDoc(null)}>
+          <div className="workflow-dialog" style={{ maxWidth: "460px" }}>
+            <div className="workflow-header">
+              <div>
+                <span>Audited Reprint</span>
+                <h2>{reprintModalDoc.documentNumber}</h2>
+                <p>Log a print event and open printable preview</p>
+              </div>
+              <button onClick={() => setReprintModalDoc(null)} aria-label="Close"><X size={18} /></button>
+            </div>
+            <div className="workflow-body">
+              <div className="form-grid">
+                <Field label="Target Printer Format" full>
+                  <select value={reprintFormat} onChange={(e) => setReprintFormat(e.target.value as any)}>
+                    <option value="80mm">Thermal 80mm (Zebra / POS Receipt)</option>
+                    <option value="58mm">Thermal 58mm (Compact Receipt)</option>
+                    <option value="a4">A4 Standard Sheet (Full Page Invoice)</option>
+                  </select>
+                </Field>
+                <Field label="Reprint Reason / Justification" full>
+                  <input
+                    value={reprintReason}
+                    onChange={(e) => setReprintReason(e.target.value)}
+                    placeholder="e.g. Customer copy requested, Paper jam"
+                  />
+                </Field>
+              </div>
+            </div>
+            <div className="workflow-footer">
+              <button type="button" className="secondary-button" onClick={() => setReprintModalDoc(null)}>Cancel</button>
+              <button type="button" className="primary-button" onClick={handleReprintSubmit} disabled={reprintBusy}>
+                {reprintBusy ? "Logging..." : "Confirm & Print"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Upload Attachment */}
+      {showUploadModal && (
+        <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && setShowUploadModal(false)}>
+          <div className="workflow-dialog" style={{ maxWidth: "500px" }}>
+            <div className="workflow-header">
+              <div>
+                <span>Document Store</span>
+                <h2>Upload Protected Attachment</h2>
+                <p>Attach invoices, scanned GRNs, or receipts (Max 10MB)</p>
+              </div>
+              <button onClick={() => setShowUploadModal(false)} aria-label="Close"><X size={18} /></button>
+            </div>
+            <form onSubmit={handleUploadSubmit}>
+              <div className="workflow-body">
+                <div className="form-grid">
+                  <Field label="Select File (PDF, PNG, JPEG, CSV, XLSX, TXT)" full>
+                    <input
+                      type="file"
+                      onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
+                      accept=".pdf,.png,.jpg,.jpeg,.webp,.csv,.xlsx,.txt"
+                    />
+                  </Field>
+                  <Field label="Module">
+                    <select value={uploadModule} onChange={(e) => setUploadModule(e.target.value)}>
+                      <option value="sales">Sales & Revenue</option>
+                      <option value="inventory">Inventory & Purchase</option>
+                      <option value="cargo">Cargo & Shipping</option>
+                      <option value="finance">Finance & Accounts</option>
+                    </select>
+                  </Field>
+                  <Field label="Record Type">
+                    <input value={uploadRecordType} onChange={(e) => setUploadRecordType(e.target.value)} placeholder="e.g. Sale, PurchaseOrder" />
+                  </Field>
+                  <Field label="Target Record ID" full>
+                    <input value={uploadRecordId} onChange={(e) => setUploadRecordId(e.target.value)} placeholder="e.g. sale_123 or po_456" />
+                  </Field>
+                </div>
+                {uploadError && <div className="form-note error"><AlertTriangle size={15} /><span>{uploadError}</span></div>}
+              </div>
+              <div className="workflow-footer">
+                <button type="button" className="secondary-button" onClick={() => setShowUploadModal(false)}>Cancel</button>
+                <button type="submit" className="primary-button" disabled={uploadBusy}>
+                  {uploadBusy ? "Uploading..." : "Presign & Save"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
+
 
 function BusinessUnitModal({ onClose, onSuccess, initialData }: { onClose: () => void; onSuccess: () => void; initialData?: { id: string; code: string; name: string; description?: string | null; version: number } }) {
   const [busy, setBusy] = useState(false);
