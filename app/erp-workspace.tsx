@@ -8412,7 +8412,39 @@ function AttendanceView({
         </div>
 
         {tab === "Clock portal" ? (
-          <div style={{ maxWidth: "500px", margin: "40px auto", padding: "20px" }}>
+          <div style={{ maxWidth: "560px", margin: "20px auto", padding: "10px" }}>
+            {/* Mobile PWA Launcher Banner */}
+            <div style={{
+              background: "linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(11, 31, 58, 0.4) 100%)",
+              border: "1px solid rgba(16, 185, 129, 0.3)",
+              borderRadius: "12px",
+              padding: "14px 18px",
+              marginBottom: "24px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "12px",
+              flexWrap: "wrap",
+            }}>
+              <div>
+                <strong style={{ fontSize: "14px", color: "var(--text-primary)", display: "block" }}>
+                  📱 Standalone Mobile Punch Clock App
+                </strong>
+                <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
+                  Open directly on your phone or install as a PWA home screen app.
+                </span>
+              </div>
+              <a
+                href="/attendance"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="primary-button"
+                style={{ height: "36px", padding: "0 14px", fontSize: "12px", background: "#10b981", color: "white", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}
+              >
+                <span>Launch Mobile PWA ↗</span>
+              </a>
+            </div>
+
             <div style={{ textAlign: "center", marginBottom: "30px" }}>
               <div style={{ fontSize: "14px", textTransform: "uppercase", letterSpacing: "1px", color: "var(--text-secondary)" }}>
                 {new Date().toLocaleDateString("en-NG", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
