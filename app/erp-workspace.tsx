@@ -83,7 +83,7 @@ import {
   type Tone,
 } from "@/lib/erp-data";
 
-type ModalKind = "sale" | "product" | "cargo" | "deposit" | "customer" | "purchase" | "ticket" | "finance" | "staff" | "station" | "invite" | "agent" | null;
+type ModalKind = "sale" | "product" | "cargo" | "deposit" | "customer" | "purchase" | "ticket" | "finance" | "staff" | "station" | "invite" | "agent" | "profile" | "preferences" | "activity" | null;
 
 type Toast = {
   title: string;
@@ -466,6 +466,7 @@ export default function ERPWorkspace({
           onNavigate={navigate}
           identity={identity}
           allowedStations={allowedStations}
+          onModal={(k) => setModal(k)}
         />
 
         <main className="page-shell">
@@ -521,6 +522,9 @@ export default function ERPWorkspace({
             setToast({ title, detail });
           }}
           allowedStations={allowedStations}
+          identity={identity}
+          isDark={isDark}
+          setIsDark={setIsDark}
         />
       )}
 
@@ -642,6 +646,7 @@ function Topbar({
   onNavigate,
   identity,
   allowedStations,
+  onModal,
 }: {
   station: string;
   setStation: (value: string) => void;
@@ -656,6 +661,7 @@ function Topbar({
   onNavigate: (id: string) => void;
   identity: WorkspaceIdentity;
   allowedStations: AllowedStation[];
+  onModal?: (kind: ModalKind) => void;
 }) {
   const notificationApi = useApiData<NotificationRecord[]>(identity.permissions.includes("notifications.view") ? "/api/notifications?status=UNREAD&pageSize=3" : null);
   const markNotificationsRead = async () => { await fetch("/api/notifications", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "MARK_ALL_READ" }) }); notificationApi.reload(); };
@@ -735,9 +741,9 @@ function Topbar({
           {profileOpen && (
             <div className="popover profile-popover">
               <div className="profile-summary"><span className="avatar large">{initials || "AC"}</span><div><strong>{identity.name}</strong><span>{identity.email}</span></div></div>
-              <button><UserCheck size={16} /> My profile</button>
-              <button><Settings2 size={16} /> Preferences</button>
-              <button><History size={16} /> My activity</button>
+              <button onClick={() => { setProfileOpen(false); onModal?.("profile"); }}><UserCheck size={16} /> My profile</button>
+              <button onClick={() => { setProfileOpen(false); onModal?.("preferences"); }}><Settings2 size={16} /> Preferences</button>
+              <button onClick={() => { setProfileOpen(false); onModal?.("activity"); }}><History size={16} /> My activity</button>
               <div className="popover-separator" />
               <button className="danger-text" onClick={() => signOut({ callbackUrl: "/login" })}><LogOut size={16} /> Sign out</button>
             </div>
@@ -10702,7 +10708,275 @@ function ReceiptTextIcon(props: React.ComponentProps<LucideIcon>) {
   return <FileCheck2 {...props} />;
 }
 
-function WorkflowModal({ kind, onClose, onComplete, allowedStations }: { kind: Exclude<ModalKind, null>; onClose: () => void; onComplete: (title: string, detail: string) => void; allowedStations: AllowedStation[] }) {
+function UserProfileModalForm({
+  identity,
+  onClose,
+  onComplete,
+}: {
+  identity: WorkspaceIdentity;
+  onClose: () => void;
+  onComplete: (title: string, detail: string) => void;
+}) {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const initials = identity.name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+
+  const handleChangePassword = async (e: FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      alert("New passwords do not match.");
+      return;
+    }
+    if (newPassword.length < 8) {
+      alert("New password must be at least 8 characters long.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: identity.email }),
+      });
+      if (!res.ok) throw new Error("Failed to send password reset request.");
+      onComplete("Password Reset Email Sent", `Instructions to set your new password have been sent to ${identity.email}.`);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to process request.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="workflow-body">
+      <div style={{ display: "flex", alignItems: "center", gap: "16px", padding: "16px", background: "var(--surface-subtle, #f9fafb)", borderRadius: "12px", border: "1px solid var(--line, #e5e7eb)", marginBottom: "16px" }}>
+        <div className="avatar large" style={{ width: "52px", height: "52px", fontSize: "18px", background: "var(--brand-red, #ca0b12)", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", fontWeight: "bold" }}>
+          {initials || "AC"}
+        </div>
+        <div>
+          <h3 style={{ margin: "0 0 4px", fontSize: "16px", fontWeight: "bold", color: "var(--text-primary)" }}>{identity.name}</h3>
+          <p style={{ margin: 0, fontSize: "12px", color: "var(--text-secondary, #4b5563)" }}>{identity.email} • Username: <strong>{identity.username}</strong></p>
+          <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+            <span className="badge badge-info" style={{ background: "rgba(202, 11, 18, 0.08)", color: "#ca0b12", fontWeight: "bold" }}>{identity.role}</span>
+            <span className="badge badge-success">{identity.companyWide ? "Company-Wide Scope" : "Station-Scoped"}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ background: "var(--surface, #ffffff)", padding: "16px", borderRadius: "8px", border: "1px solid var(--line, #e5e7eb)", marginBottom: "16px" }}>
+        <h4 style={{ margin: "0 0 12px", fontSize: "13px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "6px" }}>
+          <KeyRound size={15} style={{ color: "var(--brand-red, #ca0b12)" }} /> Security & Credentials
+        </h4>
+        <form onSubmit={handleChangePassword} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div>
+            <label className="field-label" style={{ fontSize: "12px" }}>Current Password</label>
+            <input type="password" className="field-input" required value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="••••••••" />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div>
+              <label className="field-label" style={{ fontSize: "12px" }}>New Password</label>
+              <input type="password" className="field-input" required minLength={8} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="At least 8 chars" />
+            </div>
+            <div>
+              <label className="field-label" style={{ fontSize: "12px" }}>Confirm New Password</label>
+              <input type="password" className="field-input" required minLength={8} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-type new password" />
+            </div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "4px" }}>
+            <button type="submit" className="primary-button" disabled={busy} style={{ background: "var(--brand-red, #ca0b12)", color: "#ffffff", padding: "8px 16px" }}>
+              {busy ? "Processing..." : "Request Password Reset Link"}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <ModalFooter onClose={onClose} submitLabel="Close" icon={UserCheck} />
+    </div>
+  );
+}
+
+function UserPreferencesModalForm({
+  onClose,
+  onComplete,
+  isDark,
+  setIsDark,
+}: {
+  identity: WorkspaceIdentity;
+  onClose: () => void;
+  onComplete: (title: string, detail: string) => void;
+  isDark: boolean;
+  setIsDark: (val: boolean) => void;
+}) {
+  const [emailEnabled, setEmailEnabled] = useState(true);
+  const [smsEnabled, setSmsEnabled] = useState(true);
+  const [inAppEnabled, setInAppEnabled] = useState(true);
+  const [busy, setBusy] = useState(false);
+
+  const handleSavePreferences = async () => {
+    setBusy(true);
+    try {
+      await fetch("/api/notifications/preferences", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          type: "SYSTEM_ALERTS",
+          channel: "EMAIL",
+          enabled: emailEnabled,
+        }),
+      });
+      onComplete("Preferences Saved", "Your appearance theme and notification alert preferences have been updated.");
+    } catch {
+      alert("Failed to save user preferences.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="workflow-body">
+      <div style={{ background: "var(--surface, #ffffff)", padding: "16px", borderRadius: "8px", border: "1px solid var(--line, #e5e7eb)", marginBottom: "16px" }}>
+        <h4 style={{ margin: "0 0 12px", fontSize: "13px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "6px" }}>
+          <Sun size={15} style={{ color: "var(--brand-red, #ca0b12)" }} /> Appearance Theme
+        </h4>
+        <div style={{ display: "flex", gap: "12px" }}>
+          <button
+            type="button"
+            className={classNames("secondary-button", !isDark && "active")}
+            onClick={() => setIsDark(false)}
+            style={{ flex: 1, height: "40px", justifyContent: "center", background: !isDark ? "var(--brand-red-light, rgba(202,11,18,0.08))" : undefined, color: !isDark ? "#ca0b12" : undefined, borderColor: !isDark ? "#ca0b12" : undefined }}
+          >
+            <Sun size={15} /> Light Theme
+          </button>
+          <button
+            type="button"
+            className={classNames("secondary-button", isDark && "active")}
+            onClick={() => setIsDark(true)}
+            style={{ flex: 1, height: "40px", justifyContent: "center", background: isDark ? "var(--brand-red-light, rgba(202,11,18,0.08))" : undefined, color: isDark ? "#ca0b12" : undefined, borderColor: isDark ? "#ca0b12" : undefined }}
+          >
+            <Moon size={15} /> Dark Theme
+          </button>
+        </div>
+      </div>
+
+      <div style={{ background: "var(--surface, #ffffff)", padding: "16px", borderRadius: "8px", border: "1px solid var(--line, #e5e7eb)", marginBottom: "20px" }}>
+        <h4 style={{ margin: "0 0 12px", fontSize: "13px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "6px" }}>
+          <Bell size={15} style={{ color: "var(--brand-red, #ca0b12)" }} /> Notification Alert Channels
+        </h4>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "12px" }}>
+          <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
+            <span><strong>Email Notifications</strong><br /><small style={{ color: "var(--text-secondary)" }}>Receive critical financial and approval alerts by email</small></span>
+            <input type="checkbox" checked={emailEnabled} onChange={(e) => setEmailEnabled(e.target.checked)} style={{ width: "16px", height: "16px" }} />
+          </label>
+          <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
+            <span><strong>SMS Mobile Alerts</strong><br /><small style={{ color: "var(--text-secondary)" }}>Receive urgent operational notifications on mobile</small></span>
+            <input type="checkbox" checked={smsEnabled} onChange={(e) => setSmsEnabled(e.target.checked)} style={{ width: "16px", height: "16px" }} />
+          </label>
+          <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
+            <span><strong>In-App Activity Badge</strong><br /><small style={{ color: "var(--text-secondary)" }}>Display real-time notification counter in top bar</small></span>
+            <input type="checkbox" checked={inAppEnabled} onChange={(e) => setInAppEnabled(e.target.checked)} style={{ width: "16px", height: "16px" }} />
+          </label>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+        <button type="button" className="secondary-button" onClick={onClose}>Cancel</button>
+        <button type="button" className="primary-button" disabled={busy} onClick={handleSavePreferences} style={{ background: "var(--brand-red, #ca0b12)", color: "#ffffff" }}>
+          {busy ? "Saving..." : "Save Preferences"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function UserActivityModalForm({
+  onClose,
+}: {
+  identity: WorkspaceIdentity;
+  onClose: () => void;
+}) {
+  const auditApi = useApiData<any[]>("/api/audit?pageSize=15");
+  const attendanceApi = useApiData<any>("/api/staff/attendance/today");
+
+  return (
+    <div className="workflow-body">
+      <div style={{ background: "var(--surface, #ffffff)", padding: "16px", borderRadius: "8px", border: "1px solid var(--line, #e5e7eb)", marginBottom: "16px" }}>
+        <h4 style={{ margin: "0 0 10px", fontSize: "13px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "6px" }}>
+          <Clock3 size={15} style={{ color: "var(--brand-red, #ca0b12)" }} /> Today's Attendance Punch Log
+        </h4>
+        {attendanceApi.loading ? (
+          <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Loading attendance status...</div>
+        ) : attendanceApi.data?.todayStatus ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "12px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>Clock In Time:</span>
+              <strong>{attendanceApi.data.todayStatus.clockInAt ? new Date(attendanceApi.data.todayStatus.clockInAt).toLocaleTimeString("en-NG") : "Not Clocked In"}</strong>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>Clock Out Time:</span>
+              <strong>{attendanceApi.data.todayStatus.clockOutAt ? new Date(attendanceApi.data.todayStatus.clockOutAt).toLocaleTimeString("en-NG") : "Not Clocked Out"}</strong>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>Shift Duration:</span>
+              <strong>{attendanceApi.data.todayStatus.shiftDurationFormatted ?? "0h 0m"}</strong>
+            </div>
+          </div>
+        ) : (
+          <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>No attendance record found for today.</div>
+        )}
+      </div>
+
+      <div style={{ background: "var(--surface, #ffffff)", padding: "16px", borderRadius: "8px", border: "1px solid var(--line, #e5e7eb)", marginBottom: "20px" }}>
+        <h4 style={{ margin: "0 0 12px", fontSize: "13px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "6px" }}>
+          <History size={15} style={{ color: "var(--brand-red, #ca0b12)" }} /> Recent System Audit Logs
+        </h4>
+        <div style={{ maxHeight: "200px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px" }}>
+          {auditApi.data?.map((event: any) => (
+            <div key={event.id} style={{ padding: "8px 10px", background: "var(--surface-subtle, #f9fafb)", borderRadius: "6px", border: "1px solid var(--line, #e5e7eb)", fontSize: "11px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "600" }}>
+                <span>{event.action}</span>
+                <span style={{ color: "var(--text-muted)" }}>{new Date(event.occurredAt).toLocaleString("en-NG")}</span>
+              </div>
+              <div style={{ color: "var(--text-secondary)", fontSize: "11px", marginTop: "2px" }}>
+                Entity: {event.entityType} ({event.entityId?.slice(0, 12) ?? "N/A"})
+              </div>
+            </div>
+          ))}
+          {!auditApi.loading && !auditApi.data?.length && (
+            <div style={{ fontSize: "12px", color: "var(--text-secondary)", textAlign: "center", padding: "10px" }}>No recent audit events logged.</div>
+          )}
+        </div>
+      </div>
+
+      <ModalFooter onClose={onClose} submitLabel="Close" icon={History} />
+    </div>
+  );
+}
+
+function WorkflowModal({
+  kind,
+  onClose,
+  onComplete,
+  allowedStations,
+  identity,
+  isDark,
+  setIsDark,
+}: {
+  kind: Exclude<ModalKind, null>;
+  onClose: () => void;
+  onComplete: (title: string, detail: string) => void;
+  allowedStations: AllowedStation[];
+  identity: WorkspaceIdentity;
+  isDark: boolean;
+  setIsDark: (val: boolean) => void;
+}) {
   const config = {
     sale: { eyebrow: "Point of sale", title: "Complete sale", description: "Confirm the customer, items and payment before posting." },
     product: { eyebrow: "Inventory", title: "Add catalogue product", description: "Create a controlled stock item for the selected station." },
@@ -10716,6 +10990,9 @@ function WorkflowModal({ kind, onClose, onComplete, allowedStations }: { kind: E
     station: { eyebrow: "Station administration", title: "Add station", description: "Create an operating location and enable its business units." },
     invite: { eyebrow: "Access control", title: "Invite user", description: "Provision a user with explicit roles and station scope." },
     agent: { eyebrow: "Agent management", title: "Create agent", description: "Register an agent and provision a zero-balance wallet." },
+    profile: { eyebrow: "User Account", title: "My Profile", description: "View your user account identity, station scope permissions, and security credentials." },
+    preferences: { eyebrow: "User Settings", title: "Preferences", description: "Configure notification alert channels, appearance theme, and quiet hours." },
+    activity: { eyebrow: "Audit & Activity Log", title: "My Activity", description: "Inspect your recent system actions, attendance punches, and session logs." },
   }[kind];
   return (
     <div className="modal-layer" role="dialog" aria-modal="true" aria-labelledby="workflow-title" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
@@ -10733,6 +11010,9 @@ function WorkflowModal({ kind, onClose, onComplete, allowedStations }: { kind: E
         {kind === "station" && <StationForm onComplete={onComplete} onClose={onClose} />}
         {kind === "invite" && <InviteForm onComplete={onComplete} onClose={onClose} allowedStations={allowedStations} />}
         {kind === "agent" && <AgentForm onComplete={onComplete} onClose={onClose} allowedStations={allowedStations} />}
+        {kind === "profile" && <UserProfileModalForm identity={identity} onClose={onClose} onComplete={onComplete} />}
+        {kind === "preferences" && <UserPreferencesModalForm identity={identity} onClose={onClose} onComplete={onComplete} isDark={isDark} setIsDark={setIsDark} />}
+        {kind === "activity" && <UserActivityModalForm identity={identity} onClose={onClose} />}
       </div>
     </div>
   );
