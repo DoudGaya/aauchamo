@@ -126,7 +126,7 @@ export async function POST(request: Request) {
     }
 
     const customer = await db.$transaction(async (tx) => {
-      const customerNumber = await allocateSequence(tx, {
+      let customerNumber = await allocateSequence(tx, {
         companyId: access.companyId,
         stationId: input.homeStationId,
         documentType: "CUSTOMER",
@@ -134,6 +134,16 @@ export async function POST(request: Request) {
         includeDate: false,
         padding: 6,
       });
+
+      const existing = await tx.customer.findFirst({
+        where: { companyId: access.companyId, customerNumber },
+        select: { id: true },
+      });
+      if (existing) {
+        const count = await tx.customer.count({ where: { companyId: access.companyId } });
+        customerNumber = `CUS-${String(count + 1).padStart(6, "0")}-${Math.floor(100 + Math.random() * 900)}`;
+      }
+
       const nationalIdCiphertext = input.nationalId ? encryptSensitive(input.nationalId) : undefined;
       const created = await tx.customer.create({
         data: {

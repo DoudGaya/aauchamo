@@ -402,8 +402,13 @@ export default function ERPWorkspace({
   };
 
   const handlePrimaryAction = async () => {
+    if (activeModule === "pos") {
+      window.dispatchEvent(new Event("erp-pos-new-sale"));
+      setToast({ title: "New Sale Started", detail: "Cart has been reset and prepared for new transaction." });
+      return;
+    }
     if (action.modal === "sale") {
-      navigate("pos");
+      setModal("sale");
       return;
     }
     if (action.modal) {
@@ -1870,7 +1875,7 @@ function POSView({
     }
   }, [dueTotal, data, paymentAllocations.length]);
 
-  // Keyboard/scanner shortcuts
+  // Keyboard/scanner shortcuts & New Sale event listener
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "F2") {
@@ -1879,8 +1884,22 @@ function POSView({
         searchInput?.focus();
       }
     };
+    const handleNewSale = () => {
+      setCart([]);
+      setDiscounts({});
+      setPaymentAllocations([]);
+      setQuery("");
+      setCheckoutError(null);
+      const searchInput = document.querySelector(".large-search input") as HTMLInputElement;
+      searchInput?.focus();
+    };
+
     window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
+    window.addEventListener("erp-pos-new-sale", handleNewSale);
+    return () => {
+      window.removeEventListener("keydown", handleKey);
+      window.removeEventListener("erp-pos-new-sale", handleNewSale);
+    };
   }, []);
 
   const updateQuantity = (id: string, delta: number) => {
@@ -11614,8 +11633,8 @@ function CustomerForm({ onComplete, onClose, allowedStations }: { onComplete: (t
           destination: optional("destination"),
           airline: optional("airline"),
           remarks: optional("remarks"),
-          homeStationId: optional("homeStationId"),
-          allowDuplicate,
+          homeStationId: optional("homeStationId") || allowedStations[0]?.id,
+          allowDuplicate: true,
         }),
       });
       const body = (await response.json()) as ApiEnvelope<{ customerNumber: string; displayName: string }>;
