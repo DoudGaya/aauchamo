@@ -11038,13 +11038,17 @@ function QuickSaleForm({
     try {
       const res = await fetch("/api/sales", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json",
+          "idempotency-key": `pos-modal-${crypto.randomUUID()}`,
+        },
         body: JSON.stringify({
           stationId,
           businessUnitId: posData?.businessUnits[0]?.id,
           customerId: selectedCustId,
-          lines: [{ productId, quantity: Number(quantity) || 1 }],
-          paymentAllocations: [{ paymentMethodId: selectedPayId, amount: totalAmount.toFixed(2), reference: paymentRef || undefined }],
+          lines: [{ productId, quantity: String(Math.max(1, Number(quantity) || 1)) }],
+          payments: [{ paymentMethodId: selectedPayId, amount: totalAmount.toFixed(2), reference: paymentRef || undefined }],
         }),
       });
 

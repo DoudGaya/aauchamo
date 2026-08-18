@@ -80,12 +80,13 @@ export function apiFailure(error: unknown, requestId: string) {
   }
 
   if (error instanceof ZodError) {
+    const issueSummary = error.issues.map((i) => `${i.path.join(".") || "field"}: ${i.message}`).join("; ");
     return NextResponse.json<ApiFailure>(
       {
         ok: false,
         error: {
           code: "VALIDATION_ERROR",
-          message: "The request contains invalid values.",
+          message: issueSummary ? `Validation failed: ${issueSummary}` : "The request contains invalid values.",
           details: error.flatten(),
         },
         meta: { requestId, timestamp: new Date().toISOString() },
