@@ -90,3 +90,36 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pr
     return apiFailure(error, requestId);
   }
 }
+
+export async function DELETE(request: Request, { params }: { params: Promise<{ productId: string }> }) {
+  const requestId = requestIdFrom(request);
+  try {
+    const access = requirePermission(await requireAccess(), "inventory.create_product");
+    const { productId } = await params;
+
+    const current = await db.product.findFirst({ where: { id: productId, companyId: access.companyId } });
+    if (!current) throw new NotFoundError("Product not found.");
+
+    await db.$transaction(async (tx) => {
+      await tx.product.update({
+        where: { id: productId },
+        data: { status: "INACTIVE", updatedById: access.userId },
+      });
+
+      await writeAudit(tx, {
+        companyId: access.companyId,
+        actorId: access.userId,
+        action: "product.deleted",
+        entityType: "Product",
+        entityId: productId,
+        requestId,
+        before: current,
+        after: { status: "INACTIVE" },
+      });
+    }, { isolationLevel: "Serializable", timeout: 30_000, maxWait: 15_000 });
+
+    return apiSuccess({ deleted: true, id: productId, name: current.name }, requestId);
+  } catch (error) {
+    return apiFailure(error, requestId);
+  }
+}

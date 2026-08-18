@@ -4146,7 +4146,30 @@ function InventoryView({
                     <td>{product.reorderLevel}</td>
                     <td className="number-cell">{formatNaira(Number(product.sellingPrice))}</td>
                     <td><StatusPill value={available <= 0 ? "Out of stock" : available <= Number(product.reorderLevel) ? "Low stock" : "In stock"} /></td>
-                    <td><button className="icon-ghost" onClick={() => onModal("product")}><MoreHorizontal size={17} /></button></td>
+                    <td>
+                      <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end", alignItems: "center" }}>
+                        <button
+                          type="button"
+                          className="danger-button-subtle"
+                          title="Delete Product"
+                          style={{ padding: "4px 8px", fontSize: "11px", height: "26px", color: "#dc2626", background: "rgba(220, 38, 38, 0.1)", border: "none", borderRadius: "4px", fontWeight: "600", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
+                          onClick={async () => {
+                            if (!window.confirm(`Delete product "${product.name}" (${product.code}) from inventory?`)) return;
+                            try {
+                              const res = await fetch(`/api/inventory/catalogue/${product.id}`, { method: "DELETE" });
+                              const body = await res.json();
+                              if (!res.ok || !body.ok) throw new Error(body.error?.message || "Failed to delete product.");
+                              window.dispatchEvent(new Event("erp-data-changed"));
+                              productApi.reload();
+                            } catch (err: any) {
+                              alert(err.message || "Failed to delete product.");
+                            }
+                          }}
+                        >
+                          <Trash2 size={13} /> Delete
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -10370,6 +10393,103 @@ function PaymentMethodModal({ pm, onClose, onSuccess }: { pm: any; onClose: () =
   );
 }
 
+function ProductUnitsCategoriesSettings({ onToast }: { onToast: (toast: Toast) => void }) {
+  const setupApi = useApiData<InventorySetup>("/api/inventory/setup");
+  const [busy, setBusy] = useState(false);
+
+  const addCategory = async () => {
+    const name = window.prompt("Enter new product category name (e.g. Beverages, Electronics):");
+    if (!name || !name.trim()) return;
+    const code = window.prompt("Enter short category code (e.g. BEV, ELEC):", name.substring(0, 4).toUpperCase());
+    if (!code || !code.trim()) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/inventory/setup", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ type: "CATEGORY", name: name.trim(), code: code.trim().toUpperCase() }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) throw new Error(body.error?.message || "Failed to create category.");
+      setupApi.reload();
+      onToast({ title: "Category Created", detail: `Product category "${name}" was created successfully.` });
+    } catch (err: any) {
+      onToast({ title: "Creation Failed", detail: err.message || "Failed to create category." });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const addUnit = async () => {
+    const name = window.prompt("Enter new unit of measure name (e.g. Bags, Litres, Cartons, Pieces):");
+    if (!name || !name.trim()) return;
+    const code = window.prompt("Enter short unit code (e.g. BG, L, CTN, PCS):", name.substring(0, 3).toUpperCase());
+    if (!code || !code.trim()) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/inventory/setup", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ type: "UNIT", name: name.trim(), code: code.trim().toUpperCase(), precision: 0 }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) throw new Error(body.error?.message || "Failed to create unit of measure.");
+      setupApi.reload();
+      onToast({ title: "Unit Created", detail: `Unit of measure "${name}" (${code}) was created successfully.` });
+    } catch (err: any) {
+      onToast({ title: "Creation Failed", detail: err.message || "Failed to create unit." });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: "15px", fontWeight: "700" }}>Product Categories</h3>
+            <p style={{ margin: "2px 0 0", fontSize: "12px", color: "var(--text-secondary)" }}>Manage stock item classification categories.</p>
+          </div>
+          <button type="button" className="primary-button" onClick={addCategory} disabled={busy}>+ Add Category</button>
+        </div>
+        {setupApi.loading ? (
+          <EmptyState icon={RefreshCcw} title="Loading categories" compact />
+        ) : setupApi.data?.categories.length ? (
+          <div className="document-rows">
+            {setupApi.data.categories.map((cat) => (
+              <DocumentRow key={cat.id} icon={Boxes} name={cat.name} meta={`Code: ${cat.code}`} status={cat.isActive ? "Active" : "Disabled"} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState icon={Boxes} title="No categories found" detail="Click + Add Category to create your first category." compact />
+        )}
+      </div>
+
+      <div style={{ borderTop: "1px solid var(--line)", paddingTop: "1.5rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: "15px", fontWeight: "700" }}>Units of Measure Configurations</h3>
+            <p style={{ margin: "2px 0 0", fontSize: "12px", color: "var(--text-secondary)" }}>Configure selling and stock measurement units (e.g. Each, Bags, Litres, Cartons).</p>
+          </div>
+          <button type="button" className="primary-button" onClick={addUnit} disabled={busy}>+ Add Unit of Measure</button>
+        </div>
+        {setupApi.loading ? (
+          <EmptyState icon={RefreshCcw} title="Loading units of measure" compact />
+        ) : setupApi.data?.units.length ? (
+          <div className="document-rows">
+            {setupApi.data.units.map((unit) => (
+              <DocumentRow key={unit.id} icon={PackageCheck} name={unit.name} meta={`Code: ${unit.code} · Precision: ${unit.precision} decimals`} status={unit.isActive ? "Active" : "Disabled"} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState icon={PackageCheck} title="No units found" detail="Click + Add Unit of Measure to configure your first unit." compact />
+        )}
+      </div>
+    </div>
+  );
+}
+
 function SettingsView({ onToast, onModal }: { onToast: (toast: Toast) => void; onModal?: (kind: ModalKind) => void }) {
   const [section, setSection] = useState("Company profile");
   const [buModal, setBuModal] = useState<boolean | { id: string; code: string; name: string; description?: string | null; version: number }>(false);
@@ -10381,7 +10501,7 @@ function SettingsView({ onToast, onModal }: { onToast: (toast: Toast) => void; o
   const stationsApi = useApiData<StationRecord[]>(section === "Stations" ? "/api/stations" : null);
   const [busy, setBusy] = useState(false);
 
-  const sections = ["Company profile", "Business units", "Stations", "Payment methods", "Tax & receipts", "Printer settings", "Notifications", "Integrations", "Security"];
+  const sections = ["Company profile", "Business units", "Stations", "Payment methods", "Product units & categories", "Tax & receipts", "Printer settings", "Notifications", "Integrations", "Security"];
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -10678,6 +10798,8 @@ function SettingsView({ onToast, onModal }: { onToast: (toast: Toast) => void; o
                     }
                   />
                 ))
+              ) : section === "Product units & categories" ? (
+                <ProductUnitsCategoriesSettings onToast={onToast} />
               ) : (
                 <>
                   {section === "Tax & receipts" && (
@@ -11217,9 +11339,48 @@ function WorkflowModal({
 }
 
 function ProductForm({ onComplete, onClose, allowedStations }: { onComplete: (title: string, detail: string) => void; onClose: () => void; allowedStations: AllowedStation[] }) {
-  const { data: setup, loading, error: setupError } = useApiData<InventorySetup>("/api/inventory/setup");
+  const { data: setup, loading, error: setupError, reload: reloadSetup } = useApiData<InventorySetup>("/api/inventory/setup");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const addCategory = async () => {
+    const name = window.prompt("Enter new product category name (e.g. Beverages, Electronics):");
+    if (!name || !name.trim()) return;
+    const code = window.prompt("Enter short category code (e.g. BEV, ELEC):", name.substring(0, 4).toUpperCase());
+    if (!code || !code.trim()) return;
+    try {
+      const res = await fetch("/api/inventory/setup", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ type: "CATEGORY", name: name.trim(), code: code.trim().toUpperCase() }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) throw new Error(body.error?.message || "Failed to create category.");
+      reloadSetup();
+    } catch (err: any) {
+      alert(err.message || "Failed to create category.");
+    }
+  };
+
+  const addUnit = async () => {
+    const name = window.prompt("Enter new unit name (e.g. Bags, Litres, Cartons, Pieces):");
+    if (!name || !name.trim()) return;
+    const code = window.prompt("Enter short unit code (e.g. BG, L, CTN, PCS):", name.substring(0, 3).toUpperCase());
+    if (!code || !code.trim()) return;
+    try {
+      const res = await fetch("/api/inventory/setup", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ type: "UNIT", name: name.trim(), code: code.trim().toUpperCase(), precision: 0 }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) throw new Error(body.error?.message || "Failed to create unit.");
+      reloadSetup();
+    } catch (err: any) {
+      alert(err.message || "Failed to create unit.");
+    }
+  };
+
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault(); setBusy(true); setError(null); const form = new FormData(event.currentTarget);
     const stationId = String(form.get("stationId")); const quantity = String(form.get("stock") || "0");
@@ -11231,7 +11392,7 @@ function ProductForm({ onComplete, onClose, allowedStations }: { onComplete: (ti
       onComplete("Product created", `${body.data.code} · ${body.data.name} and its opening stock movement were committed.`);
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Product could not be created."); } finally { setBusy(false); }
   };
-  return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="Product name" full><input name="name" required placeholder="e.g. Binani Premium Rice 50kg" /></Field><Field label="Product code"><input name="code" required placeholder="BNA-RCE-050" /></Field><Field label="Barcode"><input name="barcode" placeholder="Scan or enter barcode" /></Field><Field label="Category"><select name="categoryId" required defaultValue=""><option value="" disabled>Select category</option>{setup?.categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field><Field label="Unit"><select name="unitId" required defaultValue=""><option value="" disabled>Select unit</option>{setup?.units.map((item) => <option key={item.id} value={item.id}>{item.name} ({item.code})</option>)}</select></Field><Field label="Default supplier"><select name="supplierId" defaultValue=""><option value="">No default supplier</option>{setup?.suppliers.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field><Field label="Opening station"><select name="stationId" required defaultValue={allowedStations[0]?.id}>{allowedStations.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select></Field><Field label="Opening quantity"><input name="stock" type="number" step="0.001" min="0" defaultValue="0" /></Field><Field label="Reorder level"><input name="reorder" type="number" step="0.001" min="0" defaultValue="20" /></Field><Field label="Minimum level"><input name="minimum" type="number" step="0.001" min="0" defaultValue="0" /></Field><Field label="Purchase price"><div className="money-input"><span>₦</span><input name="purchasePrice" type="number" step="0.01" min="0" defaultValue="0" /></div></Field><Field label="Selling price"><div className="money-input"><span>₦</span><input name="sellingPrice" type="number" step="0.01" min="0.01" required /></div></Field></div>{(error || setupError) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? setupError}</span></div>}<div className="form-note"><PackageCheck size={16} /><span>Product creation and opening stock are committed atomically to the immutable movement ledger.</span></div></div><ModalFooter onClose={onClose} submitLabel={busy ? "Creating…" : loading ? "Loading setup…" : "Create product"} icon={PackagePlus} disabled={busy || loading || !setup || !allowedStations.length} /></form>;
+  return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="Product name" full><input name="name" required placeholder="e.g. Binani Premium Rice 50kg" /></Field><Field label="Product code"><input name="code" required placeholder="BNA-RCE-050" /></Field><Field label="Barcode"><input name="barcode" placeholder="Scan or enter barcode" /></Field><Field label="Category"><div style={{ display: "flex", gap: "6px" }}><select name="categoryId" required defaultValue="" style={{ flex: 1 }}><option value="" disabled>Select category</option>{setup?.categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><button type="button" className="secondary-button" onClick={addCategory} title="Create new category" style={{ height: "36px", padding: "0 10px", fontSize: "12px", whiteSpace: "nowrap" }}>+ New</button></div></Field><Field label="Unit"><div style={{ display: "flex", gap: "6px" }}><select name="unitId" required defaultValue="" style={{ flex: 1 }}><option value="" disabled>Select unit</option>{setup?.units.map((item) => <option key={item.id} value={item.id}>{item.name} ({item.code})</option>)}</select><button type="button" className="secondary-button" onClick={addUnit} title="Create new unit of measure" style={{ height: "36px", padding: "0 10px", fontSize: "12px", whiteSpace: "nowrap" }}>+ New</button></div></Field><Field label="Default supplier"><select name="supplierId" defaultValue=""><option value="">No default supplier</option>{setup?.suppliers.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field><Field label="Opening station"><select name="stationId" required defaultValue={allowedStations[0]?.id}>{allowedStations.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select></Field><Field label="Opening quantity"><input name="stock" type="number" step="0.001" min="0" defaultValue="0" /></Field><Field label="Reorder level"><input name="reorder" type="number" step="0.001" min="0" defaultValue="20" /></Field><Field label="Minimum level"><input name="minimum" type="number" step="0.001" min="0" defaultValue="0" /></Field><Field label="Purchase price"><div className="money-input"><span>₦</span><input name="purchasePrice" type="number" step="0.01" min="0" defaultValue="0" /></div></Field><Field label="Selling price"><div className="money-input"><span>₦</span><input name="sellingPrice" type="number" step="0.01" min="0.01" required /></div></Field></div>{(error || setupError) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? setupError}</span></div>}<div className="form-note"><PackageCheck size={16} /><span>Product creation and opening stock are committed atomically to the immutable movement ledger.</span></div></div><ModalFooter onClose={onClose} submitLabel={busy ? "Creating…" : loading ? "Loading setup…" : "Create product"} icon={PackagePlus} disabled={busy || loading || !setup || !allowedStations.length} /></form>;
 }
 
 function CargoForm({ onComplete, onClose, allowedStations }: { onComplete: (title: string, detail: string) => void; onClose: () => void; allowedStations: AllowedStation[] }) {
