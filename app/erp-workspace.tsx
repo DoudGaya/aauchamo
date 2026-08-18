@@ -1953,14 +1953,18 @@ function POSView({
     }
 
     // Validate split payment allocations
-    const sumAlloc = paymentAllocations.reduce((sum, p) => sum + Number(p.amount), 0);
+    const activeAllocations = paymentAllocations.length === 1
+      ? [{ ...paymentAllocations[0], amount: dueTotal.toFixed(2) }]
+      : paymentAllocations;
+
+    const sumAlloc = activeAllocations.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
     if (Math.abs(sumAlloc - dueTotal) > 0.01) {
       setCheckoutError(`Payment split sum (${formatNaira(sumAlloc)}) must match amount due (${formatNaira(dueTotal)}).`);
       return;
     }
 
     // Reference and terminal ID validation
-    for (const alloc of paymentAllocations) {
+    for (const alloc of activeAllocations) {
       const method = data?.paymentMethods.find((item) => item.id === alloc.paymentMethodId);
       if (method?.requiresReference && !alloc.reference.trim()) {
         setCheckoutError(`${method.name} payment requires a reference.`);
@@ -1980,24 +1984,24 @@ function POSView({
         headers: {
           "content-type": "application/json",
           accept: "application/json",
-          "idempotency-key": crypto.randomUUID(),
+          "idempotency-key": `pos-checkout-${crypto.randomUUID()}`,
         },
         body: JSON.stringify({
           stationId: station.id,
           businessUnitId: selectedBusinessUnitId,
           customerId: selectedCustomerId,
           posSessionId: activeSession.id,
-          agentId: paymentAllocations.some(p => data?.paymentMethods.find(m => m.id === p.paymentMethodId)?.type === "WALLET") ? agentId || undefined : undefined,
+          agentId: activeAllocations.some((p) => data?.paymentMethods.find((m) => m.id === p.paymentMethodId)?.type === "WALLET") ? agentId || undefined : undefined,
           lines: cart.map((item) => ({
             productId: item.id,
             quantity: String(item.quantity),
-            discountAmount: discounts[item.id] ? Number(discounts[item.id]).toFixed(2) : undefined,
+            discountAmount: discounts[item.id] && Number(discounts[item.id]) > 0 ? Number(discounts[item.id]).toFixed(2) : undefined,
           })),
-          payments: paymentAllocations.map((p) => ({
+          payments: activeAllocations.map((p) => ({
             paymentMethodId: p.paymentMethodId,
-            amount: Number(p.amount).toFixed(2),
-            reference: p.reference || undefined,
-            terminalId: p.terminalId || undefined,
+            amount: (Number(p.amount) || dueTotal).toFixed(2),
+            reference: p.reference?.trim() || undefined,
+            terminalId: p.terminalId?.trim() || undefined,
           })),
         }),
       });
