@@ -10984,6 +10984,157 @@ function UserActivityModalForm({
   );
 }
 
+function QuickSaleForm({
+  onComplete,
+  onClose,
+  allowedStations,
+}: {
+  onComplete: (title: string, detail: string) => void;
+  onClose: () => void;
+  allowedStations: AllowedStation[];
+}) {
+  const [stationId, setStationId] = useState(allowedStations[0]?.id || "");
+  const { data: posData, loading } = useApiData<POSBootstrap>(stationId ? `/api/pos/bootstrap?stationId=${stationId}` : null);
+
+  const [productId, setProductId] = useState("");
+  const [quantity, setQuantity] = useState("1");
+  const [customerId, setCustomerId] = useState("");
+  const [paymentMethodId, setPaymentMethodId] = useState("");
+  const [paymentRef, setPaymentRef] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const selectedProduct = posData?.products.find((p) => p.id === productId);
+  const sellingPrice = Number(selectedProduct?.sellingPrice || 0);
+  const totalAmount = sellingPrice * (Number(quantity) || 1);
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!productId) {
+      setError("Please select a product from the catalog.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+
+    const selectedCustId = customerId || posData?.customers[0]?.id;
+    const selectedPayId = paymentMethodId || posData?.paymentMethods[0]?.id;
+
+    try {
+      const res = await fetch("/api/sales", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          stationId,
+          businessUnitId: posData?.businessUnits[0]?.id,
+          customerId: selectedCustId,
+          lines: [{ productId, quantity: Number(quantity) || 1 }],
+          paymentAllocations: [{ paymentMethodId: selectedPayId, amount: totalAmount.toFixed(2), reference: paymentRef || undefined }],
+        }),
+      });
+
+      const body = await res.json();
+      if (!res.ok || !body.ok) {
+        throw new Error(body.error?.message || "Failed to complete sale.");
+      }
+
+      window.dispatchEvent(new Event("erp-data-changed"));
+      onComplete("Sale Completed", `Order #${body.data?.saleNumber ?? "SAL"} recorded successfully.`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to record sale.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit}>
+      <div className="workflow-body">
+        <div className="form-grid">
+          <Field label="Station location">
+            <select value={stationId} onChange={(e) => setStationId(e.target.value)} required>
+              {allowedStations.map((s) => (
+                <option key={s.id} value={s.id}>{s.code} · {s.name}</option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Customer">
+            <select value={customerId} onChange={(e) => setCustomerId(e.target.value)}>
+              {posData?.customers.map((c) => (
+                <option key={c.id} value={c.id}>{c.displayName} ({c.customerNumber})</option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Select Product Item" full>
+            <select value={productId} onChange={(e) => setProductId(e.target.value)} required>
+              <option value="">-- Select Product --</option>
+              {posData?.products.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.code} · {p.name} (Stock: {p.available} | ₦{Number(p.sellingPrice).toLocaleString()})
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Quantity">
+            <input
+              type="number"
+              min="1"
+              max={selectedProduct?.available || 9999}
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              required
+            />
+          </Field>
+
+          <Field label="Payment Method">
+            <select value={paymentMethodId} onChange={(e) => setPaymentMethodId(e.target.value)}>
+              {posData?.paymentMethods.map((pm) => (
+                <option key={pm.id} value={pm.id}>{pm.name}</option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Payment Reference (Optional)" full>
+            <input
+              type="text"
+              placeholder="e.g. Bank Transfer Ref / POS Receipt Code"
+              value={paymentRef}
+              onChange={(e) => setPaymentRef(e.target.value)}
+            />
+          </Field>
+        </div>
+
+        <div style={{ background: "var(--surface-subtle, #f9fafb)", padding: "14px", borderRadius: "10px", border: "1px solid var(--line)", marginTop: "14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Total Calculated Sale Value</span>
+            <div style={{ fontSize: "22px", fontWeight: "800", color: "#ca0b12" }}>
+              ₦{totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+          </div>
+          <span className="badge badge-success">Live Price Verified</span>
+        </div>
+
+        {error && (
+          <div className="form-note" style={{ marginTop: "12px" }}>
+            <AlertTriangle size={16} />
+            <span>{error}</span>
+          </div>
+        )}
+      </div>
+
+      <ModalFooter
+        onClose={onClose}
+        submitLabel={busy ? "Posting Sale..." : "Complete & Post Sale"}
+        icon={ShoppingCart}
+        disabled={busy || loading || !productId}
+      />
+    </form>
+  );
+}
+
 function WorkflowModal({
   kind,
   onClose,
@@ -11022,7 +11173,7 @@ function WorkflowModal({
     <div className="modal-layer" role="dialog" aria-modal="true" aria-labelledby="workflow-title" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <div className="workflow-dialog">
         <div className="workflow-header"><div><span>{config.eyebrow}</span><h2 id="workflow-title">{config.title}</h2><p>{config.description}</p></div><button onClick={onClose} aria-label="Close modal"><X size={19} /></button></div>
-        {kind === "sale" && <div className="workflow-body"><EmptyState icon={ShoppingCart} title="Use the live POS workspace" detail="Sales are created from the station-scoped product catalogue with server-verified pricing." /><ModalFooter onClose={onClose} submitLabel="Close" icon={ShoppingCart} /></div>}
+        {kind === "sale" && <QuickSaleForm onComplete={onComplete} onClose={onClose} allowedStations={allowedStations} />}
         {kind === "product" && <ProductForm onComplete={onComplete} onClose={onClose} allowedStations={allowedStations} />}
         {kind === "cargo" && <CargoForm onComplete={onComplete} onClose={onClose} allowedStations={allowedStations} />}
         {kind === "deposit" && <DepositForm onComplete={onComplete} onClose={onClose} allowedStations={allowedStations} />}

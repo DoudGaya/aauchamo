@@ -12,9 +12,9 @@ function createDatabaseClient() {
   const env = getRuntimeEnv();
   const adapter = new PrismaPg({
     connectionString: env.DATABASE_URL,
-    connectionTimeoutMillis: 5_000,
-    idleTimeoutMillis: 10_000,
-    max: 10,
+    connectionTimeoutMillis: 30_000,
+    idleTimeoutMillis: 30_000,
+    max: 20,
   });
 
   return new PrismaClient({
