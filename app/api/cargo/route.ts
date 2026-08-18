@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       await tx.generatedDocument.create({ data: { companyId: access.companyId, stationId: input.stationId, documentType: "CARGO_LABEL", documentNumber, sourceType: "CargoShipment", sourceId: created.id, templateKey: "cargo-label-v1", status: "READY", mimeType: "text/html", generatedById: access.userId, generatedAt: new Date() } });
       await writeAudit(tx, { companyId: access.companyId, actorId: access.userId, stationId: input.stationId, action: "cargo.created", entityType: "CargoShipment", entityId: created.id, requestId, after: created });
       return { ...created, labelUrl: `/print/cargo/${created.id}` };
-    });
+    }, { isolationLevel: "Serializable", timeout: 30_000, maxWait: 15_000 });
     return apiSuccess(shipment, requestId, { created: true });
   } catch (error) { return apiFailure(error, requestId); }
 }

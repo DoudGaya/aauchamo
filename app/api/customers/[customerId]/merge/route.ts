@@ -74,7 +74,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ cus
       });
 
       return mergeRecord;
-    });
+    }, { isolationLevel: "Serializable", timeout: 30000 });
 
     return apiSuccess({ success: true, mergeId: merged.id, targetCustomerId: target.id }, requestId);
   } catch (error) {

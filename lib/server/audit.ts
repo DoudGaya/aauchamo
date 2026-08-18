@@ -48,7 +48,11 @@ function asJson(value: unknown): Prisma.InputJsonValue | undefined {
 }
 
 export async function writeAudit(tx: TransactionClient, input: AuditInput) {
-  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`audit:${input.companyId}`}))`;
+  try {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`audit:${input.companyId}`}))`;
+  } catch {
+    // Non-blocking fallback if advisory lock is unavailable
+  }
   const previous = await tx.auditEvent.findFirst({ where: { companyId: input.companyId }, orderBy: [{ occurredAt: "desc" }, { id: "desc" }], select: { eventHash: true } });
   const id = randomUUID(); const occurredAt = new Date();
   const before = redactAuditValue(input.before); const after = redactAuditValue(input.after); const metadata = redactAuditValue(input.metadata);
