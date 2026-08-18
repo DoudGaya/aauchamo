@@ -10763,7 +10763,7 @@ function UserProfileModalForm({
         </div>
         <div>
           <h3 style={{ margin: "0 0 4px", fontSize: "16px", fontWeight: "bold", color: "var(--text-primary)" }}>{identity.name}</h3>
-          <p style={{ margin: 0, fontSize: "12px", color: "var(--text-secondary, #4b5563)" }}>{identity.email} • Username: <strong>{identity.username}</strong></p>
+          <p style={{ margin: 0, fontSize: "12px", color: "var(--text-secondary, #4b5563)" }}>{identity.email} • ID: <strong>{identity.email.split("@")[0]}</strong></p>
           <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
             <span className="badge badge-info" style={{ background: "rgba(202, 11, 18, 0.08)", color: "#ca0b12", fontWeight: "bold" }}>{identity.role}</span>
             <span className="badge badge-success">{identity.companyWide ? "Company-Wide Scope" : "Station-Scoped"}</span>
