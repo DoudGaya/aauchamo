@@ -164,7 +164,7 @@ type AgentRecord = { id: string; agentNumber: string; name: string; contactName:
 type FinanceRecord = { id: string; entryNumber: string; direction: string; amount: string; description: string; status: string; createdAt: string; account: { name: string }; category: { name: string }; station: AllowedStation };
 type TicketRecord = { id: string; bookingNumber: string; pnr: string; passengerName: string; origin: string; destination: string; airline: string; travelDate: string; fare: string; sellingPrice: string; profit: string; status: string; station: AllowedStation };
 type POSBootstrap = { permissions: string[]; products: Array<{ id: string; code: string; name: string; sellingPrice: string; available: number; unit: { code: string } }>; customers: Array<{ id: string; customerNumber: string; displayName: string; primaryPhone: string }>; paymentMethods: Array<{ id: string; name: string; type: string; requiresReference: boolean; requiresTerminal: boolean }>; businessUnits: Array<{ id: string; code: string; name: string }>; agents: Array<{ id: string; name: string; agentNumber: string; wallet: { balance: string } | null }> };
-type InventorySetup = { categories: Array<{ id: string; code: string; name: string }>; units: Array<{ id: string; code: string; name: string }>; suppliers: Array<{ id: string; supplierNumber: string; name: string }> };
+type InventorySetup = { categories: Array<{ id: string; code: string; name: string; isActive?: boolean }>; units: Array<{ id: string; code: string; name: string; precision?: number; isActive?: boolean }>; suppliers: Array<{ id: string; supplierNumber: string; name: string }> };
 type FinanceSetup = { accounts: Array<{ id: string; code: string; name: string }>; categories: Array<{ id: string; code: string; name: string; type: string }>; paymentMethods: Array<{ id: string; name: string; type: string }> };
 type DashboardSummary = { sales: { grossRevenue: string; refunds: string; netRevenue: string; transactions: number; outstanding: string }; inventory: { quantity: string; balanceRows: number; outOfStock: number; value?: string }; entities: { customers: number; agents: number; staff: number; stations: number }; cargo: Record<string, number>; approvals: { pending: number }; receivables: { count: number; amount: string }; financialVisible?: boolean; businessUnits?: Array<{ id: string; code: string; name: string }> };
 type StationPerformanceRecord = { id: string; code: string; name: string; revenue: string; outstanding: string; transactions: number; _count: { staffHome: number; cargoShipments: number } };
@@ -10454,11 +10454,11 @@ function ProductUnitsCategoriesSettings({ onToast }: { onToast: (toast: Toast) =
           <button type="button" className="primary-button" onClick={addCategory} disabled={busy}>+ Add Category</button>
         </div>
         {setupApi.loading ? (
-          <EmptyState icon={RefreshCcw} title="Loading categories" compact />
+          <EmptyState icon={RefreshCcw} title="Loading categories" detail="Retrieving system categories." compact />
         ) : setupApi.data?.categories.length ? (
           <div className="document-rows">
             {setupApi.data.categories.map((cat) => (
-              <DocumentRow key={cat.id} icon={Boxes} name={cat.name} meta={`Code: ${cat.code}`} status={cat.isActive ? "Active" : "Disabled"} />
+              <DocumentRow key={cat.id} icon={Boxes} name={cat.name} meta={`Code: ${cat.code}`} status={cat.isActive ?? true ? "Active" : "Disabled"} />
             ))}
           </div>
         ) : (
@@ -10475,11 +10475,11 @@ function ProductUnitsCategoriesSettings({ onToast }: { onToast: (toast: Toast) =
           <button type="button" className="primary-button" onClick={addUnit} disabled={busy}>+ Add Unit of Measure</button>
         </div>
         {setupApi.loading ? (
-          <EmptyState icon={RefreshCcw} title="Loading units of measure" compact />
+          <EmptyState icon={RefreshCcw} title="Loading units of measure" detail="Retrieving system units of measure." compact />
         ) : setupApi.data?.units.length ? (
           <div className="document-rows">
             {setupApi.data.units.map((unit) => (
-              <DocumentRow key={unit.id} icon={PackageCheck} name={unit.name} meta={`Code: ${unit.code} · Precision: ${unit.precision} decimals`} status={unit.isActive ? "Active" : "Disabled"} />
+              <DocumentRow key={unit.id} icon={PackageCheck} name={unit.name} meta={`Code: ${unit.code} · Precision: ${unit.precision ?? 0} decimals`} status={unit.isActive ?? true ? "Active" : "Disabled"} />
             ))}
           </div>
         ) : (

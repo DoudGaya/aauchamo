@@ -103,7 +103,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ p
     await db.$transaction(async (tx) => {
       await tx.product.update({
         where: { id: productId },
-        data: { status: "INACTIVE", updatedById: access.userId },
+        data: { status: "DISABLED", updatedById: access.userId },
       });
 
       await writeAudit(tx, {
@@ -114,7 +114,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ p
         entityId: productId,
         requestId,
         before: current,
-        after: { status: "INACTIVE" },
+        after: { status: "DISABLED" },
       });
     }, { isolationLevel: "Serializable", timeout: 30_000, maxWait: 15_000 });
 
