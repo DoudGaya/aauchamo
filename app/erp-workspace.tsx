@@ -404,10 +404,6 @@ export default function ERPWorkspace({
   const handlePrimaryAction = async () => {
     if (activeModule === "pos") {
       window.dispatchEvent(new Event("erp-pos-new-sale"));
-      setToast({ title: "New Sale Started", detail: "Cart has been reset and prepared for new transaction." });
-      return;
-    }
-    if (action.modal === "sale") {
       setModal("sale");
       return;
     }
