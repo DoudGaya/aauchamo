@@ -17,8 +17,10 @@ import {
   ShieldCheck,
   ChevronLeft,
 } from "lucide-react";
+import { enqueueOfflineTransaction, useOfflineSync } from "@/lib/client/offline-sync";
 
 export default function MobileAttendancePage() {
+  const { isOnline, queueCount, isSyncing } = useOfflineSync();
   const [currentTime, setCurrentTime] = useState("");
   const [currentDate, setCurrentDate] = useState("");
   
@@ -111,6 +113,19 @@ export default function MobileAttendancePage() {
     }
 
     setBusy(true);
+    if (!isOnline) {
+      enqueueOfflineTransaction("/api/staff/attendance", "POST", {
+        action,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        notes: notes || undefined,
+      });
+      alert(`⚡ Offline Clock ${action.toUpperCase()} recorded on device! It will auto-sync automatically when network is restored.`);
+      setNotes("");
+      setBusy(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/staff/attendance", {
         method: "POST",
@@ -130,8 +145,15 @@ export default function MobileAttendancePage() {
 
       setNotes("");
       await fetchStatus();
-    } catch (err: any) {
-      alert(err.message || "Failed to record attendance.");
+    } catch (err: unknown) {
+      enqueueOfflineTransaction("/api/staff/attendance", "POST", {
+        action,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        notes: notes || undefined,
+      });
+      alert(`⚡ Offline Clock ${action.toUpperCase()} saved locally! It will auto-sync when network is restored.`);
+      setNotes("");
     } finally {
       setBusy(false);
     }

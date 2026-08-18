@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useOfflineSync } from "@/lib/client/offline-sync";
 
 import {
   Activity,
@@ -302,6 +303,7 @@ export default function ERPWorkspace({
   brand: { logoUrl: string | null; logoDarkUrl: string | null };
   allowedStations: AllowedStation[];
 }) {
+  const { isOnline, queueCount, isSyncing, triggerManualSync } = useOfflineSync();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -495,7 +497,29 @@ export default function ERPWorkspace({
 
         <footer className="app-footer">
           <span>AAU Chamo Operations Suite</span>
-          <span className="sync-state"><Wifi size={13} /> Live sync · Last checked just now</span>
+          <span className={classNames("sync-state", !isOnline && "offline", queueCount > 0 && "has-queue")}>
+            {isSyncing ? (
+              <span style={{ color: "#ca0b12", fontWeight: "bold", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                <RefreshCcw size={13} className="animate-spin" /> Syncing {queueCount} offline item{queueCount > 1 ? "s" : ""}...
+              </span>
+            ) : !isOnline ? (
+              <span style={{ color: "#ca0b12", fontWeight: "bold", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                <Zap size={13} /> Offline Mode ({queueCount} pending syncs)
+              </span>
+            ) : queueCount > 0 ? (
+              <button
+                type="button"
+                onClick={() => triggerManualSync()}
+                style={{ background: "none", border: "none", color: "#ca0b12", cursor: "pointer", fontWeight: "bold", padding: 0, display: "inline-flex", alignItems: "center", gap: "6px" }}
+              >
+                <RefreshCcw size={13} /> Sync {queueCount} pending offline item{queueCount > 1 ? "s" : ""} now
+              </button>
+            ) : (
+              <>
+                <Wifi size={13} /> Live sync · Connected 🟢
+              </>
+            )}
+          </span>
           <span>v1.0.0</span>
         </footer>
       </div>
