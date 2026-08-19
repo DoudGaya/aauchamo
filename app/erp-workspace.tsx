@@ -11147,7 +11147,7 @@ function QuickSaleForm({
       }
 
       window.dispatchEvent(new Event("erp-data-changed"));
-      onComplete("Sale Completed", `Order #${body.data?.saleNumber ?? "SAL"} recorded successfully.`);
+      onComplete("Sale Completed", `Order #${body.data?.saleNumber ?? "AUG"} recorded successfully.`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to record sale.");
     } finally {

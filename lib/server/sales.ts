@@ -67,7 +67,7 @@ export async function postSale(input: {
     if (!new Prisma.Decimal(payment.amount).isPositive()) throw new AppError("INVALID_PAYMENT_AMOUNT", "Payment amounts must be greater than zero.", 422);
   }
 
-  const saleNumber = await allocateSequence(tx, { companyId: access.companyId, stationId: payload.stationId, businessUnitId: payload.businessUnitId, documentType: "SALE", prefix: "SAL", includeDate: true, padding: 6 });
+  const saleNumber = await allocateSequence(tx, { companyId: access.companyId, stationId: payload.stationId, businessUnitId: payload.businessUnitId, documentType: "SALE", prefix: "AUG", includeDate: true, padding: 6 });
   const outstanding = total.minus(paidTotal).toDecimalPlaces(2);
   const sale = await tx.sale.create({ data: {
     companyId: access.companyId, stationId: payload.stationId, businessUnitId: payload.businessUnitId,
