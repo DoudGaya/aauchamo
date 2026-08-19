@@ -269,11 +269,11 @@ const classNames = (...values: Array<string | false | null | undefined>) =>
 const formatDate = (value: string | Date) =>
   new Intl.DateTimeFormat("en-NG", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value));
 
-const pageActions: Record<string, { label: string; modal?: ModalKind; icon: LucideIcon }> = {
-  overview: { label: "New sale", modal: "sale", icon: Plus },
+const pageActions: Record<string, { label: string; modal?: ModalKind; navigate?: string; icon: LucideIcon }> = {
+  overview: { label: "New sale", navigate: "pos", icon: Plus },
   operations: { label: "Refresh live data", icon: RefreshCcw },
   approvals: { label: "Review next", icon: CheckCircle2 },
-  pos: { label: "New sale", modal: "sale", icon: Plus },
+  pos: { label: "New sale", icon: Plus },
   sales: { label: "Export sales", icon: Download },
   customers: { label: "Add customer", modal: "customer", icon: UserPlus },
   agents: { label: "Add agent", modal: "agent", icon: Plus },
@@ -404,7 +404,10 @@ export default function ERPWorkspace({
   const handlePrimaryAction = async () => {
     if (activeModule === "pos") {
       window.dispatchEvent(new Event("erp-pos-new-sale"));
-      setModal("sale");
+      return;
+    }
+    if (action.navigate) {
+      navigate(action.navigate);
       return;
     }
     if (action.modal) {
@@ -1830,15 +1833,11 @@ function POSView({
   const [cart, setCart] = useState<Array<POSBootstrap["products"][number] & { quantity: number }>>([]);
   const [query, setQuery] = useState("");
   const [customerId, setCustomerId] = useState("");
+  const [customerSearch, setCustomerSearch] = useState("");
   const [businessUnitId, setBusinessUnitId] = useState("");
   const [agentId, setAgentId] = useState("");
   const [busy, setBusy] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
-
-  // POS Session state hooks
-  const sessionApi = useApiData<any>(station ? `/api/pos/sessions?active=true&stationId=${station.id}` : null);
-  const [showOpenSession, setShowOpenSession] = useState(false);
-  const [showCloseSession, setShowCloseSession] = useState(false);
 
   // Split payments state hooks
   const [paymentAllocations, setPaymentAllocations] = useState<Array<{ paymentMethodId: string; amount: string; reference: string; terminalId: string }>>([]);
@@ -1946,11 +1945,6 @@ function POSView({
 
   const checkout = async () => {
     if (!station || !selectedCustomerId || !selectedBusinessUnitId || !cart.length) return;
-    const activeSession = sessionApi.data;
-    if (!activeSession) {
-      setCheckoutError("No active POS session. Open the drawer session first.");
-      return;
-    }
 
     // Validate split payment allocations
     const activeAllocations = paymentAllocations.length === 1
@@ -1990,7 +1984,6 @@ function POSView({
           stationId: station.id,
           businessUnitId: selectedBusinessUnitId,
           customerId: selectedCustomerId,
-          posSessionId: activeSession.id,
           agentId: activeAllocations.some((p) => data?.paymentMethods.find((m) => m.id === p.paymentMethodId)?.type === "WALLET") ? agentId || undefined : undefined,
           lines: cart.map((item) => ({
             productId: item.id,
@@ -2013,7 +2006,6 @@ function POSView({
       setDiscounts({});
       setPaymentAllocations([]);
       reload();
-      sessionApi.reload();
       window.dispatchEvent(new Event("erp-data-changed"));
       onToast({
         title: "Sale completed",
@@ -2030,7 +2022,6 @@ function POSView({
 
   if (!station) return <EmptyState icon={Store} title="No operating station" detail="Assign an operating station to this account before using POS." />;
 
-  const activeSession = sessionApi.data;
   const products = (data?.products ?? []).filter(
     (product) => !query.trim() || `${product.code} ${product.name}`.toLowerCase().includes(query.toLowerCase())
   );
@@ -2038,27 +2029,6 @@ function POSView({
   return (
     <div className="pos-layout">
       <section className="pos-catalogue panel">
-        {/* POS Session Header Bar */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: activeSession ? "#f0fdf4" : "#fef2f2", borderBottom: "1px solid var(--border-color)", margin: "-16px -16px 16px -16px", borderRadius: "6px 6px 0 0" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: activeSession ? "#22c55e" : "#ef4444" }}></span>
-            <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-              {activeSession ? `Drawer Session Open (Float: ${formatNaira(Number(activeSession.openingCash))})` : "POS Drawer Closed"}
-            </span>
-          </div>
-          <div>
-            {activeSession ? (
-              <button type="button" className="secondary-button" onClick={() => setShowCloseSession(true)} style={{ height: "28px", padding: "0 12px", fontSize: "12px", background: "#fecaca", color: "#991b1b" }}>
-                Close Drawer
-              </button>
-            ) : (
-              <button type="button" className="primary-button" onClick={() => setShowOpenSession(true)} style={{ height: "28px", padding: "0 12px", fontSize: "12px" }}>
-                Open Drawer
-              </button>
-            )}
-          </div>
-        </div>
-
         <div className="pos-search-row">
           <label className="large-search">
             <Search size={18} />
@@ -2084,8 +2054,8 @@ function POSView({
             {products.map((product) => (
               <button
                 key={product.id}
-                className={classNames("product-tile", (product.available <= 0 || !activeSession) && "disabled")}
-                disabled={product.available <= 0 || !activeSession}
+                className={classNames("product-tile", product.available <= 0 && "disabled")}
+                disabled={product.available <= 0}
                 onClick={() =>
                   setCart((current) => {
                     const existing = current.find((item) => item.id === product.id);
@@ -2110,7 +2080,7 @@ function POSView({
         )}
       </section>
 
-      <aside className="pos-cart panel">
+      <aside className="pos-cart panel" style={{ overflowY: "auto" }}>
         <div className="cart-header">
           <div>
             <span>Current sale</span>
@@ -2121,13 +2091,27 @@ function POSView({
 
         <div className="settings-form">
           <Field label="Customer">
-            <select value={selectedCustomerId} onChange={(event) => setCustomerId(event.target.value)}>
-              {data?.customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.displayName} · {customer.primaryPhone}
-                </option>
-              ))}
-            </select>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <input 
+                type="search" 
+                placeholder="Search customers..." 
+                className="field-input" 
+                value={customerSearch} 
+                onChange={(e) => setCustomerSearch(e.target.value)} 
+                style={{ fontSize: "13px" }}
+              />
+              <select 
+                className="field-input" 
+                value={selectedCustomerId} 
+                onChange={(event) => setCustomerId(event.target.value)}
+              >
+                {data?.customers.filter(c => !customerSearch || c.displayName.toLowerCase().includes(customerSearch.toLowerCase()) || c.primaryPhone.includes(customerSearch)).map((customer) => (
+                  <option key={customer.id} value={customer.id}>
+                    {customer.displayName} · {customer.primaryPhone}
+                  </option>
+                ))}
+              </select>
+            </div>
           </Field>
           <button className="customer-selector" onClick={() => onModal("customer")}>
             <span className="customer-icon"><UserPlus size={17} /></span>
@@ -2339,8 +2323,7 @@ function POSView({
               busy ||
               !cart.length ||
               !selectedCustomerId ||
-              !selectedBusinessUnitId ||
-              !activeSession
+              !selectedBusinessUnitId
             }
             onClick={checkout}
           >
@@ -2355,27 +2338,7 @@ function POSView({
       </aside>
 
       {/* MODALS */}
-      {showOpenSession && (
-        <POSSessionOpenModal
-          stationId={station.id}
-          onClose={() => setShowOpenSession(false)}
-          onComplete={() => {
-            setShowOpenSession(false);
-            sessionApi.reload();
-          }}
-        />
-      )}
 
-      {showCloseSession && (
-        <POSSessionCloseModal
-          session={activeSession}
-          onClose={() => setShowCloseSession(false)}
-          onComplete={() => {
-            setShowCloseSession(false);
-            sessionApi.reload();
-          }}
-        />
-      )}
 
       {completedSaleId && (
         <POSReceiptModal

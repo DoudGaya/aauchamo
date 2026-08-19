@@ -38,16 +38,17 @@ export async function GET(request: Request) {
     // Group refunds by day
     const refundTrends = await db.$queryRaw`
       SELECT 
-        DATE_TRUNC('day', "postedAt") as date,
-        COALESCE(SUM(amount), 0) as refunds
-      FROM refunds
-      WHERE "companyId" = ${access.companyId}
-        AND status = 'POSTED'
-        AND "postedAt" >= ${filters.start}
-        AND "postedAt" <= ${filters.end}
-        ${stationCondition}
-        ${businessUnitCondition}
-      GROUP BY DATE_TRUNC('day', "postedAt")
+        DATE_TRUNC('day', r."postedAt") as date,
+        COALESCE(SUM(r.amount), 0) as refunds
+      FROM refunds r
+      ${filters.businessUnitIds ? Prisma.sql`JOIN sales s ON r."saleId" = s.id` : Prisma.empty}
+      WHERE r."companyId" = ${access.companyId}
+        AND r.status = 'POSTED'
+        AND r."postedAt" >= ${filters.start}
+        AND r."postedAt" <= ${filters.end}
+        ${filters.stationIds && filters.stationIds.length > 0 ? Prisma.sql`AND r."stationId" IN (${Prisma.join(filters.stationIds)})` : Prisma.empty}
+        ${filters.businessUnitIds ? Prisma.sql`AND s."businessUnitId" IN (${Prisma.join(filters.businessUnitIds)})` : Prisma.empty}
+      GROUP BY DATE_TRUNC('day', r."postedAt")
       ORDER BY date ASC
     `;
 

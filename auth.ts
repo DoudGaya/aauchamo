@@ -196,6 +196,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => {
         }
         return session;
       },
+      async redirect({ url, baseUrl }) {
+        if (url.startsWith("/")) return url;
+        try {
+          if (new URL(url).origin === new URL(baseUrl).origin) return url;
+        } catch {}
+        return baseUrl;
+      },
     },
   };
 });
