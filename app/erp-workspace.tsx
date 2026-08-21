@@ -512,6 +512,18 @@ export default function ERPWorkspace({
           onModal={(k) => setModal(k)}
         />
 
+        {!isOnline && (
+          <div style={{ background: "#ca0b12", color: "white", padding: "8px 16px", fontSize: "13px", fontWeight: 500, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "6px" }}><Activity size={15} /> You are offline. Changes are saved locally.</span>
+            {queueCount > 0 && (
+              <span style={{ display: "flex", alignItems: "center", gap: "8px", opacity: 0.9 }}>
+                <span>{queueCount} pending sync{queueCount > 1 ? "s" : ""}</span>
+                {isSyncing && <RefreshCcw size={12} className="spin" />}
+              </span>
+            )}
+          </div>
+        )}
+
         <main className="page-shell">
           <PageHeader
             eyebrow={meta.eyebrow}

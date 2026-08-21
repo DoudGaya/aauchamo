@@ -9,6 +9,14 @@ export const metadata: Metadata = {
   applicationName: "AAU Chamo Operations Suite",
   manifest: "/manifest.webmanifest",
   robots: { index: false, follow: false },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "AAU Chamo",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { get, set } from "idb-keyval";
 
 export type OfflineTransaction = {
   id: string;
@@ -12,30 +13,30 @@ export type OfflineTransaction = {
   retries: number;
 };
 
-const QUEUE_STORAGE_KEY = "aau_chamo_offline_outbox_v1";
+const QUEUE_STORAGE_KEY = "aau_chamo_offline_outbox_v2";
 
-export function getOfflineQueue(): OfflineTransaction[] {
+export async function getOfflineQueue(): Promise<OfflineTransaction[]> {
   if (typeof window === "undefined") return [];
   try {
-    const data = localStorage.getItem(QUEUE_STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    const data = await get<OfflineTransaction[]>(QUEUE_STORAGE_KEY);
+    return data || [];
   } catch {
     return [];
   }
 }
 
-export function saveOfflineQueue(queue: OfflineTransaction[]): void {
+export async function saveOfflineQueue(queue: OfflineTransaction[]): Promise<void> {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(queue));
+    await set(QUEUE_STORAGE_KEY, queue);
     window.dispatchEvent(new Event("aau_offline_queue_updated"));
   } catch {
     // Ignore storage quota errors
   }
 }
 
-export function enqueueOfflineTransaction(url: string, method: string, body: any, headers?: Record<string, string>): OfflineTransaction {
-  const queue = getOfflineQueue();
+export async function enqueueOfflineTransaction(url: string, method: string, body: any, headers?: Record<string, string>): Promise<OfflineTransaction> {
+  const queue = await getOfflineQueue();
   const tx: OfflineTransaction = {
     id: `tx_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
     url,
@@ -46,12 +47,12 @@ export function enqueueOfflineTransaction(url: string, method: string, body: any
     retries: 0,
   };
   queue.push(tx);
-  saveOfflineQueue(queue);
+  await saveOfflineQueue(queue);
   return tx;
 }
 
 export async function processOfflineQueue(): Promise<{ succeeded: number; failed: number }> {
-  const queue = getOfflineQueue();
+  const queue = await getOfflineQueue();
   if (!queue.length) return { succeeded: 0, failed: 0 };
 
   let succeeded = 0;
@@ -82,7 +83,7 @@ export async function processOfflineQueue(): Promise<{ succeeded: number; failed
     }
   }
 
-  saveOfflineQueue(remainingQueue);
+  await saveOfflineQueue(remainingQueue);
   return { succeeded, failed };
 }
 
@@ -91,10 +92,11 @@ export function useOfflineSync() {
   const [queueCount, setQueueCount] = useState<number>(0);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
-  const updateState = () => {
+  const updateState = async () => {
     if (typeof window !== "undefined") {
       setIsOnline(navigator.onLine);
-      setQueueCount(getOfflineQueue().length);
+      const queue = await getOfflineQueue();
+      setQueueCount(queue.length);
     }
   };
 
@@ -106,16 +108,16 @@ export function useOfflineSync() {
       setIsSyncing(true);
       await processOfflineQueue();
       setIsSyncing(false);
-      updateState();
+      await updateState();
     };
 
-    const handleOffline = () => {
+    const handleOffline = async () => {
       setIsOnline(false);
-      updateState();
+      await updateState();
     };
 
-    const handleQueueUpdate = () => {
-      updateState();
+    const handleQueueUpdate = async () => {
+      await updateState();
     };
 
     window.addEventListener("online", handleOnline);
@@ -133,7 +135,7 @@ export function useOfflineSync() {
     setIsSyncing(true);
     const result = await processOfflineQueue();
     setIsSyncing(false);
-    updateState();
+    await updateState();
     return result;
   };
 
@@ -143,4 +145,28 @@ export function useOfflineSync() {
     isSyncing,
     triggerManualSync,
   };
+}
+
+const CACHE_STORAGE_KEY = "aau_chamo_offline_cache_v2";
+
+export async function fetchWithOfflineCache<T>(url: string, defaultData: T): Promise<T> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Network response was not ok");
+    const data = await response.json();
+    
+    // Save to cache
+    const cache = (await get<Record<string, any>>(CACHE_STORAGE_KEY)) || {};
+    cache[url] = data;
+    await set(CACHE_STORAGE_KEY, cache);
+    
+    return data;
+  } catch (error) {
+    // If offline or fetch fails, try to return from cache
+    const cache = await get<Record<string, any>>(CACHE_STORAGE_KEY);
+    if (cache && cache[url]) {
+      return cache[url] as T;
+    }
+    return defaultData;
+  }
 }
