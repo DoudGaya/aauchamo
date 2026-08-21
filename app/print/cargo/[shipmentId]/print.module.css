@@ -71,4 +71,18 @@
   width: 100%;
 }
 
+.a5 { max-width: 580px; padding: 16px; }
+.a5 header { padding-bottom: 8px; border-bottom-width: 2px; }
+.a5 header strong { font-size: 16px; }
+.a5 header b { font-size: 20px; }
+.a5 .route { padding: 12px 0; }
+.a5 .route strong { font-size: 22px; }
+.a5 .route i { font-size: 20px; }
+.a5 .parties { padding: 10px 0; }
+.a5 .parties strong { font-size: 14px; }
+.a5 .metrics div { padding: 6px; min-height: 50px; }
+.a5 .tagDestCode { font-size: 22px; }
+.a5 .tagsContainer { margin-bottom: 12px; padding-bottom: 12px; }
+.a5 .commodity { padding: 8px; margin-top: 8px; }
+
 @media print { .sheet { margin: 0; max-width: none; border: 0; padding: 0 !important; } .thermal { width: 100mm; padding: 4mm !important; } .tagsContainer { border-bottom-style: dotted; } }

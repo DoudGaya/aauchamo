@@ -10553,12 +10553,15 @@ function ProductUnitsCategoriesSettings({ onToast }: { onToast: (toast: Toast) =
   );
 }
 
+
+
 function SettingsView({ onToast, onModal }: { onToast: (toast: Toast) => void; onModal?: (kind: ModalKind) => void }) {
   const [section, setSection] = useState("Company profile");
   const [buModal, setBuModal] = useState<boolean | { id: string; code: string; name: string; description?: string | null; version: number }>(false);
   const [settingModal, setSettingModal] = useState<boolean | any>(false);
   const [selectedStation, setSelectedStation] = useState<any>(null);
   const [pmModal, setPmModal] = useState<any>(null);
+  const [locationModal, setLocationModal] = useState<boolean | any>(false);
 
   const api = useApiData<SettingsRecord>("/api/settings");
   const stationsApi = useApiData<StationRecord[]>(section === "Stations" ? "/api/stations" : null);
@@ -10709,6 +10712,13 @@ function SettingsView({ onToast, onModal }: { onToast: (toast: Toast) => void; o
           pm={pmModal}
           onClose={() => setPmModal(null)}
           onSuccess={() => { api.reload(); onToast({ title: "Payment method updated", detail: "Payment method rules have been applied." }); }}
+        />
+      )}
+      {locationModal && (
+        <CargoLocationModal
+          location={locationModal === true ? undefined : locationModal}
+          onClose={() => setLocationModal(false)}
+          onSuccess={() => { setLocationModal(false); api.reload(); onToast({ title: "Location saved", detail: "Cargo location has been updated successfully." }); }}
         />
       )}
 
@@ -10864,7 +10874,7 @@ function SettingsView({ onToast, onModal }: { onToast: (toast: Toast) => void; o
               ) : section === "Cargo locations" ? (
                 <>
                   <div className="settings-actions" style={{ marginBottom: "1rem" }}>
-                    <button type="button" className="primary-button" disabled>Add location (Server managed)</button>
+                    <button type="button" className="primary-button" onClick={() => setLocationModal(true)}>Add location</button>
                   </div>
                   {api.data.cargoLocations && api.data.cargoLocations.length > 0 ? (
                     api.data.cargoLocations.map((item) => (
@@ -10874,6 +10884,7 @@ function SettingsView({ onToast, onModal }: { onToast: (toast: Toast) => void; o
                         name={item.name} 
                         meta={item.code} 
                         status={item.isActive ? "Active" : "Disabled"} 
+                        onClick={() => setLocationModal(item)}
                         action={
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }} onClick={(e) => e.stopPropagation()}>
                             <div style={{ width: "20px", height: "20px", backgroundColor: item.color, borderRadius: "50%", border: "1px solid var(--line)" }} title={item.color} />
@@ -10883,7 +10894,7 @@ function SettingsView({ onToast, onModal }: { onToast: (toast: Toast) => void; o
                       />
                     ))
                   ) : (
-                    <EmptyState icon={Plane} title="No locations configured" detail="Run the seed script to initialize cargo locations." compact />
+                    <EmptyState icon={Plane} title="No locations configured" detail="Add your first cargo location." compact />
                   )}
                 </>
               ) : section === "Product units & categories" ? (
@@ -11487,8 +11498,8 @@ function CargoForm({ onComplete, onClose, allowedStations }: { onComplete: (titl
   const { data: customerData, loading, error: customerError } = useApiData<CustomerRecord[]>("/api/customers?pageSize=100");
   const { data: settings } = useApiData<SettingsRecord>("/api/settings");
   const [busy, setBusy] = useState(false); const [error, setError] = useState<string | null>(null);
-  const submit = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setBusy(true); setError(null); const form = new FormData(event.currentTarget); const optional = (name: string) => String(form.get(name) ?? "").trim() || undefined; try { const response = await fetch("/api/cargo", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ stationId: String(form.get("stationId")), customerId: String(form.get("customerId")), senderName: String(form.get("senderName")), senderPhone: String(form.get("senderPhone")), receiverName: String(form.get("receiverName")), receiverPhone: String(form.get("receiverPhone")), receiverAddress: optional("receiverAddress"), origin: String(form.get("origin")), destination: String(form.get("destination")), weightKg: String(form.get("weightKg")), pieces: Number(form.get("pieces")), commodity: String(form.get("commodity")), airline: optional("airline"), flightNumber: optional("flightNumber"), handlingNotes: optional("handlingNotes"), declaredValue: optional("declaredValue"), isFragile: form.get("isFragile") === "on" }) }); const body = await response.json() as ApiEnvelope<{ id: string; awbNumber: string; labelUrl: string }>; if (!response.ok || !body.ok || !body.data) throw new Error(body.error?.message ?? "Cargo record could not be created."); window.open(body.data.labelUrl, "_blank", "noopener,noreferrer"); onComplete("Cargo record created", `${body.data.awbNumber} was posted and its traceable label opened for printing.`); } catch (reason) { setError(reason instanceof Error ? reason.message : "Cargo record could not be created."); } finally { setBusy(false); } };
-  return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="Station"><select name="stationId" required defaultValue={allowedStations[0]?.id}>{allowedStations.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select></Field><Field label="Customer"><select name="customerId" required defaultValue=""><option value="" disabled>Select customer</option>{customerData?.map((item) => <option key={item.id} value={item.id}>{item.displayName} · {item.primaryPhone}</option>)}</select></Field><Field label="Sender name"><input name="senderName" required /></Field><Field label="Sender phone"><input name="senderPhone" required autoComplete="tel" /></Field><Field label="Receiver"><input name="receiverName" required /></Field><Field label="Receiver phone"><input name="receiverPhone" required autoComplete="tel" /></Field><Field label="Receiver address" full><input name="receiverAddress" /></Field><Field label="Origin"><select name="origin" required defaultValue=""><option value="" disabled>Select origin</option>{settings?.cargoLocations?.map(l => <option key={l.id} value={l.code}>{l.name} ({l.code})</option>)}</select></Field><Field label="Destination"><select name="destination" required defaultValue=""><option value="" disabled>Select destination</option>{settings?.cargoLocations?.map(l => <option key={l.id} value={l.code}>{l.name} ({l.code})</option>)}</select></Field><Field label="Weight (kg)"><input name="weightKg" type="number" step="0.001" min="0.001" required /></Field><Field label="Pieces"><input name="pieces" type="number" min="1" defaultValue="1" required /></Field><Field label="Commodity" full><input name="commodity" required placeholder="Describe the cargo contents" /></Field><Field label="Declared value"><div className="money-input"><span>₦</span><input name="declaredValue" type="number" step="0.01" min="0" /></div></Field><Field label="Airline"><input name="airline" /></Field><Field label="Flight number"><input name="flightNumber" placeholder="e.g. VM-1642" /></Field><Field label="Handling notes"><textarea name="handlingNotes" placeholder="Orientation, special handling..." /></Field><Field label="Fragile"><div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}><input type="checkbox" name="isFragile" /><span>Mark as fragile</span></div></Field></div>{(error || customerError) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? customerError}</span></div>}</div><ModalFooter onClose={onClose} submitLabel={busy ? "Creating…" : loading ? "Loading customers…" : "Create & print label"} icon={Printer} disabled={busy || loading || !customerData?.length || !allowedStations.length} /></form>;
+  const submit = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setBusy(true); setError(null); const form = new FormData(event.currentTarget); const optional = (name: string) => String(form.get(name) ?? "").trim() || undefined; try { const response = await fetch("/api/cargo", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ stationId: String(form.get("stationId")), customerId: String(form.get("customerId")), senderName: String(form.get("senderName")), senderPhone: String(form.get("senderPhone")), receiverName: String(form.get("receiverName")), receiverPhone: String(form.get("receiverPhone")), receiverAddress: optional("receiverAddress"), origin: String(form.get("origin")), destination: String(form.get("destination")), weightKg: String(form.get("weightKg")), pieces: Number(form.get("pieces")), commodity: String(form.get("commodity")), airline: optional("airline"), flightNumber: optional("flightNumber"), handlingNotes: optional("handlingNotes"), declaredValue: optional("declaredValue"), isFragile: form.get("isFragile") === "on" }) }); const body = await response.json() as ApiEnvelope<{ id: string; awbNumber: string; labelUrl: string }>; if (!response.ok || !body.ok || !body.data) throw new Error(body.error?.message ?? "Cargo record could not be created."); window.dispatchEvent(new Event("erp-data-changed")); window.open(body.data.labelUrl, "_blank", "noopener,noreferrer"); onComplete("Cargo record created", `${body.data.awbNumber} was posted and its traceable label opened for printing.`); } catch (reason) { setError(reason instanceof Error ? reason.message : "Cargo record could not be created."); } finally { setBusy(false); } };
+  return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="Station"><select name="stationId" required defaultValue={allowedStations[0]?.id}>{allowedStations.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select></Field><Field label="Customer"><select name="customerId" required defaultValue=""><option value="" disabled>Select customer</option>{customerData?.map((item) => <option key={item.id} value={item.id}>{item.displayName} · {item.primaryPhone}</option>)}</select></Field><Field label="Sender name"><input name="senderName" required /></Field><Field label="Sender phone"><input name="senderPhone" required autoComplete="tel" pattern="[0-9]+" title="Only digits are allowed" /></Field><Field label="Receiver"><input name="receiverName" required /></Field><Field label="Receiver phone"><input name="receiverPhone" required autoComplete="tel" pattern="[0-9]+" title="Only digits are allowed" /></Field><Field label="Receiver address" full><input name="receiverAddress" /></Field><Field label="Origin"><select name="origin" required defaultValue=""><option value="" disabled>Select origin</option>{settings?.cargoLocations?.map(l => <option key={l.id} value={l.code}>{l.name} ({l.code})</option>)}</select></Field><Field label="Destination"><select name="destination" required defaultValue=""><option value="" disabled>Select destination</option>{settings?.cargoLocations?.map(l => <option key={l.id} value={l.code}>{l.name} ({l.code})</option>)}</select></Field><Field label="Weight (kg)"><input name="weightKg" type="number" step="0.001" min="0.001" required /></Field><Field label="Pieces"><input name="pieces" type="number" min="1" defaultValue="1" required /></Field><Field label="Commodity" full><input name="commodity" required placeholder="Describe the cargo contents" /></Field><Field label="Declared value"><div className="money-input"><span>₦</span><input name="declaredValue" type="number" step="0.01" min="0" /></div></Field><Field label="Airline"><input name="airline" /></Field><Field label="Flight number"><input name="flightNumber" placeholder="e.g. VM-1642" /></Field><Field label="Handling notes"><textarea name="handlingNotes" placeholder="Orientation, special handling..." /></Field><Field label="Fragile"><div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}><input type="checkbox" name="isFragile" /><span>Mark as fragile</span></div></Field></div>{(error || customerError) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? customerError}</span></div>}</div><ModalFooter onClose={onClose} submitLabel={busy ? "Creating…" : loading ? "Loading customers…" : "Create & print label"} icon={Printer} disabled={busy || loading || !customerData?.length || !allowedStations.length} /></form>;
 }
 
 function DepositForm({ onComplete, onClose, allowedStations, initialAgentId }: { onComplete: (title: string, detail: string) => void; onClose: () => void; allowedStations: AllowedStation[]; initialAgentId?: string }) {
