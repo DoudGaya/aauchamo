@@ -65,6 +65,7 @@ export type CargoShipmentMinAggregateOutputType = {
   flightDate: Date | null
   handlingNotes: string | null
   declaredValue: runtime.Decimal | null
+  isFragile: boolean | null
   status: $Enums.CargoStatus | null
   labelVersion: number | null
   reprintCount: number | null
@@ -97,6 +98,7 @@ export type CargoShipmentMaxAggregateOutputType = {
   flightDate: Date | null
   handlingNotes: string | null
   declaredValue: runtime.Decimal | null
+  isFragile: boolean | null
   status: $Enums.CargoStatus | null
   labelVersion: number | null
   reprintCount: number | null
@@ -129,6 +131,7 @@ export type CargoShipmentCountAggregateOutputType = {
   flightDate: number
   handlingNotes: number
   declaredValue: number
+  isFragile: number
   status: number
   labelVersion: number
   reprintCount: number
@@ -181,6 +184,7 @@ export type CargoShipmentMinAggregateInputType = {
   flightDate?: true
   handlingNotes?: true
   declaredValue?: true
+  isFragile?: true
   status?: true
   labelVersion?: true
   reprintCount?: true
@@ -213,6 +217,7 @@ export type CargoShipmentMaxAggregateInputType = {
   flightDate?: true
   handlingNotes?: true
   declaredValue?: true
+  isFragile?: true
   status?: true
   labelVersion?: true
   reprintCount?: true
@@ -245,6 +250,7 @@ export type CargoShipmentCountAggregateInputType = {
   flightDate?: true
   handlingNotes?: true
   declaredValue?: true
+  isFragile?: true
   status?: true
   labelVersion?: true
   reprintCount?: true
@@ -364,6 +370,7 @@ export type CargoShipmentGroupByOutputType = {
   flightDate: Date | null
   handlingNotes: string | null
   declaredValue: runtime.Decimal | null
+  isFragile: boolean
   status: $Enums.CargoStatus
   labelVersion: number
   reprintCount: number
@@ -419,6 +426,7 @@ export type CargoShipmentWhereInput = {
   flightDate?: Prisma.DateTimeNullableFilter<"CargoShipment"> | Date | string | null
   handlingNotes?: Prisma.StringNullableFilter<"CargoShipment"> | string | null
   declaredValue?: Prisma.DecimalNullableFilter<"CargoShipment"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: Prisma.BoolFilter<"CargoShipment"> | boolean
   status?: Prisma.EnumCargoStatusFilter<"CargoShipment"> | $Enums.CargoStatus
   labelVersion?: Prisma.IntFilter<"CargoShipment"> | number
   reprintCount?: Prisma.IntFilter<"CargoShipment"> | number
@@ -455,6 +463,7 @@ export type CargoShipmentOrderByWithRelationInput = {
   flightDate?: Prisma.SortOrderInput | Prisma.SortOrder
   handlingNotes?: Prisma.SortOrderInput | Prisma.SortOrder
   declaredValue?: Prisma.SortOrderInput | Prisma.SortOrder
+  isFragile?: Prisma.SortOrder
   status?: Prisma.SortOrder
   labelVersion?: Prisma.SortOrder
   reprintCount?: Prisma.SortOrder
@@ -495,6 +504,7 @@ export type CargoShipmentWhereUniqueInput = Prisma.AtLeast<{
   flightDate?: Prisma.DateTimeNullableFilter<"CargoShipment"> | Date | string | null
   handlingNotes?: Prisma.StringNullableFilter<"CargoShipment"> | string | null
   declaredValue?: Prisma.DecimalNullableFilter<"CargoShipment"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: Prisma.BoolFilter<"CargoShipment"> | boolean
   status?: Prisma.EnumCargoStatusFilter<"CargoShipment"> | $Enums.CargoStatus
   labelVersion?: Prisma.IntFilter<"CargoShipment"> | number
   reprintCount?: Prisma.IntFilter<"CargoShipment"> | number
@@ -531,6 +541,7 @@ export type CargoShipmentOrderByWithAggregationInput = {
   flightDate?: Prisma.SortOrderInput | Prisma.SortOrder
   handlingNotes?: Prisma.SortOrderInput | Prisma.SortOrder
   declaredValue?: Prisma.SortOrderInput | Prisma.SortOrder
+  isFragile?: Prisma.SortOrder
   status?: Prisma.SortOrder
   labelVersion?: Prisma.SortOrder
   reprintCount?: Prisma.SortOrder
@@ -571,6 +582,7 @@ export type CargoShipmentScalarWhereWithAggregatesInput = {
   flightDate?: Prisma.DateTimeNullableWithAggregatesFilter<"CargoShipment"> | Date | string | null
   handlingNotes?: Prisma.StringNullableWithAggregatesFilter<"CargoShipment"> | string | null
   declaredValue?: Prisma.DecimalNullableWithAggregatesFilter<"CargoShipment"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: Prisma.BoolWithAggregatesFilter<"CargoShipment"> | boolean
   status?: Prisma.EnumCargoStatusWithAggregatesFilter<"CargoShipment"> | $Enums.CargoStatus
   labelVersion?: Prisma.IntWithAggregatesFilter<"CargoShipment"> | number
   reprintCount?: Prisma.IntWithAggregatesFilter<"CargoShipment"> | number
@@ -600,6 +612,7 @@ export type CargoShipmentCreateInput = {
   flightDate?: Date | string | null
   handlingNotes?: string | null
   declaredValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: boolean
   status?: $Enums.CargoStatus
   labelVersion?: number
   reprintCount?: number
@@ -636,6 +649,7 @@ export type CargoShipmentUncheckedCreateInput = {
   flightDate?: Date | string | null
   handlingNotes?: string | null
   declaredValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: boolean
   status?: $Enums.CargoStatus
   labelVersion?: number
   reprintCount?: number
@@ -666,6 +680,7 @@ export type CargoShipmentUpdateInput = {
   flightDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   handlingNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   declaredValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumCargoStatusFieldUpdateOperationsInput | $Enums.CargoStatus
   labelVersion?: Prisma.IntFieldUpdateOperationsInput | number
   reprintCount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -702,6 +717,7 @@ export type CargoShipmentUncheckedUpdateInput = {
   flightDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   handlingNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   declaredValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumCargoStatusFieldUpdateOperationsInput | $Enums.CargoStatus
   labelVersion?: Prisma.IntFieldUpdateOperationsInput | number
   reprintCount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -735,6 +751,7 @@ export type CargoShipmentCreateManyInput = {
   flightDate?: Date | string | null
   handlingNotes?: string | null
   declaredValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: boolean
   status?: $Enums.CargoStatus
   labelVersion?: number
   reprintCount?: number
@@ -764,6 +781,7 @@ export type CargoShipmentUpdateManyMutationInput = {
   flightDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   handlingNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   declaredValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumCargoStatusFieldUpdateOperationsInput | $Enums.CargoStatus
   labelVersion?: Prisma.IntFieldUpdateOperationsInput | number
   reprintCount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -796,6 +814,7 @@ export type CargoShipmentUncheckedUpdateManyInput = {
   flightDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   handlingNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   declaredValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumCargoStatusFieldUpdateOperationsInput | $Enums.CargoStatus
   labelVersion?: Prisma.IntFieldUpdateOperationsInput | number
   reprintCount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -843,6 +862,7 @@ export type CargoShipmentCountOrderByAggregateInput = {
   flightDate?: Prisma.SortOrder
   handlingNotes?: Prisma.SortOrder
   declaredValue?: Prisma.SortOrder
+  isFragile?: Prisma.SortOrder
   status?: Prisma.SortOrder
   labelVersion?: Prisma.SortOrder
   reprintCount?: Prisma.SortOrder
@@ -884,6 +904,7 @@ export type CargoShipmentMaxOrderByAggregateInput = {
   flightDate?: Prisma.SortOrder
   handlingNotes?: Prisma.SortOrder
   declaredValue?: Prisma.SortOrder
+  isFragile?: Prisma.SortOrder
   status?: Prisma.SortOrder
   labelVersion?: Prisma.SortOrder
   reprintCount?: Prisma.SortOrder
@@ -916,6 +937,7 @@ export type CargoShipmentMinOrderByAggregateInput = {
   flightDate?: Prisma.SortOrder
   handlingNotes?: Prisma.SortOrder
   declaredValue?: Prisma.SortOrder
+  isFragile?: Prisma.SortOrder
   status?: Prisma.SortOrder
   labelVersion?: Prisma.SortOrder
   reprintCount?: Prisma.SortOrder
@@ -1103,6 +1125,7 @@ export type CargoShipmentCreateWithoutCompanyInput = {
   flightDate?: Date | string | null
   handlingNotes?: string | null
   declaredValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: boolean
   status?: $Enums.CargoStatus
   labelVersion?: number
   reprintCount?: number
@@ -1137,6 +1160,7 @@ export type CargoShipmentUncheckedCreateWithoutCompanyInput = {
   flightDate?: Date | string | null
   handlingNotes?: string | null
   declaredValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: boolean
   status?: $Enums.CargoStatus
   labelVersion?: number
   reprintCount?: number
@@ -1199,6 +1223,7 @@ export type CargoShipmentScalarWhereInput = {
   flightDate?: Prisma.DateTimeNullableFilter<"CargoShipment"> | Date | string | null
   handlingNotes?: Prisma.StringNullableFilter<"CargoShipment"> | string | null
   declaredValue?: Prisma.DecimalNullableFilter<"CargoShipment"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: Prisma.BoolFilter<"CargoShipment"> | boolean
   status?: Prisma.EnumCargoStatusFilter<"CargoShipment"> | $Enums.CargoStatus
   labelVersion?: Prisma.IntFilter<"CargoShipment"> | number
   reprintCount?: Prisma.IntFilter<"CargoShipment"> | number
@@ -1228,6 +1253,7 @@ export type CargoShipmentCreateWithoutStationInput = {
   flightDate?: Date | string | null
   handlingNotes?: string | null
   declaredValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: boolean
   status?: $Enums.CargoStatus
   labelVersion?: number
   reprintCount?: number
@@ -1262,6 +1288,7 @@ export type CargoShipmentUncheckedCreateWithoutStationInput = {
   flightDate?: Date | string | null
   handlingNotes?: string | null
   declaredValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: boolean
   status?: $Enums.CargoStatus
   labelVersion?: number
   reprintCount?: number
@@ -1318,6 +1345,7 @@ export type CargoShipmentCreateWithoutCustomerInput = {
   flightDate?: Date | string | null
   handlingNotes?: string | null
   declaredValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: boolean
   status?: $Enums.CargoStatus
   labelVersion?: number
   reprintCount?: number
@@ -1352,6 +1380,7 @@ export type CargoShipmentUncheckedCreateWithoutCustomerInput = {
   flightDate?: Date | string | null
   handlingNotes?: string | null
   declaredValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: boolean
   status?: $Enums.CargoStatus
   labelVersion?: number
   reprintCount?: number
@@ -1408,6 +1437,7 @@ export type CargoShipmentCreateWithoutEventsInput = {
   flightDate?: Date | string | null
   handlingNotes?: string | null
   declaredValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: boolean
   status?: $Enums.CargoStatus
   labelVersion?: number
   reprintCount?: number
@@ -1443,6 +1473,7 @@ export type CargoShipmentUncheckedCreateWithoutEventsInput = {
   flightDate?: Date | string | null
   handlingNotes?: string | null
   declaredValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: boolean
   status?: $Enums.CargoStatus
   labelVersion?: number
   reprintCount?: number
@@ -1488,6 +1519,7 @@ export type CargoShipmentUpdateWithoutEventsInput = {
   flightDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   handlingNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   declaredValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumCargoStatusFieldUpdateOperationsInput | $Enums.CargoStatus
   labelVersion?: Prisma.IntFieldUpdateOperationsInput | number
   reprintCount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1523,6 +1555,7 @@ export type CargoShipmentUncheckedUpdateWithoutEventsInput = {
   flightDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   handlingNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   declaredValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumCargoStatusFieldUpdateOperationsInput | $Enums.CargoStatus
   labelVersion?: Prisma.IntFieldUpdateOperationsInput | number
   reprintCount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1554,6 +1587,7 @@ export type CargoShipmentCreateManyCompanyInput = {
   flightDate?: Date | string | null
   handlingNotes?: string | null
   declaredValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: boolean
   status?: $Enums.CargoStatus
   labelVersion?: number
   reprintCount?: number
@@ -1583,6 +1617,7 @@ export type CargoShipmentUpdateWithoutCompanyInput = {
   flightDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   handlingNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   declaredValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumCargoStatusFieldUpdateOperationsInput | $Enums.CargoStatus
   labelVersion?: Prisma.IntFieldUpdateOperationsInput | number
   reprintCount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1617,6 +1652,7 @@ export type CargoShipmentUncheckedUpdateWithoutCompanyInput = {
   flightDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   handlingNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   declaredValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumCargoStatusFieldUpdateOperationsInput | $Enums.CargoStatus
   labelVersion?: Prisma.IntFieldUpdateOperationsInput | number
   reprintCount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1649,6 +1685,7 @@ export type CargoShipmentUncheckedUpdateManyWithoutCompanyInput = {
   flightDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   handlingNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   declaredValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumCargoStatusFieldUpdateOperationsInput | $Enums.CargoStatus
   labelVersion?: Prisma.IntFieldUpdateOperationsInput | number
   reprintCount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1680,6 +1717,7 @@ export type CargoShipmentCreateManyStationInput = {
   flightDate?: Date | string | null
   handlingNotes?: string | null
   declaredValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: boolean
   status?: $Enums.CargoStatus
   labelVersion?: number
   reprintCount?: number
@@ -1709,6 +1747,7 @@ export type CargoShipmentUpdateWithoutStationInput = {
   flightDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   handlingNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   declaredValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumCargoStatusFieldUpdateOperationsInput | $Enums.CargoStatus
   labelVersion?: Prisma.IntFieldUpdateOperationsInput | number
   reprintCount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1743,6 +1782,7 @@ export type CargoShipmentUncheckedUpdateWithoutStationInput = {
   flightDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   handlingNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   declaredValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumCargoStatusFieldUpdateOperationsInput | $Enums.CargoStatus
   labelVersion?: Prisma.IntFieldUpdateOperationsInput | number
   reprintCount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1775,6 +1815,7 @@ export type CargoShipmentUncheckedUpdateManyWithoutStationInput = {
   flightDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   handlingNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   declaredValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumCargoStatusFieldUpdateOperationsInput | $Enums.CargoStatus
   labelVersion?: Prisma.IntFieldUpdateOperationsInput | number
   reprintCount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1806,6 +1847,7 @@ export type CargoShipmentCreateManyCustomerInput = {
   flightDate?: Date | string | null
   handlingNotes?: string | null
   declaredValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: boolean
   status?: $Enums.CargoStatus
   labelVersion?: number
   reprintCount?: number
@@ -1835,6 +1877,7 @@ export type CargoShipmentUpdateWithoutCustomerInput = {
   flightDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   handlingNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   declaredValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumCargoStatusFieldUpdateOperationsInput | $Enums.CargoStatus
   labelVersion?: Prisma.IntFieldUpdateOperationsInput | number
   reprintCount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1869,6 +1912,7 @@ export type CargoShipmentUncheckedUpdateWithoutCustomerInput = {
   flightDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   handlingNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   declaredValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumCargoStatusFieldUpdateOperationsInput | $Enums.CargoStatus
   labelVersion?: Prisma.IntFieldUpdateOperationsInput | number
   reprintCount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1901,6 +1945,7 @@ export type CargoShipmentUncheckedUpdateManyWithoutCustomerInput = {
   flightDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   handlingNotes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   declaredValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  isFragile?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumCargoStatusFieldUpdateOperationsInput | $Enums.CargoStatus
   labelVersion?: Prisma.IntFieldUpdateOperationsInput | number
   reprintCount?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1964,6 +2009,7 @@ export type CargoShipmentSelect<ExtArgs extends runtime.Types.Extensions.Interna
   flightDate?: boolean
   handlingNotes?: boolean
   declaredValue?: boolean
+  isFragile?: boolean
   status?: boolean
   labelVersion?: boolean
   reprintCount?: boolean
@@ -2001,6 +2047,7 @@ export type CargoShipmentSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   flightDate?: boolean
   handlingNotes?: boolean
   declaredValue?: boolean
+  isFragile?: boolean
   status?: boolean
   labelVersion?: boolean
   reprintCount?: boolean
@@ -2036,6 +2083,7 @@ export type CargoShipmentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   flightDate?: boolean
   handlingNotes?: boolean
   declaredValue?: boolean
+  isFragile?: boolean
   status?: boolean
   labelVersion?: boolean
   reprintCount?: boolean
@@ -2071,6 +2119,7 @@ export type CargoShipmentSelectScalar = {
   flightDate?: boolean
   handlingNotes?: boolean
   declaredValue?: boolean
+  isFragile?: boolean
   status?: boolean
   labelVersion?: boolean
   reprintCount?: boolean
@@ -2082,7 +2131,7 @@ export type CargoShipmentSelectScalar = {
   updatedAt?: boolean
 }
 
-export type CargoShipmentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "companyId" | "stationId" | "customerId" | "awbNumber" | "senderName" | "senderPhone" | "receiverName" | "receiverPhone" | "receiverAddress" | "origin" | "destination" | "weightKg" | "pieces" | "commodity" | "airline" | "flightNumber" | "flightDate" | "handlingNotes" | "declaredValue" | "status" | "labelVersion" | "reprintCount" | "createdById" | "dispatchedAt" | "deliveredAt" | "version" | "createdAt" | "updatedAt", ExtArgs["result"]["cargoShipment"]>
+export type CargoShipmentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "companyId" | "stationId" | "customerId" | "awbNumber" | "senderName" | "senderPhone" | "receiverName" | "receiverPhone" | "receiverAddress" | "origin" | "destination" | "weightKg" | "pieces" | "commodity" | "airline" | "flightNumber" | "flightDate" | "handlingNotes" | "declaredValue" | "isFragile" | "status" | "labelVersion" | "reprintCount" | "createdById" | "dispatchedAt" | "deliveredAt" | "version" | "createdAt" | "updatedAt", ExtArgs["result"]["cargoShipment"]>
 export type CargoShipmentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
   station?: boolean | Prisma.StationDefaultArgs<ExtArgs>
@@ -2130,6 +2179,7 @@ export type $CargoShipmentPayload<ExtArgs extends runtime.Types.Extensions.Inter
     flightDate: Date | null
     handlingNotes: string | null
     declaredValue: runtime.Decimal | null
+    isFragile: boolean
     status: $Enums.CargoStatus
     labelVersion: number
     reprintCount: number
@@ -2586,6 +2636,7 @@ export interface CargoShipmentFieldRefs {
   readonly flightDate: Prisma.FieldRef<"CargoShipment", 'DateTime'>
   readonly handlingNotes: Prisma.FieldRef<"CargoShipment", 'String'>
   readonly declaredValue: Prisma.FieldRef<"CargoShipment", 'Decimal'>
+  readonly isFragile: Prisma.FieldRef<"CargoShipment", 'Boolean'>
   readonly status: Prisma.FieldRef<"CargoShipment", 'CargoStatus'>
   readonly labelVersion: Prisma.FieldRef<"CargoShipment", 'Int'>
   readonly reprintCount: Prisma.FieldRef<"CargoShipment", 'Int'>

@@ -320,6 +320,7 @@ model Company {
   payments             Payment[]
   refunds              Refund[]
   cargoShipments       CargoShipment[]
+  cargoLocations       CargoLocation[]
   agents               Agent[]
   walletEntries        WalletEntry[]
   financialAccounts    FinancialAccount[]
@@ -1779,6 +1780,22 @@ model RefundLine {
   @@map("refund_lines")
 }
 
+model CargoLocation {
+  id        String   @id @default(cuid())
+  companyId String
+  code      String
+  name      String
+  color     String   @default("#000000")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
+
+  @@unique([companyId, code])
+  @@map("cargo_locations")
+}
+
 model CargoShipment {
   id              String      @id @default(cuid())
   companyId       String
@@ -1800,6 +1817,7 @@ model CargoShipment {
   flightDate      DateTime?   @db.Date
   handlingNotes   String?
   declaredValue   Decimal?    @db.Decimal(18, 2)
+  isFragile       Boolean     @default(false)
   status          CargoStatus @default(DRAFT)
   labelVersion    Int         @default(1)
   reprintCount    Int         @default(0)

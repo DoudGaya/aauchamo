@@ -364,6 +364,7 @@ export type CompanyWhereInput = {
   payments?: Prisma.PaymentListRelationFilter
   refunds?: Prisma.RefundListRelationFilter
   cargoShipments?: Prisma.CargoShipmentListRelationFilter
+  cargoLocations?: Prisma.CargoLocationListRelationFilter
   agents?: Prisma.AgentListRelationFilter
   walletEntries?: Prisma.WalletEntryListRelationFilter
   financialAccounts?: Prisma.FinancialAccountListRelationFilter
@@ -427,6 +428,7 @@ export type CompanyOrderByWithRelationInput = {
   payments?: Prisma.PaymentOrderByRelationAggregateInput
   refunds?: Prisma.RefundOrderByRelationAggregateInput
   cargoShipments?: Prisma.CargoShipmentOrderByRelationAggregateInput
+  cargoLocations?: Prisma.CargoLocationOrderByRelationAggregateInput
   agents?: Prisma.AgentOrderByRelationAggregateInput
   walletEntries?: Prisma.WalletEntryOrderByRelationAggregateInput
   financialAccounts?: Prisma.FinancialAccountOrderByRelationAggregateInput
@@ -493,6 +495,7 @@ export type CompanyWhereUniqueInput = Prisma.AtLeast<{
   payments?: Prisma.PaymentListRelationFilter
   refunds?: Prisma.RefundListRelationFilter
   cargoShipments?: Prisma.CargoShipmentListRelationFilter
+  cargoLocations?: Prisma.CargoLocationListRelationFilter
   agents?: Prisma.AgentListRelationFilter
   walletEntries?: Prisma.WalletEntryListRelationFilter
   financialAccounts?: Prisma.FinancialAccountListRelationFilter
@@ -608,6 +611,7 @@ export type CompanyCreateInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -671,6 +675,7 @@ export type CompanyUncheckedCreateInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -734,6 +739,7 @@ export type CompanyUpdateInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -797,6 +803,7 @@ export type CompanyUncheckedUpdateInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -1421,6 +1428,20 @@ export type CompanyUpdateOneRequiredWithoutRefundsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.CompanyUpdateToOneWithWhereWithoutRefundsInput, Prisma.CompanyUpdateWithoutRefundsInput>, Prisma.CompanyUncheckedUpdateWithoutRefundsInput>
 }
 
+export type CompanyCreateNestedOneWithoutCargoLocationsInput = {
+  create?: Prisma.XOR<Prisma.CompanyCreateWithoutCargoLocationsInput, Prisma.CompanyUncheckedCreateWithoutCargoLocationsInput>
+  connectOrCreate?: Prisma.CompanyCreateOrConnectWithoutCargoLocationsInput
+  connect?: Prisma.CompanyWhereUniqueInput
+}
+
+export type CompanyUpdateOneRequiredWithoutCargoLocationsNestedInput = {
+  create?: Prisma.XOR<Prisma.CompanyCreateWithoutCargoLocationsInput, Prisma.CompanyUncheckedCreateWithoutCargoLocationsInput>
+  connectOrCreate?: Prisma.CompanyCreateOrConnectWithoutCargoLocationsInput
+  upsert?: Prisma.CompanyUpsertWithoutCargoLocationsInput
+  connect?: Prisma.CompanyWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CompanyUpdateToOneWithWhereWithoutCargoLocationsInput, Prisma.CompanyUpdateWithoutCargoLocationsInput>, Prisma.CompanyUncheckedUpdateWithoutCargoLocationsInput>
+}
+
 export type CompanyCreateNestedOneWithoutCargoShipmentsInput = {
   create?: Prisma.XOR<Prisma.CompanyCreateWithoutCargoShipmentsInput, Prisma.CompanyUncheckedCreateWithoutCargoShipmentsInput>
   connectOrCreate?: Prisma.CompanyCreateOrConnectWithoutCargoShipmentsInput
@@ -1612,6 +1633,7 @@ export type CompanyCreateWithoutBusinessUnitsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -1674,6 +1696,7 @@ export type CompanyUncheckedCreateWithoutBusinessUnitsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -1752,6 +1775,7 @@ export type CompanyUpdateWithoutBusinessUnitsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -1814,6 +1838,7 @@ export type CompanyUncheckedUpdateWithoutBusinessUnitsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -1876,6 +1901,7 @@ export type CompanyCreateWithoutStationsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -1938,6 +1964,7 @@ export type CompanyUncheckedCreateWithoutStationsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -2016,6 +2043,7 @@ export type CompanyUpdateWithoutStationsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -2078,6 +2106,7 @@ export type CompanyUncheckedUpdateWithoutStationsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2140,6 +2169,7 @@ export type CompanyCreateWithoutUsersInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -2202,6 +2232,7 @@ export type CompanyUncheckedCreateWithoutUsersInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -2280,6 +2311,7 @@ export type CompanyUpdateWithoutUsersInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -2342,6 +2374,7 @@ export type CompanyUncheckedUpdateWithoutUsersInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2404,6 +2437,7 @@ export type CompanyCreateWithoutRolesInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -2466,6 +2500,7 @@ export type CompanyUncheckedCreateWithoutRolesInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -2544,6 +2579,7 @@ export type CompanyUpdateWithoutRolesInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -2606,6 +2642,7 @@ export type CompanyUncheckedUpdateWithoutRolesInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2668,6 +2705,7 @@ export type CompanyCreateWithoutSequencesInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -2730,6 +2768,7 @@ export type CompanyUncheckedCreateWithoutSequencesInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -2808,6 +2847,7 @@ export type CompanyUpdateWithoutSequencesInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -2870,6 +2910,7 @@ export type CompanyUncheckedUpdateWithoutSequencesInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -2932,6 +2973,7 @@ export type CompanyCreateWithoutAuditEventsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -2994,6 +3036,7 @@ export type CompanyUncheckedCreateWithoutAuditEventsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -3072,6 +3115,7 @@ export type CompanyUpdateWithoutAuditEventsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -3134,6 +3178,7 @@ export type CompanyUncheckedUpdateWithoutAuditEventsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3196,6 +3241,7 @@ export type CompanyCreateWithoutApprovalsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -3258,6 +3304,7 @@ export type CompanyUncheckedCreateWithoutApprovalsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -3336,6 +3383,7 @@ export type CompanyUpdateWithoutApprovalsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -3398,6 +3446,7 @@ export type CompanyUncheckedUpdateWithoutApprovalsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3460,6 +3509,7 @@ export type CompanyCreateWithoutAttachmentsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -3522,6 +3572,7 @@ export type CompanyUncheckedCreateWithoutAttachmentsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -3600,6 +3651,7 @@ export type CompanyUpdateWithoutAttachmentsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -3662,6 +3714,7 @@ export type CompanyUncheckedUpdateWithoutAttachmentsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3724,6 +3777,7 @@ export type CompanyCreateWithoutNotificationsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -3786,6 +3840,7 @@ export type CompanyUncheckedCreateWithoutNotificationsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -3864,6 +3919,7 @@ export type CompanyUpdateWithoutNotificationsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -3926,6 +3982,7 @@ export type CompanyUncheckedUpdateWithoutNotificationsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -3988,6 +4045,7 @@ export type CompanyCreateWithoutSettingsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -4050,6 +4108,7 @@ export type CompanyUncheckedCreateWithoutSettingsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -4128,6 +4187,7 @@ export type CompanyUpdateWithoutSettingsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -4190,6 +4250,7 @@ export type CompanyUncheckedUpdateWithoutSettingsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4252,6 +4313,7 @@ export type CompanyCreateWithoutOutboxEventsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -4314,6 +4376,7 @@ export type CompanyUncheckedCreateWithoutOutboxEventsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -4392,6 +4455,7 @@ export type CompanyUpdateWithoutOutboxEventsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -4454,6 +4518,7 @@ export type CompanyUncheckedUpdateWithoutOutboxEventsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4516,6 +4581,7 @@ export type CompanyCreateWithoutIdempotencyKeysInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -4578,6 +4644,7 @@ export type CompanyUncheckedCreateWithoutIdempotencyKeysInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -4656,6 +4723,7 @@ export type CompanyUpdateWithoutIdempotencyKeysInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -4718,6 +4786,7 @@ export type CompanyUncheckedUpdateWithoutIdempotencyKeysInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -4780,6 +4849,7 @@ export type CompanyCreateWithoutPaymentMethodsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -4842,6 +4912,7 @@ export type CompanyUncheckedCreateWithoutPaymentMethodsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -4920,6 +4991,7 @@ export type CompanyUpdateWithoutPaymentMethodsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -4982,6 +5054,7 @@ export type CompanyUncheckedUpdateWithoutPaymentMethodsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5044,6 +5117,7 @@ export type CompanyCreateWithoutDepartmentsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -5106,6 +5180,7 @@ export type CompanyUncheckedCreateWithoutDepartmentsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -5184,6 +5259,7 @@ export type CompanyUpdateWithoutDepartmentsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -5246,6 +5322,7 @@ export type CompanyUncheckedUpdateWithoutDepartmentsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5308,6 +5385,7 @@ export type CompanyCreateWithoutPositionsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -5370,6 +5448,7 @@ export type CompanyUncheckedCreateWithoutPositionsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -5448,6 +5527,7 @@ export type CompanyUpdateWithoutPositionsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -5510,6 +5590,7 @@ export type CompanyUncheckedUpdateWithoutPositionsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5572,6 +5653,7 @@ export type CompanyCreateWithoutStaffInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -5634,6 +5716,7 @@ export type CompanyUncheckedCreateWithoutStaffInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -5712,6 +5795,7 @@ export type CompanyUpdateWithoutStaffInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -5774,6 +5858,7 @@ export type CompanyUncheckedUpdateWithoutStaffInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -5836,6 +5921,7 @@ export type CompanyCreateWithoutAttendanceInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -5898,6 +5984,7 @@ export type CompanyUncheckedCreateWithoutAttendanceInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -5976,6 +6063,7 @@ export type CompanyUpdateWithoutAttendanceInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -6038,6 +6126,7 @@ export type CompanyUncheckedUpdateWithoutAttendanceInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -6100,6 +6189,7 @@ export type CompanyCreateWithoutCustomersInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -6162,6 +6252,7 @@ export type CompanyUncheckedCreateWithoutCustomersInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -6240,6 +6331,7 @@ export type CompanyUpdateWithoutCustomersInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -6302,6 +6394,7 @@ export type CompanyUncheckedUpdateWithoutCustomersInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -6364,6 +6457,7 @@ export type CompanyCreateWithoutCustomerMergesInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -6426,6 +6520,7 @@ export type CompanyUncheckedCreateWithoutCustomerMergesInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -6504,6 +6599,7 @@ export type CompanyUpdateWithoutCustomerMergesInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -6566,6 +6662,7 @@ export type CompanyUncheckedUpdateWithoutCustomerMergesInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -6628,6 +6725,7 @@ export type CompanyCreateWithoutProductCategoriesInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -6690,6 +6788,7 @@ export type CompanyUncheckedCreateWithoutProductCategoriesInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -6768,6 +6867,7 @@ export type CompanyUpdateWithoutProductCategoriesInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -6830,6 +6930,7 @@ export type CompanyUncheckedUpdateWithoutProductCategoriesInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -6892,6 +6993,7 @@ export type CompanyCreateWithoutUnitsOfMeasureInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -6954,6 +7056,7 @@ export type CompanyUncheckedCreateWithoutUnitsOfMeasureInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -7032,6 +7135,7 @@ export type CompanyUpdateWithoutUnitsOfMeasureInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -7094,6 +7198,7 @@ export type CompanyUncheckedUpdateWithoutUnitsOfMeasureInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -7156,6 +7261,7 @@ export type CompanyCreateWithoutSuppliersInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -7218,6 +7324,7 @@ export type CompanyUncheckedCreateWithoutSuppliersInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -7296,6 +7403,7 @@ export type CompanyUpdateWithoutSuppliersInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -7358,6 +7466,7 @@ export type CompanyUncheckedUpdateWithoutSuppliersInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -7420,6 +7529,7 @@ export type CompanyCreateWithoutProductsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -7482,6 +7592,7 @@ export type CompanyUncheckedCreateWithoutProductsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -7560,6 +7671,7 @@ export type CompanyUpdateWithoutProductsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -7622,6 +7734,7 @@ export type CompanyUncheckedUpdateWithoutProductsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -7684,6 +7797,7 @@ export type CompanyCreateWithoutStockMovementsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -7746,6 +7860,7 @@ export type CompanyUncheckedCreateWithoutStockMovementsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -7824,6 +7939,7 @@ export type CompanyUpdateWithoutStockMovementsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -7886,6 +8002,7 @@ export type CompanyUncheckedUpdateWithoutStockMovementsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -7948,6 +8065,7 @@ export type CompanyCreateWithoutPurchaseOrdersInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -8010,6 +8128,7 @@ export type CompanyUncheckedCreateWithoutPurchaseOrdersInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -8088,6 +8207,7 @@ export type CompanyUpdateWithoutPurchaseOrdersInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -8150,6 +8270,7 @@ export type CompanyUncheckedUpdateWithoutPurchaseOrdersInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -8212,6 +8333,7 @@ export type CompanyCreateWithoutGoodsReceiptsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -8274,6 +8396,7 @@ export type CompanyUncheckedCreateWithoutGoodsReceiptsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -8352,6 +8475,7 @@ export type CompanyUpdateWithoutGoodsReceiptsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -8414,6 +8538,7 @@ export type CompanyUncheckedUpdateWithoutGoodsReceiptsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -8476,6 +8601,7 @@ export type CompanyCreateWithoutStockTransfersInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -8538,6 +8664,7 @@ export type CompanyUncheckedCreateWithoutStockTransfersInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -8616,6 +8743,7 @@ export type CompanyUpdateWithoutStockTransfersInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -8678,6 +8806,7 @@ export type CompanyUncheckedUpdateWithoutStockTransfersInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -8740,6 +8869,7 @@ export type CompanyCreateWithoutInventoryAdjustmentsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -8802,6 +8932,7 @@ export type CompanyUncheckedCreateWithoutInventoryAdjustmentsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -8880,6 +9011,7 @@ export type CompanyUpdateWithoutInventoryAdjustmentsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -8942,6 +9074,7 @@ export type CompanyUncheckedUpdateWithoutInventoryAdjustmentsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -9004,6 +9137,7 @@ export type CompanyCreateWithoutSalesInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -9066,6 +9200,7 @@ export type CompanyUncheckedCreateWithoutSalesInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -9144,6 +9279,7 @@ export type CompanyUpdateWithoutSalesInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -9206,6 +9342,7 @@ export type CompanyUncheckedUpdateWithoutSalesInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -9268,6 +9405,7 @@ export type CompanyCreateWithoutPaymentsInput = {
   sales?: Prisma.SaleCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -9330,6 +9468,7 @@ export type CompanyUncheckedCreateWithoutPaymentsInput = {
   sales?: Prisma.SaleUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -9408,6 +9547,7 @@ export type CompanyUpdateWithoutPaymentsInput = {
   sales?: Prisma.SaleUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -9470,6 +9610,7 @@ export type CompanyUncheckedUpdateWithoutPaymentsInput = {
   sales?: Prisma.SaleUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -9532,6 +9673,7 @@ export type CompanyCreateWithoutRefundsInput = {
   sales?: Prisma.SaleCreateNestedManyWithoutCompanyInput
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -9594,6 +9736,7 @@ export type CompanyUncheckedCreateWithoutRefundsInput = {
   sales?: Prisma.SaleUncheckedCreateNestedManyWithoutCompanyInput
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -9672,6 +9815,7 @@ export type CompanyUpdateWithoutRefundsInput = {
   sales?: Prisma.SaleUpdateManyWithoutCompanyNestedInput
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -9733,6 +9877,275 @@ export type CompanyUncheckedUpdateWithoutRefundsInput = {
   inventoryAdjustments?: Prisma.InventoryAdjustmentUncheckedUpdateManyWithoutCompanyNestedInput
   sales?: Prisma.SaleUncheckedUpdateManyWithoutCompanyNestedInput
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
+  agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
+  walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
+  financialCategories?: Prisma.FinancialCategoryUncheckedUpdateManyWithoutCompanyNestedInput
+  cashbookEntries?: Prisma.CashbookEntryUncheckedUpdateManyWithoutCompanyNestedInput
+  financialPeriods?: Prisma.FinancialPeriodUncheckedUpdateManyWithoutCompanyNestedInput
+  reconciliations?: Prisma.ReconciliationUncheckedUpdateManyWithoutCompanyNestedInput
+  ticketBookings?: Prisma.TicketBookingUncheckedUpdateManyWithoutCompanyNestedInput
+  generatedDocuments?: Prisma.GeneratedDocumentUncheckedUpdateManyWithoutCompanyNestedInput
+}
+
+export type CompanyCreateWithoutCargoLocationsInput = {
+  id?: string
+  code: string
+  legalName: string
+  displayName: string
+  email?: string | null
+  phone?: string | null
+  address?: string | null
+  logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
+  timezone?: string
+  currencyCode?: string
+  locale?: string
+  taxRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  isActive?: boolean
+  version?: number
+  createdById?: string | null
+  updatedById?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  businessUnits?: Prisma.BusinessUnitCreateNestedManyWithoutCompanyInput
+  stations?: Prisma.StationCreateNestedManyWithoutCompanyInput
+  users?: Prisma.UserCreateNestedManyWithoutCompanyInput
+  roles?: Prisma.RoleCreateNestedManyWithoutCompanyInput
+  sequences?: Prisma.SequenceCreateNestedManyWithoutCompanyInput
+  auditEvents?: Prisma.AuditEventCreateNestedManyWithoutCompanyInput
+  approvals?: Prisma.ApprovalRequestCreateNestedManyWithoutCompanyInput
+  attachments?: Prisma.AttachmentCreateNestedManyWithoutCompanyInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutCompanyInput
+  settings?: Prisma.SystemSettingCreateNestedManyWithoutCompanyInput
+  outboxEvents?: Prisma.OutboxEventCreateNestedManyWithoutCompanyInput
+  idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutCompanyInput
+  paymentMethods?: Prisma.PaymentMethodCreateNestedManyWithoutCompanyInput
+  departments?: Prisma.DepartmentCreateNestedManyWithoutCompanyInput
+  positions?: Prisma.PositionCreateNestedManyWithoutCompanyInput
+  staff?: Prisma.StaffCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceCreateNestedManyWithoutCompanyInput
+  customers?: Prisma.CustomerCreateNestedManyWithoutCompanyInput
+  customerMerges?: Prisma.CustomerMergeCreateNestedManyWithoutCompanyInput
+  productCategories?: Prisma.ProductCategoryCreateNestedManyWithoutCompanyInput
+  unitsOfMeasure?: Prisma.UnitOfMeasureCreateNestedManyWithoutCompanyInput
+  suppliers?: Prisma.SupplierCreateNestedManyWithoutCompanyInput
+  products?: Prisma.ProductCreateNestedManyWithoutCompanyInput
+  stockMovements?: Prisma.StockMovementCreateNestedManyWithoutCompanyInput
+  purchaseOrders?: Prisma.PurchaseOrderCreateNestedManyWithoutCompanyInput
+  goodsReceipts?: Prisma.GoodsReceiptCreateNestedManyWithoutCompanyInput
+  stockTransfers?: Prisma.StockTransferCreateNestedManyWithoutCompanyInput
+  inventoryAdjustments?: Prisma.InventoryAdjustmentCreateNestedManyWithoutCompanyInput
+  sales?: Prisma.SaleCreateNestedManyWithoutCompanyInput
+  payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
+  refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
+  cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
+  walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
+  financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
+  financialCategories?: Prisma.FinancialCategoryCreateNestedManyWithoutCompanyInput
+  cashbookEntries?: Prisma.CashbookEntryCreateNestedManyWithoutCompanyInput
+  financialPeriods?: Prisma.FinancialPeriodCreateNestedManyWithoutCompanyInput
+  reconciliations?: Prisma.ReconciliationCreateNestedManyWithoutCompanyInput
+  ticketBookings?: Prisma.TicketBookingCreateNestedManyWithoutCompanyInput
+  generatedDocuments?: Prisma.GeneratedDocumentCreateNestedManyWithoutCompanyInput
+}
+
+export type CompanyUncheckedCreateWithoutCargoLocationsInput = {
+  id?: string
+  code: string
+  legalName: string
+  displayName: string
+  email?: string | null
+  phone?: string | null
+  address?: string | null
+  logoObjectKey?: string | null
+  logoDarkObjectKey?: string | null
+  timezone?: string
+  currencyCode?: string
+  locale?: string
+  taxRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  isActive?: boolean
+  version?: number
+  createdById?: string | null
+  updatedById?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  businessUnits?: Prisma.BusinessUnitUncheckedCreateNestedManyWithoutCompanyInput
+  stations?: Prisma.StationUncheckedCreateNestedManyWithoutCompanyInput
+  users?: Prisma.UserUncheckedCreateNestedManyWithoutCompanyInput
+  roles?: Prisma.RoleUncheckedCreateNestedManyWithoutCompanyInput
+  sequences?: Prisma.SequenceUncheckedCreateNestedManyWithoutCompanyInput
+  auditEvents?: Prisma.AuditEventUncheckedCreateNestedManyWithoutCompanyInput
+  approvals?: Prisma.ApprovalRequestUncheckedCreateNestedManyWithoutCompanyInput
+  attachments?: Prisma.AttachmentUncheckedCreateNestedManyWithoutCompanyInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutCompanyInput
+  settings?: Prisma.SystemSettingUncheckedCreateNestedManyWithoutCompanyInput
+  outboxEvents?: Prisma.OutboxEventUncheckedCreateNestedManyWithoutCompanyInput
+  idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutCompanyInput
+  paymentMethods?: Prisma.PaymentMethodUncheckedCreateNestedManyWithoutCompanyInput
+  departments?: Prisma.DepartmentUncheckedCreateNestedManyWithoutCompanyInput
+  positions?: Prisma.PositionUncheckedCreateNestedManyWithoutCompanyInput
+  staff?: Prisma.StaffUncheckedCreateNestedManyWithoutCompanyInput
+  attendance?: Prisma.StaffAttendanceUncheckedCreateNestedManyWithoutCompanyInput
+  customers?: Prisma.CustomerUncheckedCreateNestedManyWithoutCompanyInput
+  customerMerges?: Prisma.CustomerMergeUncheckedCreateNestedManyWithoutCompanyInput
+  productCategories?: Prisma.ProductCategoryUncheckedCreateNestedManyWithoutCompanyInput
+  unitsOfMeasure?: Prisma.UnitOfMeasureUncheckedCreateNestedManyWithoutCompanyInput
+  suppliers?: Prisma.SupplierUncheckedCreateNestedManyWithoutCompanyInput
+  products?: Prisma.ProductUncheckedCreateNestedManyWithoutCompanyInput
+  stockMovements?: Prisma.StockMovementUncheckedCreateNestedManyWithoutCompanyInput
+  purchaseOrders?: Prisma.PurchaseOrderUncheckedCreateNestedManyWithoutCompanyInput
+  goodsReceipts?: Prisma.GoodsReceiptUncheckedCreateNestedManyWithoutCompanyInput
+  stockTransfers?: Prisma.StockTransferUncheckedCreateNestedManyWithoutCompanyInput
+  inventoryAdjustments?: Prisma.InventoryAdjustmentUncheckedCreateNestedManyWithoutCompanyInput
+  sales?: Prisma.SaleUncheckedCreateNestedManyWithoutCompanyInput
+  payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
+  refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
+  cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
+  walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
+  financialCategories?: Prisma.FinancialCategoryUncheckedCreateNestedManyWithoutCompanyInput
+  cashbookEntries?: Prisma.CashbookEntryUncheckedCreateNestedManyWithoutCompanyInput
+  financialPeriods?: Prisma.FinancialPeriodUncheckedCreateNestedManyWithoutCompanyInput
+  reconciliations?: Prisma.ReconciliationUncheckedCreateNestedManyWithoutCompanyInput
+  ticketBookings?: Prisma.TicketBookingUncheckedCreateNestedManyWithoutCompanyInput
+  generatedDocuments?: Prisma.GeneratedDocumentUncheckedCreateNestedManyWithoutCompanyInput
+}
+
+export type CompanyCreateOrConnectWithoutCargoLocationsInput = {
+  where: Prisma.CompanyWhereUniqueInput
+  create: Prisma.XOR<Prisma.CompanyCreateWithoutCargoLocationsInput, Prisma.CompanyUncheckedCreateWithoutCargoLocationsInput>
+}
+
+export type CompanyUpsertWithoutCargoLocationsInput = {
+  update: Prisma.XOR<Prisma.CompanyUpdateWithoutCargoLocationsInput, Prisma.CompanyUncheckedUpdateWithoutCargoLocationsInput>
+  create: Prisma.XOR<Prisma.CompanyCreateWithoutCargoLocationsInput, Prisma.CompanyUncheckedCreateWithoutCargoLocationsInput>
+  where?: Prisma.CompanyWhereInput
+}
+
+export type CompanyUpdateToOneWithWhereWithoutCargoLocationsInput = {
+  where?: Prisma.CompanyWhereInput
+  data: Prisma.XOR<Prisma.CompanyUpdateWithoutCargoLocationsInput, Prisma.CompanyUncheckedUpdateWithoutCargoLocationsInput>
+}
+
+export type CompanyUpdateWithoutCargoLocationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.StringFieldUpdateOperationsInput | string
+  legalName?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
+  taxRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  version?: Prisma.IntFieldUpdateOperationsInput | number
+  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  businessUnits?: Prisma.BusinessUnitUpdateManyWithoutCompanyNestedInput
+  stations?: Prisma.StationUpdateManyWithoutCompanyNestedInput
+  users?: Prisma.UserUpdateManyWithoutCompanyNestedInput
+  roles?: Prisma.RoleUpdateManyWithoutCompanyNestedInput
+  sequences?: Prisma.SequenceUpdateManyWithoutCompanyNestedInput
+  auditEvents?: Prisma.AuditEventUpdateManyWithoutCompanyNestedInput
+  approvals?: Prisma.ApprovalRequestUpdateManyWithoutCompanyNestedInput
+  attachments?: Prisma.AttachmentUpdateManyWithoutCompanyNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutCompanyNestedInput
+  settings?: Prisma.SystemSettingUpdateManyWithoutCompanyNestedInput
+  outboxEvents?: Prisma.OutboxEventUpdateManyWithoutCompanyNestedInput
+  idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutCompanyNestedInput
+  paymentMethods?: Prisma.PaymentMethodUpdateManyWithoutCompanyNestedInput
+  departments?: Prisma.DepartmentUpdateManyWithoutCompanyNestedInput
+  positions?: Prisma.PositionUpdateManyWithoutCompanyNestedInput
+  staff?: Prisma.StaffUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUpdateManyWithoutCompanyNestedInput
+  customers?: Prisma.CustomerUpdateManyWithoutCompanyNestedInput
+  customerMerges?: Prisma.CustomerMergeUpdateManyWithoutCompanyNestedInput
+  productCategories?: Prisma.ProductCategoryUpdateManyWithoutCompanyNestedInput
+  unitsOfMeasure?: Prisma.UnitOfMeasureUpdateManyWithoutCompanyNestedInput
+  suppliers?: Prisma.SupplierUpdateManyWithoutCompanyNestedInput
+  products?: Prisma.ProductUpdateManyWithoutCompanyNestedInput
+  stockMovements?: Prisma.StockMovementUpdateManyWithoutCompanyNestedInput
+  purchaseOrders?: Prisma.PurchaseOrderUpdateManyWithoutCompanyNestedInput
+  goodsReceipts?: Prisma.GoodsReceiptUpdateManyWithoutCompanyNestedInput
+  stockTransfers?: Prisma.StockTransferUpdateManyWithoutCompanyNestedInput
+  inventoryAdjustments?: Prisma.InventoryAdjustmentUpdateManyWithoutCompanyNestedInput
+  sales?: Prisma.SaleUpdateManyWithoutCompanyNestedInput
+  payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
+  refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
+  cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
+  walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
+  financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
+  financialCategories?: Prisma.FinancialCategoryUpdateManyWithoutCompanyNestedInput
+  cashbookEntries?: Prisma.CashbookEntryUpdateManyWithoutCompanyNestedInput
+  financialPeriods?: Prisma.FinancialPeriodUpdateManyWithoutCompanyNestedInput
+  reconciliations?: Prisma.ReconciliationUpdateManyWithoutCompanyNestedInput
+  ticketBookings?: Prisma.TicketBookingUpdateManyWithoutCompanyNestedInput
+  generatedDocuments?: Prisma.GeneratedDocumentUpdateManyWithoutCompanyNestedInput
+}
+
+export type CompanyUncheckedUpdateWithoutCargoLocationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.StringFieldUpdateOperationsInput | string
+  legalName?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logoDarkObjectKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  currencyCode?: Prisma.StringFieldUpdateOperationsInput | string
+  locale?: Prisma.StringFieldUpdateOperationsInput | string
+  taxRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  version?: Prisma.IntFieldUpdateOperationsInput | number
+  createdById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  updatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  businessUnits?: Prisma.BusinessUnitUncheckedUpdateManyWithoutCompanyNestedInput
+  stations?: Prisma.StationUncheckedUpdateManyWithoutCompanyNestedInput
+  users?: Prisma.UserUncheckedUpdateManyWithoutCompanyNestedInput
+  roles?: Prisma.RoleUncheckedUpdateManyWithoutCompanyNestedInput
+  sequences?: Prisma.SequenceUncheckedUpdateManyWithoutCompanyNestedInput
+  auditEvents?: Prisma.AuditEventUncheckedUpdateManyWithoutCompanyNestedInput
+  approvals?: Prisma.ApprovalRequestUncheckedUpdateManyWithoutCompanyNestedInput
+  attachments?: Prisma.AttachmentUncheckedUpdateManyWithoutCompanyNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutCompanyNestedInput
+  settings?: Prisma.SystemSettingUncheckedUpdateManyWithoutCompanyNestedInput
+  outboxEvents?: Prisma.OutboxEventUncheckedUpdateManyWithoutCompanyNestedInput
+  idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutCompanyNestedInput
+  paymentMethods?: Prisma.PaymentMethodUncheckedUpdateManyWithoutCompanyNestedInput
+  departments?: Prisma.DepartmentUncheckedUpdateManyWithoutCompanyNestedInput
+  positions?: Prisma.PositionUncheckedUpdateManyWithoutCompanyNestedInput
+  staff?: Prisma.StaffUncheckedUpdateManyWithoutCompanyNestedInput
+  attendance?: Prisma.StaffAttendanceUncheckedUpdateManyWithoutCompanyNestedInput
+  customers?: Prisma.CustomerUncheckedUpdateManyWithoutCompanyNestedInput
+  customerMerges?: Prisma.CustomerMergeUncheckedUpdateManyWithoutCompanyNestedInput
+  productCategories?: Prisma.ProductCategoryUncheckedUpdateManyWithoutCompanyNestedInput
+  unitsOfMeasure?: Prisma.UnitOfMeasureUncheckedUpdateManyWithoutCompanyNestedInput
+  suppliers?: Prisma.SupplierUncheckedUpdateManyWithoutCompanyNestedInput
+  products?: Prisma.ProductUncheckedUpdateManyWithoutCompanyNestedInput
+  stockMovements?: Prisma.StockMovementUncheckedUpdateManyWithoutCompanyNestedInput
+  purchaseOrders?: Prisma.PurchaseOrderUncheckedUpdateManyWithoutCompanyNestedInput
+  goodsReceipts?: Prisma.GoodsReceiptUncheckedUpdateManyWithoutCompanyNestedInput
+  stockTransfers?: Prisma.StockTransferUncheckedUpdateManyWithoutCompanyNestedInput
+  inventoryAdjustments?: Prisma.InventoryAdjustmentUncheckedUpdateManyWithoutCompanyNestedInput
+  sales?: Prisma.SaleUncheckedUpdateManyWithoutCompanyNestedInput
+  payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
+  refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -9796,6 +10209,7 @@ export type CompanyCreateWithoutCargoShipmentsInput = {
   sales?: Prisma.SaleCreateNestedManyWithoutCompanyInput
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -9858,6 +10272,7 @@ export type CompanyUncheckedCreateWithoutCargoShipmentsInput = {
   sales?: Prisma.SaleUncheckedCreateNestedManyWithoutCompanyInput
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -9936,6 +10351,7 @@ export type CompanyUpdateWithoutCargoShipmentsInput = {
   sales?: Prisma.SaleUpdateManyWithoutCompanyNestedInput
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -9998,6 +10414,7 @@ export type CompanyUncheckedUpdateWithoutCargoShipmentsInput = {
   sales?: Prisma.SaleUncheckedUpdateManyWithoutCompanyNestedInput
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -10061,6 +10478,7 @@ export type CompanyCreateWithoutAgentsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
   financialCategories?: Prisma.FinancialCategoryCreateNestedManyWithoutCompanyInput
@@ -10123,6 +10541,7 @@ export type CompanyUncheckedCreateWithoutAgentsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
   financialCategories?: Prisma.FinancialCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -10201,6 +10620,7 @@ export type CompanyUpdateWithoutAgentsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
   financialCategories?: Prisma.FinancialCategoryUpdateManyWithoutCompanyNestedInput
@@ -10263,6 +10683,7 @@ export type CompanyUncheckedUpdateWithoutAgentsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
   financialCategories?: Prisma.FinancialCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -10325,6 +10746,7 @@ export type CompanyCreateWithoutWalletEntriesInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
   financialCategories?: Prisma.FinancialCategoryCreateNestedManyWithoutCompanyInput
@@ -10387,6 +10809,7 @@ export type CompanyUncheckedCreateWithoutWalletEntriesInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
   financialCategories?: Prisma.FinancialCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -10465,6 +10888,7 @@ export type CompanyUpdateWithoutWalletEntriesInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
   financialCategories?: Prisma.FinancialCategoryUpdateManyWithoutCompanyNestedInput
@@ -10527,6 +10951,7 @@ export type CompanyUncheckedUpdateWithoutWalletEntriesInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
   financialCategories?: Prisma.FinancialCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -10589,6 +11014,7 @@ export type CompanyCreateWithoutFinancialAccountsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialCategories?: Prisma.FinancialCategoryCreateNestedManyWithoutCompanyInput
@@ -10651,6 +11077,7 @@ export type CompanyUncheckedCreateWithoutFinancialAccountsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialCategories?: Prisma.FinancialCategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -10729,6 +11156,7 @@ export type CompanyUpdateWithoutFinancialAccountsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialCategories?: Prisma.FinancialCategoryUpdateManyWithoutCompanyNestedInput
@@ -10791,6 +11219,7 @@ export type CompanyUncheckedUpdateWithoutFinancialAccountsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialCategories?: Prisma.FinancialCategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -10853,6 +11282,7 @@ export type CompanyCreateWithoutFinancialCategoriesInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -10915,6 +11345,7 @@ export type CompanyUncheckedCreateWithoutFinancialCategoriesInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -10993,6 +11424,7 @@ export type CompanyUpdateWithoutFinancialCategoriesInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -11055,6 +11487,7 @@ export type CompanyUncheckedUpdateWithoutFinancialCategoriesInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -11117,6 +11550,7 @@ export type CompanyCreateWithoutCashbookEntriesInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -11179,6 +11613,7 @@ export type CompanyUncheckedCreateWithoutCashbookEntriesInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -11257,6 +11692,7 @@ export type CompanyUpdateWithoutCashbookEntriesInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -11319,6 +11755,7 @@ export type CompanyUncheckedUpdateWithoutCashbookEntriesInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -11381,6 +11818,7 @@ export type CompanyCreateWithoutFinancialPeriodsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -11443,6 +11881,7 @@ export type CompanyUncheckedCreateWithoutFinancialPeriodsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -11521,6 +11960,7 @@ export type CompanyUpdateWithoutFinancialPeriodsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -11583,6 +12023,7 @@ export type CompanyUncheckedUpdateWithoutFinancialPeriodsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -11645,6 +12086,7 @@ export type CompanyCreateWithoutReconciliationsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -11707,6 +12149,7 @@ export type CompanyUncheckedCreateWithoutReconciliationsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -11785,6 +12228,7 @@ export type CompanyUpdateWithoutReconciliationsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -11847,6 +12291,7 @@ export type CompanyUncheckedUpdateWithoutReconciliationsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -11909,6 +12354,7 @@ export type CompanyCreateWithoutTicketBookingsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -11971,6 +12417,7 @@ export type CompanyUncheckedCreateWithoutTicketBookingsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -12049,6 +12496,7 @@ export type CompanyUpdateWithoutTicketBookingsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -12111,6 +12559,7 @@ export type CompanyUncheckedUpdateWithoutTicketBookingsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -12173,6 +12622,7 @@ export type CompanyCreateWithoutGeneratedDocumentsInput = {
   payments?: Prisma.PaymentCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutCompanyInput
@@ -12235,6 +12685,7 @@ export type CompanyUncheckedCreateWithoutGeneratedDocumentsInput = {
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCompanyInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutCompanyInput
   cargoShipments?: Prisma.CargoShipmentUncheckedCreateNestedManyWithoutCompanyInput
+  cargoLocations?: Prisma.CargoLocationUncheckedCreateNestedManyWithoutCompanyInput
   agents?: Prisma.AgentUncheckedCreateNestedManyWithoutCompanyInput
   walletEntries?: Prisma.WalletEntryUncheckedCreateNestedManyWithoutCompanyInput
   financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutCompanyInput
@@ -12313,6 +12764,7 @@ export type CompanyUpdateWithoutGeneratedDocumentsInput = {
   payments?: Prisma.PaymentUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutCompanyNestedInput
@@ -12375,6 +12827,7 @@ export type CompanyUncheckedUpdateWithoutGeneratedDocumentsInput = {
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutCompanyNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutCompanyNestedInput
   cargoShipments?: Prisma.CargoShipmentUncheckedUpdateManyWithoutCompanyNestedInput
+  cargoLocations?: Prisma.CargoLocationUncheckedUpdateManyWithoutCompanyNestedInput
   agents?: Prisma.AgentUncheckedUpdateManyWithoutCompanyNestedInput
   walletEntries?: Prisma.WalletEntryUncheckedUpdateManyWithoutCompanyNestedInput
   financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutCompanyNestedInput
@@ -12423,6 +12876,7 @@ export type CompanyCountOutputType = {
   payments: number
   refunds: number
   cargoShipments: number
+  cargoLocations: number
   agents: number
   walletEntries: number
   financialAccounts: number
@@ -12467,6 +12921,7 @@ export type CompanyCountOutputTypeSelect<ExtArgs extends runtime.Types.Extension
   payments?: boolean | CompanyCountOutputTypeCountPaymentsArgs
   refunds?: boolean | CompanyCountOutputTypeCountRefundsArgs
   cargoShipments?: boolean | CompanyCountOutputTypeCountCargoShipmentsArgs
+  cargoLocations?: boolean | CompanyCountOutputTypeCountCargoLocationsArgs
   agents?: boolean | CompanyCountOutputTypeCountAgentsArgs
   walletEntries?: boolean | CompanyCountOutputTypeCountWalletEntriesArgs
   financialAccounts?: boolean | CompanyCountOutputTypeCountFinancialAccountsArgs
@@ -12715,6 +13170,13 @@ export type CompanyCountOutputTypeCountCargoShipmentsArgs<ExtArgs extends runtim
 /**
  * CompanyCountOutputType without action
  */
+export type CompanyCountOutputTypeCountCargoLocationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CargoLocationWhereInput
+}
+
+/**
+ * CompanyCountOutputType without action
+ */
 export type CompanyCountOutputTypeCountAgentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.AgentWhereInput
 }
@@ -12828,6 +13290,7 @@ export type CompanySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   payments?: boolean | Prisma.Company$paymentsArgs<ExtArgs>
   refunds?: boolean | Prisma.Company$refundsArgs<ExtArgs>
   cargoShipments?: boolean | Prisma.Company$cargoShipmentsArgs<ExtArgs>
+  cargoLocations?: boolean | Prisma.Company$cargoLocationsArgs<ExtArgs>
   agents?: boolean | Prisma.Company$agentsArgs<ExtArgs>
   walletEntries?: boolean | Prisma.Company$walletEntriesArgs<ExtArgs>
   financialAccounts?: boolean | Prisma.Company$financialAccountsArgs<ExtArgs>
@@ -12940,6 +13403,7 @@ export type CompanyInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs
   payments?: boolean | Prisma.Company$paymentsArgs<ExtArgs>
   refunds?: boolean | Prisma.Company$refundsArgs<ExtArgs>
   cargoShipments?: boolean | Prisma.Company$cargoShipmentsArgs<ExtArgs>
+  cargoLocations?: boolean | Prisma.Company$cargoLocationsArgs<ExtArgs>
   agents?: boolean | Prisma.Company$agentsArgs<ExtArgs>
   walletEntries?: boolean | Prisma.Company$walletEntriesArgs<ExtArgs>
   financialAccounts?: boolean | Prisma.Company$financialAccountsArgs<ExtArgs>
@@ -12989,6 +13453,7 @@ export type $CompanyPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     payments: Prisma.$PaymentPayload<ExtArgs>[]
     refunds: Prisma.$RefundPayload<ExtArgs>[]
     cargoShipments: Prisma.$CargoShipmentPayload<ExtArgs>[]
+    cargoLocations: Prisma.$CargoLocationPayload<ExtArgs>[]
     agents: Prisma.$AgentPayload<ExtArgs>[]
     walletEntries: Prisma.$WalletEntryPayload<ExtArgs>[]
     financialAccounts: Prisma.$FinancialAccountPayload<ExtArgs>[]
@@ -13445,6 +13910,7 @@ export interface Prisma__CompanyClient<T, Null = never, ExtArgs extends runtime.
   payments<T extends Prisma.Company$paymentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$paymentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PaymentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   refunds<T extends Prisma.Company$refundsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$refundsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RefundPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   cargoShipments<T extends Prisma.Company$cargoShipmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$cargoShipmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CargoShipmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  cargoLocations<T extends Prisma.Company$cargoLocationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$cargoLocationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CargoLocationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   agents<T extends Prisma.Company$agentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$agentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AgentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   walletEntries<T extends Prisma.Company$walletEntriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$walletEntriesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WalletEntryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   financialAccounts<T extends Prisma.Company$financialAccountsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Company$financialAccountsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FinancialAccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -14660,6 +15126,30 @@ export type Company$cargoShipmentsArgs<ExtArgs extends runtime.Types.Extensions.
   take?: number
   skip?: number
   distinct?: Prisma.CargoShipmentScalarFieldEnum | Prisma.CargoShipmentScalarFieldEnum[]
+}
+
+/**
+ * Company.cargoLocations
+ */
+export type Company$cargoLocationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CargoLocation
+   */
+  select?: Prisma.CargoLocationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CargoLocation
+   */
+  omit?: Prisma.CargoLocationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CargoLocationInclude<ExtArgs> | null
+  where?: Prisma.CargoLocationWhereInput
+  orderBy?: Prisma.CargoLocationOrderByWithRelationInput | Prisma.CargoLocationOrderByWithRelationInput[]
+  cursor?: Prisma.CargoLocationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CargoLocationScalarFieldEnum | Prisma.CargoLocationScalarFieldEnum[]
 }
 
 /**

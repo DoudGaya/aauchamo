@@ -111,6 +111,7 @@ export const ModelName = {
   OutstandingPayment: 'OutstandingPayment',
   Refund: 'Refund',
   RefundLine: 'RefundLine',
+  CargoLocation: 'CargoLocation',
   CargoShipment: 'CargoShipment',
   CargoStatusEvent: 'CargoStatusEvent',
   Agent: 'Agent',
@@ -1241,6 +1242,20 @@ export const RefundLineScalarFieldEnum = {
 export type RefundLineScalarFieldEnum = (typeof RefundLineScalarFieldEnum)[keyof typeof RefundLineScalarFieldEnum]
 
 
+export const CargoLocationScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  code: 'code',
+  name: 'name',
+  color: 'color',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CargoLocationScalarFieldEnum = (typeof CargoLocationScalarFieldEnum)[keyof typeof CargoLocationScalarFieldEnum]
+
+
 export const CargoShipmentScalarFieldEnum = {
   id: 'id',
   companyId: 'companyId',
@@ -1262,6 +1277,7 @@ export const CargoShipmentScalarFieldEnum = {
   flightDate: 'flightDate',
   handlingNotes: 'handlingNotes',
   declaredValue: 'declaredValue',
+  isFragile: 'isFragile',
   status: 'status',
   labelVersion: 'labelVersion',
   reprintCount: 'reprintCount',

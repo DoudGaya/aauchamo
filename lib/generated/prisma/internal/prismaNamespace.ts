@@ -457,6 +457,7 @@ export const ModelName = {
   OutstandingPayment: 'OutstandingPayment',
   Refund: 'Refund',
   RefundLine: 'RefundLine',
+  CargoLocation: 'CargoLocation',
   CargoShipment: 'CargoShipment',
   CargoStatusEvent: 'CargoStatusEvent',
   Agent: 'Agent',
@@ -486,7 +487,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "company" | "businessUnit" | "station" | "stationBusinessUnit" | "user" | "account" | "session" | "verificationToken" | "role" | "permission" | "rolePermission" | "userRole" | "userStationScope" | "userBusinessUnitScope" | "stationManagerAssignment" | "loginAttempt" | "sequence" | "auditEvent" | "approvalRequest" | "attachment" | "notification" | "notificationPreference" | "systemSetting" | "outboxEvent" | "idempotencyKey" | "paymentMethod" | "department" | "position" | "staff" | "staffAttendance" | "employmentHistory" | "staffStationAssignment" | "nextOfKin" | "customer" | "customerContact" | "customerIdentifier" | "customerMerge" | "productCategory" | "unitOfMeasure" | "supplier" | "product" | "batch" | "inventoryBalance" | "stockMovement" | "purchaseOrder" | "purchaseOrderLine" | "goodsReceipt" | "goodsReceiptLine" | "stockTransfer" | "stockTransferLine" | "inventoryAdjustment" | "inventoryAdjustmentLine" | "pOSSession" | "sale" | "saleLine" | "payment" | "paymentAllocation" | "outstandingPayment" | "refund" | "refundLine" | "cargoShipment" | "cargoStatusEvent" | "agent" | "walletAccount" | "walletEntry" | "financialAccount" | "financialCategory" | "cashbookEntry" | "financialPeriod" | "cashSession" | "reconciliation" | "ticketBooking" | "generatedDocument" | "printEvent"
+    modelProps: "company" | "businessUnit" | "station" | "stationBusinessUnit" | "user" | "account" | "session" | "verificationToken" | "role" | "permission" | "rolePermission" | "userRole" | "userStationScope" | "userBusinessUnitScope" | "stationManagerAssignment" | "loginAttempt" | "sequence" | "auditEvent" | "approvalRequest" | "attachment" | "notification" | "notificationPreference" | "systemSetting" | "outboxEvent" | "idempotencyKey" | "paymentMethod" | "department" | "position" | "staff" | "staffAttendance" | "employmentHistory" | "staffStationAssignment" | "nextOfKin" | "customer" | "customerContact" | "customerIdentifier" | "customerMerge" | "productCategory" | "unitOfMeasure" | "supplier" | "product" | "batch" | "inventoryBalance" | "stockMovement" | "purchaseOrder" | "purchaseOrderLine" | "goodsReceipt" | "goodsReceiptLine" | "stockTransfer" | "stockTransferLine" | "inventoryAdjustment" | "inventoryAdjustmentLine" | "pOSSession" | "sale" | "saleLine" | "payment" | "paymentAllocation" | "outstandingPayment" | "refund" | "refundLine" | "cargoLocation" | "cargoShipment" | "cargoStatusEvent" | "agent" | "walletAccount" | "walletEntry" | "financialAccount" | "financialCategory" | "cashbookEntry" | "financialPeriod" | "cashSession" | "reconciliation" | "ticketBooking" | "generatedDocument" | "printEvent"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -4930,6 +4931,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    CargoLocation: {
+      payload: Prisma.$CargoLocationPayload<ExtArgs>
+      fields: Prisma.CargoLocationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CargoLocationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CargoLocationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CargoLocationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CargoLocationPayload>
+        }
+        findFirst: {
+          args: Prisma.CargoLocationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CargoLocationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CargoLocationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CargoLocationPayload>
+        }
+        findMany: {
+          args: Prisma.CargoLocationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CargoLocationPayload>[]
+        }
+        create: {
+          args: Prisma.CargoLocationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CargoLocationPayload>
+        }
+        createMany: {
+          args: Prisma.CargoLocationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CargoLocationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CargoLocationPayload>[]
+        }
+        delete: {
+          args: Prisma.CargoLocationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CargoLocationPayload>
+        }
+        update: {
+          args: Prisma.CargoLocationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CargoLocationPayload>
+        }
+        deleteMany: {
+          args: Prisma.CargoLocationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CargoLocationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CargoLocationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CargoLocationPayload>[]
+        }
+        upsert: {
+          args: Prisma.CargoLocationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CargoLocationPayload>
+        }
+        aggregate: {
+          args: Prisma.CargoLocationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCargoLocation>
+        }
+        groupBy: {
+          args: Prisma.CargoLocationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CargoLocationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CargoLocationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CargoLocationCountAggregateOutputType> | number
+        }
+      }
+    }
     CargoShipment: {
       payload: Prisma.$CargoShipmentPayload<ExtArgs>
       fields: Prisma.CargoShipmentFieldRefs
@@ -7103,6 +7178,20 @@ export const RefundLineScalarFieldEnum = {
 export type RefundLineScalarFieldEnum = (typeof RefundLineScalarFieldEnum)[keyof typeof RefundLineScalarFieldEnum]
 
 
+export const CargoLocationScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  code: 'code',
+  name: 'name',
+  color: 'color',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CargoLocationScalarFieldEnum = (typeof CargoLocationScalarFieldEnum)[keyof typeof CargoLocationScalarFieldEnum]
+
+
 export const CargoShipmentScalarFieldEnum = {
   id: 'id',
   companyId: 'companyId',
@@ -7124,6 +7213,7 @@ export const CargoShipmentScalarFieldEnum = {
   flightDate: 'flightDate',
   handlingNotes: 'handlingNotes',
   declaredValue: 'declaredValue',
+  isFragile: 'isFragile',
   status: 'status',
   labelVersion: 'labelVersion',
   reprintCount: 'reprintCount',
@@ -8234,6 +8324,7 @@ export type GlobalOmitConfig = {
   outstandingPayment?: Prisma.OutstandingPaymentOmit
   refund?: Prisma.RefundOmit
   refundLine?: Prisma.RefundLineOmit
+  cargoLocation?: Prisma.CargoLocationOmit
   cargoShipment?: Prisma.CargoShipmentOmit
   cargoStatusEvent?: Prisma.CargoStatusEventOmit
   agent?: Prisma.AgentOmit

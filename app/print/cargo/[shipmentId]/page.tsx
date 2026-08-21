@@ -27,17 +27,13 @@ export default async function CargoLabelPage({ params, searchParams }: { params:
   }
   const isThermal = paperSize.startsWith("THERMAL");
 
-  const destinationColors: Record<string, string> = {
-    ABV: "#dc2626", MIU: "#1e3a8a", KAN: "#14532d", SKO: "#7f1d1d",
-    ILR: "#4b5563", YOL: "#000000", NBK: "#2563eb", LOS: "#eab308",
-    GMO: "#fa8072", KAD: "#06b6d4",
-  };
-  const color = destinationColors[shipment.destination] || "#000000";
+  const destinationLocation = await db.cargoLocation.findFirst({ where: { companyId: access.companyId, code: shipment.destination } });
+  const color = destinationLocation?.color || "#000000";
 
   const marginMm = isThermal ? 2 : 10;
   let pageStyle = "";
-  if (paperSize === "A4") pageStyle = `@page { size: A4; margin: ${marginMm}mm; }`;
-  else if (paperSize === "A5") pageStyle = `@page { size: A5; margin: ${marginMm}mm; }`;
+  if (paperSize === "A4") pageStyle = `@page { size: A4; margin: ${marginMm}mm; } body { font-size: 0.9em; }`;
+  else if (paperSize === "A5") pageStyle = `@page { size: A5; margin: ${marginMm}mm; } body { font-size: 0.8em; }`;
   else if (paperSize === "THERMAL_100x150") pageStyle = `@page { size: 100mm 150mm; margin: ${marginMm}mm; }`;
   else if (paperSize === "THERMAL_80x100") pageStyle = `@page { size: 80mm 100mm; margin: ${marginMm}mm; }`;
   else pageStyle = `@page { size: auto; margin: ${marginMm}mm; }`;
@@ -46,26 +42,43 @@ export default async function CargoLabelPage({ params, searchParams }: { params:
     <>
       <style dangerouslySetInnerHTML={{ __html: pageStyle }} />
       <main className={`${styles.sheet} ${isThermal ? styles.thermal : ""}`}>
-        <header><div><span>AAU CHAMO</span><strong>CARGO / AIR WAYBILL</strong></div><div><small>Origin station</small><b>{shipment.station.code}</b></div></header>
+        <div className={styles.tagsContainer}>
+          <div className={styles.tagWrap} style={{ borderColor: color, borderWidth: "8px", borderStyle: "solid" }}>
+            <div className={styles.tagContent}>
+              <div className={styles.tagDestCode} style={{ color, fontSize: "3rem", fontWeight: "900" }}>{shipment.destination}</div>
+              <div className={styles.tagLogoWrap} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <Image src="/logo.png" alt="System Logo" width={140} height={50} style={{ objectFit: "contain" }} unoptimized />
+                <span style={{ fontSize: "10px", marginTop: "4px", textAlign: "center", color: "#555" }}>{shipment.company.address || "System Address"}</span>
+              </div>
+              <div className={styles.tagDestCode} style={{ color, fontSize: "3rem", fontWeight: "900" }}>{shipment.destination}</div>
+            </div>
+            <div className={styles.tagBottomLine} style={{ backgroundColor: color, height: "12px" }} />
+          </div>
+        </div>
+
+        <header style={{ marginTop: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            {/* <Image src="/logo.png" alt="Company Logo" width={60} height={30} style={{ objectFit: "contain" }} unoptimized /> */}
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ fontSize: "12px", fontWeight: 700, marginTop: "4px", color: "#555" }}>{shipment.company.address || shipment.company.legalName}</span>
+              <strong>CARGO / AIR WAYBILL</strong>
+            </div>
+          </div>
+          <div><small>Origin station</small><b>{shipment.station.code}</b></div>
+        </header>
         <section className={styles.route}><div><small>FROM</small><strong>{shipment.origin}</strong></div><i>→</i><div><small>TO</small><strong>{shipment.destination}</strong></div></section>
         <section className={styles.parties}><div><small>SENDER</small><strong>{shipment.senderName}</strong><span>{shipment.senderPhone}</span></div><div><small>RECEIVER</small><strong>{shipment.receiverName}</strong><span>{shipment.receiverPhone}</span><span>{shipment.receiverAddress}</span></div></section>
         <section className={styles.metrics}><div><small>PIECES</small><strong>{shipment.pieces}</strong></div><div><small>WEIGHT</small><strong>{shipment.weightKg.toString()} kg</strong></div><div><small>AIRLINE / FLIGHT</small><strong>{[shipment.airline, shipment.flightNumber].filter(Boolean).join(" · ") || "—"}</strong></div><div><small>FLIGHT DATE</small><strong>{shipment.flightDate ? new Intl.DateTimeFormat("en-NG", { dateStyle: "medium" }).format(shipment.flightDate) : "—"}</strong></div></section>
         <section className={styles.commodity}><small>COMMODITY</small><strong>{shipment.commodity}</strong>{shipment.handlingNotes && <span>{shipment.handlingNotes}</span>}</section>
         <section className={styles.codes}><div><Image src={barcodeUrl} alt={`Barcode ${shipment.awbNumber}`} width={420} height={92} unoptimized /></div><div><Image src={qr} alt="Cargo tracking QR code" width={140} height={140} unoptimized /><small>Scan to track</small></div></section>
-        <footer><span>{shipment.company.displayName} · {shipment.awbNumber}</span><span>Status: {shipment.status.replaceAll("_", " ")}</span></footer>
         
-        <div className={styles.tagsContainer}>
-          <div className={styles.tagWrap} style={{ borderColor: color }}>
-            <div className={styles.tagContent}>
-              <div className={styles.tagDestCode} style={{ color }}>{shipment.destination}</div>
-              <div className={styles.tagLogoWrap}>
-                <Image src="/logo.png" alt="AAU Chamo" width={140} height={50} style={{ objectFit: "contain" }} unoptimized />
-              </div>
-              <div className={styles.tagDestCode} style={{ color }}>{shipment.destination}</div>
-            </div>
-            <div className={styles.tagBottomLine} style={{ backgroundColor: color }} />
+        {shipment.isFragile && (
+          <div style={{ textAlign: "center", marginTop: "16px", marginBottom: "16px" }}>
+            <Image src="/fragile.png" alt="FRAGILE" width={300} height={120} style={{ objectFit: "contain" }} unoptimized />
           </div>
-        </div>
+        )}
+
+        <footer><span>{shipment.company.displayName} · {shipment.awbNumber}</span><span>Status: {shipment.status.replaceAll("_", " ")}</span></footer>
       </main>
     </>
   );

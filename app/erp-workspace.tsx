@@ -172,7 +172,7 @@ type ApprovalRecord = { id: string; entityType: string; entityId: string; action
 type AuditRecord = { id: string; action: string; entityType: string; entityId: string | null; outcome: string; requestId: string | null; ipAddress: string | null; eventHash: string; occurredAt: string; actor: { name: string | null; firstName: string; lastName: string; username: string } | null; station: AllowedStation | null; before?: any; after?: any; metadata?: any; };
 type NotificationRecord = { id: string; type: string; severity: string; title: string; message: string; href: string | null; status: string; createdAt: string };
 type DocumentRecord = { id: string; documentType: string; documentNumber: string; sourceType: string; sourceId: string; status: string; mimeType: string | null; generatedAt: string | null; createdAt: string; station: AllowedStation | null; prints: Array<{ id: string; format: string; printedAt: string; reason?: string | null; printerName?: string | null }> };
-type SettingsRecord = { company: { legalName: string; displayName: string; email: string | null; phone: string | null; address: string | null; timezone: string; currencyCode: string; locale: string; logoUrl?: string; logoDarkUrl?: string; taxRate?: string | null }; businessUnits: Array<{ id: string; code: string; name: string; description?: string | null; isActive: boolean; version: number }>; paymentMethods: Array<{ id: string; name: string; type: string; isActive: boolean; requiresReference: boolean; requiresTerminal: boolean }>; settings: Array<{ id: string; namespace: string; key: string; value: unknown; valueType: string; isSensitive: boolean }> };
+type SettingsRecord = { company: { legalName: string; displayName: string; email: string | null; phone: string | null; address: string | null; timezone: string; currencyCode: string; locale: string; logoUrl?: string; logoDarkUrl?: string; taxRate?: string | null }; businessUnits: Array<{ id: string; code: string; name: string; description?: string | null; isActive: boolean; version: number }>; paymentMethods: Array<{ id: string; name: string; type: string; isActive: boolean; requiresReference: boolean; requiresTerminal: boolean }>; settings: Array<{ id: string; namespace: string; key: string; value: unknown; valueType: string; isSensitive: boolean }>; cargoLocations: Array<{ id: string; code: string; name: string; color: string; isActive: boolean }> };
 type SearchResults = { customers?: Array<{ id: string; customerNumber: string; displayName: string; primaryPhone: string }>; sales?: Array<{ id: string; saleNumber: string; total: string; customer: { displayName: string } }>; products?: Array<{ id: string; code: string; name: string; sellingPrice: string }>; cargo?: Array<{ id: string; awbNumber: string; senderName: string; receiverName: string; status: string }>; tickets?: Array<{ id: string; bookingNumber: string; pnr: string; passengerName: string; status: string }> };
 type TicketSetup = { customers: Array<{ id: string; customerNumber: string; displayName: string }>; agents: Array<{ id: string; agentNumber: string; name: string }>; paymentMethods: Array<{ id: string; name: string; type: string; requiresReference: boolean }>; businessUnits: Array<{ id: string; code: string; name: string }> };
 type HrSetup = { departments: Array<{ id: string; code: string; name: string }>; positions: Array<{ id: string; code: string; name: string }> };
@@ -185,56 +185,82 @@ type TransferRecord = { id: string; transferNumber: string; status: string; reas
 type AdjustmentRecord = { id: string; adjustmentNumber: string; status: string; reason: string; requestedAt: string; station: AllowedStation; version: number; lines: Array<{ id: string; expectedQuantity: string; countedQuantity: string; quantityDelta: string; product: { id: string; code: string; name: string } }> };
 type SaleDetailRecord = { id: string; saleNumber: string; status: string; lines: Array<{ id: string; productName: string; quantity: string; quantityRefunded: string }>; allocations: Array<{ payment: { paymentMethod: { id: string; name: string; requiresReference: boolean } } }> };
 
+const apiCache = new Map<string, any>();
+const activeRequests = new Map<string, Promise<any>>();
+
+const swrFetcher = async (url: string) => {
+  if (activeRequests.has(url)) return activeRequests.get(url)!;
+  const request = (async () => {
+    const response = await fetch(url, { headers: { accept: "application/json" } });
+    const body = (await response.json()) as ApiEnvelope<any>;
+    if (!response.ok || !body.ok || body.data === undefined) {
+      throw new Error(body.error?.message || "The requested data could not be loaded.");
+    }
+    apiCache.set(url, body);
+    return body;
+  })();
+  activeRequests.set(url, request);
+  try {
+    return await request;
+  } finally {
+    activeRequests.delete(url);
+  }
+};
+
+const mutate = (matcher: (key: string) => boolean) => {
+  for (const key of apiCache.keys()) {
+    if (matcher(key)) apiCache.delete(key);
+  }
+  window.dispatchEvent(new Event("erp-global-mutate"));
+};
+
 function useApiData<T>(url: string | null) {
-  const [data, setData] = useState<T | null>(null);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<T | null>(url ? apiCache.get(url)?.data ?? null : null);
+  const [total, setTotal] = useState(url ? (apiCache.get(url)?.meta?.total ?? (Array.isArray(apiCache.get(url)?.data) ? apiCache.get(url)?.data.length : 0)) : 0);
+  const [loading, setLoading] = useState(url ? !apiCache.has(url) : false);
   const [error, setError] = useState<string | null>(null);
   const [revision, setRevision] = useState(0);
 
   useEffect(() => {
-    const refresh = () => {
-      setLoading(true);
-      setError(null);
-      setRevision((value) => value + 1);
-    };
-    window.addEventListener("erp-data-changed", refresh);
-    return () => window.removeEventListener("erp-data-changed", refresh);
-  }, []);
-
-  useEffect(() => {
     if (!url) return;
-    const controller = new AbortController();
-    fetch(url, { signal: controller.signal, headers: { accept: "application/json" } })
-      .then(async (response) => {
-        const body = (await response.json()) as ApiEnvelope<T>;
-        if (!response.ok || !body.ok || body.data === undefined) {
-          throw new Error(body.error?.message || "The requested data could not be loaded.");
-        }
+    let isMounted = true;
+    if (!apiCache.has(url)) setLoading(true);
+    
+    swrFetcher(url)
+      .then((body) => {
+        if (!isMounted) return;
         setData(body.data);
         setTotal(body.meta?.total ?? (Array.isArray(body.data) ? body.data.length : 0));
+        setLoading(false);
+        setError(null);
       })
-      .catch((reason: unknown) => {
-        if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "The requested data could not be loaded.");
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+      .catch((err) => {
+        if (!isMounted) return;
+        setError(err instanceof Error ? err.message : String(err));
+        setLoading(false);
       });
-    return () => controller.abort();
+    return () => { isMounted = false; };
   }, [url, revision]);
 
+  useEffect(() => {
+    const handleGlobalMutate = () => setRevision(r => r + 1);
+    window.addEventListener("erp-global-mutate", handleGlobalMutate);
+    return () => window.removeEventListener("erp-global-mutate", handleGlobalMutate);
+  }, []);
+
   const reload = () => {
-    setLoading(true);
-    setError(null);
-    setRevision((value) => value + 1);
+    if (url) apiCache.delete(url);
+    setRevision(r => r + 1);
   };
-  return url ? { data, total, loading, error, reload } : { data: null, total: 0, loading: false, error: null, reload };
+  
+  return url ? { data, total, loading, error, reload } : { data: null, total: 0, loading: false, error: null, reload: async () => {} };
 }
 
 async function workflowPost<T>(url: string, body: unknown, method = "POST") {
   const response = await fetch(url, { method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
   const result = await response.json() as ApiEnvelope<T>;
   if (!response.ok || !result.ok || result.data === undefined) throw new Error(result.error?.message ?? "The workflow could not be completed.");
+  mutate((key) => typeof key === 'string' && key.startsWith('/api/'));
   window.dispatchEvent(new Event("erp-data-changed"));
   return result.data;
 }
@@ -1042,10 +1068,10 @@ function OverviewView({
           />
           
           <div className="summary-strip" style={{ borderBottom: "1px solid var(--line)", paddingBottom: "12px", marginBottom: "12px" }}>
-            <SummaryItem label="Customers" value={(summary?.entities.customers ?? 0).toString()} icon={Users} tone="info" />
-            <SummaryItem label="Agents" value={(summary?.entities.agents ?? 0).toString()} icon={WalletCards} tone="success" />
-            <SummaryItem label="Staff" value={(summary?.entities.staff ?? 0).toString()} icon={UserCheck} tone="info" />
-            <SummaryItem label="Stations" value={(summary?.entities.stations ?? 0).toString()} icon={Building2} tone="success" />
+            <SummaryItem label="Gross Sales" value={formatNaira(Number(summary?.sales.grossRevenue ?? 0))} icon={CircleDollarSign} tone="success" />
+            <SummaryItem label="Refunds" value={formatNaira(Number(summary?.sales.refunds ?? 0))} icon={RotateCcw} tone="warning" />
+            <SummaryItem label="Net Revenue" value={formatNaira(Number(summary?.sales.netRevenue ?? 0))} icon={Banknote} tone="success" />
+            <SummaryItem label="Transactions" value={(summary?.sales.transactions ?? 0).toString()} icon={ShoppingCart} tone="info" />
           </div>
 
           <div style={{ padding: "8px 16px 16px" }}>
@@ -10356,6 +10382,80 @@ function PaymentMethodModal({ pm, onClose, onSuccess }: { pm: any; onClose: () =
   );
 }
 
+function CargoLocationModal({ location, onClose, onSuccess }: { location?: any; onClose: () => void; onSuccess: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const save = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      const form = new FormData(event.currentTarget);
+      const payload = {
+        code: String(form.get("code")).toUpperCase(),
+        name: String(form.get("name")),
+        color: String(form.get("color")),
+        isActive: form.get("isActive") === "true",
+      };
+      const url = location ? `/api/settings/cargo-locations/${location.id}` : "/api/settings/cargo-locations";
+      const method = location ? "PUT" : "POST";
+      const response = await fetch(url, { method, headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+      const body = await response.json() as ApiEnvelope<unknown>;
+      if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Failed to save location.");
+      onSuccess();
+      onClose();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Failed to save.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="workflow-dialog" style={{ maxWidth: "480px" }}>
+        <div className="workflow-header">
+          <div>
+            <span className="eyebrow">Settings</span>
+            <h2>{location ? "Edit Cargo Location" : "New Cargo Location"}</h2>
+            <p>Define origins and destinations for air waybills.</p>
+          </div>
+          <button type="button" className="icon-ghost" onClick={onClose}><X size={18} /></button>
+        </div>
+        <form onSubmit={save}>
+          <div className="workflow-body">
+            {error && <div className="error-banner"><AlertTriangle size={14} /> {error}</div>}
+            <div className="form-grid">
+              <Field label="Location code (e.g. LOS)"><input name="code" defaultValue={location?.code} required maxLength={10} /></Field>
+              <Field label="Location name"><input name="name" defaultValue={location?.name} required /></Field>
+              <Field label="Tag color">
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <input type="color" name="color" defaultValue={location?.color ?? "#000000"} style={{ width: "40px", height: "36px", padding: "0" }} required />
+                  <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Used for AWB colored tags</span>
+                </div>
+              </Field>
+              <Field label="Status" full>
+                <select name="isActive" defaultValue={location?.isActive === false ? "false" : "true"}>
+                  <option value="true">Active (Enabled)</option>
+                  <option value="false">Inactive (Disabled)</option>
+                </select>
+              </Field>
+            </div>
+          </div>
+          <div className="workflow-footer">
+            <span />
+            <div>
+              <button type="button" className="secondary-button" onClick={onClose} disabled={busy}>Cancel</button>
+              <button type="submit" className="primary-button" disabled={busy}>{busy ? "Saving…" : "Save location"}</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function ProductUnitsCategoriesSettings({ onToast }: { onToast: (toast: Toast) => void }) {
   const setupApi = useApiData<InventorySetup>("/api/inventory/setup");
   const [busy, setBusy] = useState(false);
@@ -10464,7 +10564,7 @@ function SettingsView({ onToast, onModal }: { onToast: (toast: Toast) => void; o
   const stationsApi = useApiData<StationRecord[]>(section === "Stations" ? "/api/stations" : null);
   const [busy, setBusy] = useState(false);
 
-  const sections = ["Company profile", "Business units", "Stations", "Payment methods", "Product units & categories", "Tax & receipts", "Printer settings", "Notifications", "Integrations", "Security"];
+  const sections = ["Company profile", "Business units", "Stations", "Payment methods", "Cargo locations", "Product units & categories", "Tax & receipts", "Printer settings", "Notifications", "Integrations", "Security"];
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -10761,6 +10861,31 @@ function SettingsView({ onToast, onModal }: { onToast: (toast: Toast) => void; o
                     }
                   />
                 ))
+              ) : section === "Cargo locations" ? (
+                <>
+                  <div className="settings-actions" style={{ marginBottom: "1rem" }}>
+                    <button type="button" className="primary-button" disabled>Add location (Server managed)</button>
+                  </div>
+                  {api.data.cargoLocations && api.data.cargoLocations.length > 0 ? (
+                    api.data.cargoLocations.map((item) => (
+                      <DocumentRow 
+                        key={item.id} 
+                        icon={Plane}
+                        name={item.name} 
+                        meta={item.code} 
+                        status={item.isActive ? "Active" : "Disabled"} 
+                        action={
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }} onClick={(e) => e.stopPropagation()}>
+                            <div style={{ width: "20px", height: "20px", backgroundColor: item.color, borderRadius: "50%", border: "1px solid var(--line)" }} title={item.color} />
+                            <span style={{ fontSize: "12px", fontFamily: "monospace" }}>{item.color}</span>
+                          </div>
+                        }
+                      />
+                    ))
+                  ) : (
+                    <EmptyState icon={Plane} title="No locations configured" detail="Run the seed script to initialize cargo locations." compact />
+                  )}
+                </>
               ) : section === "Product units & categories" ? (
                 <ProductUnitsCategoriesSettings onToast={onToast} />
               ) : (
@@ -11360,9 +11485,10 @@ function ProductForm({ onComplete, onClose, allowedStations }: { onComplete: (ti
 
 function CargoForm({ onComplete, onClose, allowedStations }: { onComplete: (title: string, detail: string) => void; onClose: () => void; allowedStations: AllowedStation[] }) {
   const { data: customerData, loading, error: customerError } = useApiData<CustomerRecord[]>("/api/customers?pageSize=100");
+  const { data: settings } = useApiData<SettingsRecord>("/api/settings");
   const [busy, setBusy] = useState(false); const [error, setError] = useState<string | null>(null);
-  const submit = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setBusy(true); setError(null); const form = new FormData(event.currentTarget); const optional = (name: string) => String(form.get(name) ?? "").trim() || undefined; try { const response = await fetch("/api/cargo", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ stationId: String(form.get("stationId")), customerId: String(form.get("customerId")), senderName: String(form.get("senderName")), senderPhone: String(form.get("senderPhone")), receiverName: String(form.get("receiverName")), receiverPhone: String(form.get("receiverPhone")), receiverAddress: optional("receiverAddress"), origin: String(form.get("origin")), destination: String(form.get("destination")), weightKg: String(form.get("weightKg")), pieces: Number(form.get("pieces")), commodity: String(form.get("commodity")), airline: optional("airline"), flightNumber: optional("flightNumber"), handlingNotes: optional("handlingNotes"), declaredValue: optional("declaredValue") }) }); const body = await response.json() as ApiEnvelope<{ id: string; awbNumber: string; labelUrl: string }>; if (!response.ok || !body.ok || !body.data) throw new Error(body.error?.message ?? "Cargo record could not be created."); window.open(body.data.labelUrl, "_blank", "noopener,noreferrer"); onComplete("Cargo record created", `${body.data.awbNumber} was posted and its traceable label opened for printing.`); } catch (reason) { setError(reason instanceof Error ? reason.message : "Cargo record could not be created."); } finally { setBusy(false); } };
-  return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="Station"><select name="stationId" required defaultValue={allowedStations[0]?.id}>{allowedStations.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select></Field><Field label="Customer"><select name="customerId" required defaultValue=""><option value="" disabled>Select customer</option>{customerData?.map((item) => <option key={item.id} value={item.id}>{item.displayName} · {item.primaryPhone}</option>)}</select></Field><Field label="Sender name"><input name="senderName" required /></Field><Field label="Sender phone"><input name="senderPhone" required autoComplete="tel" /></Field><Field label="Receiver"><input name="receiverName" required /></Field><Field label="Receiver phone"><input name="receiverPhone" required autoComplete="tel" /></Field><Field label="Receiver address" full><input name="receiverAddress" /></Field><Field label="Origin"><input name="origin" required placeholder="Kano (KAN)" /></Field><Field label="Destination"><input name="destination" required placeholder="Lagos (LOS)" /></Field><Field label="Weight (kg)"><input name="weightKg" type="number" step="0.001" min="0.001" required /></Field><Field label="Pieces"><input name="pieces" type="number" min="1" defaultValue="1" required /></Field><Field label="Commodity" full><input name="commodity" required placeholder="Describe the cargo contents" /></Field><Field label="Declared value"><div className="money-input"><span>₦</span><input name="declaredValue" type="number" step="0.01" min="0" /></div></Field><Field label="Airline"><input name="airline" /></Field><Field label="Flight number"><input name="flightNumber" placeholder="e.g. VM-1642" /></Field><Field label="Handling notes" full><textarea name="handlingNotes" placeholder="Fragile, orientation, special handling..." /></Field></div>{(error || customerError) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? customerError}</span></div>}</div><ModalFooter onClose={onClose} submitLabel={busy ? "Creating…" : loading ? "Loading customers…" : "Create & print label"} icon={Printer} disabled={busy || loading || !customerData?.length || !allowedStations.length} /></form>;
+  const submit = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setBusy(true); setError(null); const form = new FormData(event.currentTarget); const optional = (name: string) => String(form.get(name) ?? "").trim() || undefined; try { const response = await fetch("/api/cargo", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ stationId: String(form.get("stationId")), customerId: String(form.get("customerId")), senderName: String(form.get("senderName")), senderPhone: String(form.get("senderPhone")), receiverName: String(form.get("receiverName")), receiverPhone: String(form.get("receiverPhone")), receiverAddress: optional("receiverAddress"), origin: String(form.get("origin")), destination: String(form.get("destination")), weightKg: String(form.get("weightKg")), pieces: Number(form.get("pieces")), commodity: String(form.get("commodity")), airline: optional("airline"), flightNumber: optional("flightNumber"), handlingNotes: optional("handlingNotes"), declaredValue: optional("declaredValue"), isFragile: form.get("isFragile") === "on" }) }); const body = await response.json() as ApiEnvelope<{ id: string; awbNumber: string; labelUrl: string }>; if (!response.ok || !body.ok || !body.data) throw new Error(body.error?.message ?? "Cargo record could not be created."); window.open(body.data.labelUrl, "_blank", "noopener,noreferrer"); onComplete("Cargo record created", `${body.data.awbNumber} was posted and its traceable label opened for printing.`); } catch (reason) { setError(reason instanceof Error ? reason.message : "Cargo record could not be created."); } finally { setBusy(false); } };
+  return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="Station"><select name="stationId" required defaultValue={allowedStations[0]?.id}>{allowedStations.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select></Field><Field label="Customer"><select name="customerId" required defaultValue=""><option value="" disabled>Select customer</option>{customerData?.map((item) => <option key={item.id} value={item.id}>{item.displayName} · {item.primaryPhone}</option>)}</select></Field><Field label="Sender name"><input name="senderName" required /></Field><Field label="Sender phone"><input name="senderPhone" required autoComplete="tel" /></Field><Field label="Receiver"><input name="receiverName" required /></Field><Field label="Receiver phone"><input name="receiverPhone" required autoComplete="tel" /></Field><Field label="Receiver address" full><input name="receiverAddress" /></Field><Field label="Origin"><select name="origin" required defaultValue=""><option value="" disabled>Select origin</option>{settings?.cargoLocations?.map(l => <option key={l.id} value={l.code}>{l.name} ({l.code})</option>)}</select></Field><Field label="Destination"><select name="destination" required defaultValue=""><option value="" disabled>Select destination</option>{settings?.cargoLocations?.map(l => <option key={l.id} value={l.code}>{l.name} ({l.code})</option>)}</select></Field><Field label="Weight (kg)"><input name="weightKg" type="number" step="0.001" min="0.001" required /></Field><Field label="Pieces"><input name="pieces" type="number" min="1" defaultValue="1" required /></Field><Field label="Commodity" full><input name="commodity" required placeholder="Describe the cargo contents" /></Field><Field label="Declared value"><div className="money-input"><span>₦</span><input name="declaredValue" type="number" step="0.01" min="0" /></div></Field><Field label="Airline"><input name="airline" /></Field><Field label="Flight number"><input name="flightNumber" placeholder="e.g. VM-1642" /></Field><Field label="Handling notes"><textarea name="handlingNotes" placeholder="Orientation, special handling..." /></Field><Field label="Fragile"><div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}><input type="checkbox" name="isFragile" /><span>Mark as fragile</span></div></Field></div>{(error || customerError) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? customerError}</span></div>}</div><ModalFooter onClose={onClose} submitLabel={busy ? "Creating…" : loading ? "Loading customers…" : "Create & print label"} icon={Printer} disabled={busy || loading || !customerData?.length || !allowedStations.length} /></form>;
 }
 
 function DepositForm({ onComplete, onClose, allowedStations, initialAgentId }: { onComplete: (title: string, detail: string) => void; onClose: () => void; allowedStations: AllowedStation[]; initialAgentId?: string }) {

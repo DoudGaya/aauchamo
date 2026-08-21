@@ -318,6 +318,11 @@ export type Refund = Prisma.RefundModel
  */
 export type RefundLine = Prisma.RefundLineModel
 /**
+ * Model CargoLocation
+ * 
+ */
+export type CargoLocation = Prisma.CargoLocationModel
+/**
  * Model CargoShipment
  * 
  */

@@ -28,15 +28,13 @@
 .tagsContainer {
   display: flex;
   flex-wrap: wrap;
-  margin-top: 10px;
-  border-top: 2px dashed #aeb8c4;
-  padding-top: 10px;
+  margin-bottom: 20px;
+  border-bottom: 2px dashed #aeb8c4;
+  padding-bottom: 20px;
 }
 
 .tagWrap {
   width: 100%;
-  height: 50px;
-  border: 1px solid #ccc;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -73,4 +71,4 @@
   width: 100%;
 }
 
-@media print { .sheet { margin: 0; max-width: none; border: 0; padding: 0 !important; } .thermal { width: 100mm; padding: 4mm !important; } .tagsContainer { border-top-style: dotted; } }
+@media print { .sheet { margin: 0; max-width: none; border: 0; padding: 0 !important; } .thermal { width: 100mm; padding: 4mm !important; } .tagsContainer { border-bottom-style: dotted; } }
