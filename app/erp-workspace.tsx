@@ -40,6 +40,7 @@ import {
   LogOut,
   Menu,
   Minus,
+  Monitor,
   Moon,
   MoreHorizontal,
   PackageCheck,
@@ -360,6 +361,7 @@ export default function ERPWorkspace({
   const [searchQuery, setSearchQuery] = useState("");
   const [period, setPeriod] = useState("This week");
   const [isDark, setIsDark] = useState(false);
+  const [uiScale, setUiScale] = useState(1.0);
   const [modal, setModal] = useState<ModalKind>(null);
   const [toast, setToast] = useState<Toast | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(brand.logoUrl);
@@ -404,6 +406,15 @@ export default function ERPWorkspace({
   useEffect(() => {
     window.localStorage.setItem("aau-theme", isDark ? "dark" : "light");
   }, [isDark]);
+
+  useEffect(() => {
+    const scale = window.localStorage.getItem("aau-scale");
+    if (scale) setUiScale(parseFloat(scale));
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("aau-scale", uiScale.toString());
+  }, [uiScale]);
 
   useEffect(() => {
     if (!toast) return;
@@ -470,7 +481,7 @@ export default function ERPWorkspace({
   };
 
   return (
-    <div className={classNames("erp-app", isDark && "theme-dark")}>
+    <div className={classNames("erp-app", isDark && "theme-dark")} style={uiScale !== 1.0 ? { zoom: uiScale } as any : undefined}>
       <Sidebar
         active={activeModule}
         collapsed={sidebarCollapsed}
@@ -579,6 +590,8 @@ export default function ERPWorkspace({
           identity={identity}
           isDark={isDark}
           setIsDark={setIsDark}
+          uiScale={uiScale}
+          setUiScale={setUiScale}
         />
       )}
 
@@ -11072,12 +11085,16 @@ function UserPreferencesModalForm({
   onComplete,
   isDark,
   setIsDark,
+  uiScale,
+  setUiScale,
 }: {
   identity: WorkspaceIdentity;
   onClose: () => void;
   onComplete: (title: string, detail: string) => void;
   isDark: boolean;
   setIsDark: (val: boolean) => void;
+  uiScale: number;
+  setUiScale: (val: number) => void;
 }) {
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [smsEnabled, setSmsEnabled] = useState(true);
@@ -11126,6 +11143,27 @@ function UserPreferencesModalForm({
             style={{ flex: 1, height: "40px", justifyContent: "center", background: isDark ? "var(--brand-red-light, rgba(202,11,18,0.08))" : undefined, color: isDark ? "#ca0b12" : undefined, borderColor: isDark ? "#ca0b12" : undefined }}
           >
             <Moon size={15} /> Dark Theme
+          </button>
+        </div>
+      </div>
+
+      <div style={{ background: "var(--surface, #ffffff)", padding: "16px", borderRadius: "8px", border: "1px solid var(--line, #e5e7eb)", marginBottom: "16px" }}>
+        <h4 style={{ margin: "0 0 12px", fontSize: "13px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "6px" }}>
+          <Monitor size={15} style={{ color: "var(--brand-red, #ca0b12)" }} /> Interface Scale
+        </h4>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <input 
+            type="range" 
+            min="0.8" 
+            max="1.5" 
+            step="0.05" 
+            value={uiScale} 
+            onChange={(e) => setUiScale(parseFloat(e.target.value))} 
+            style={{ flex: 1, accentColor: "var(--brand-red, #ca0b12)" }} 
+          />
+          <span style={{ fontSize: "12px", fontWeight: "600", minWidth: "40px" }}>{Math.round(uiScale * 100)}%</span>
+          <button type="button" className="secondary-button" onClick={() => setUiScale(1.0)} style={{ height: "30px", fontSize: "11px" }}>
+            Reset
           </button>
         </div>
       </div>
@@ -11387,6 +11425,8 @@ function WorkflowModal({
   identity,
   isDark,
   setIsDark,
+  uiScale,
+  setUiScale,
 }: {
   kind: Exclude<ModalKind, null>;
   onClose: () => void;
@@ -11395,6 +11435,8 @@ function WorkflowModal({
   identity: WorkspaceIdentity;
   isDark: boolean;
   setIsDark: (val: boolean) => void;
+  uiScale: number;
+  setUiScale: (val: number) => void;
 }) {
   const config = {
     sale: { eyebrow: "Point of sale", title: "Complete sale", description: "Confirm the customer, items and payment before posting." },
@@ -11430,7 +11472,7 @@ function WorkflowModal({
         {kind === "invite" && <InviteForm onComplete={onComplete} onClose={onClose} allowedStations={allowedStations} />}
         {kind === "agent" && <AgentForm onComplete={onComplete} onClose={onClose} allowedStations={allowedStations} />}
         {kind === "profile" && <UserProfileModalForm identity={identity} onClose={onClose} onComplete={onComplete} />}
-        {kind === "preferences" && <UserPreferencesModalForm identity={identity} onClose={onClose} onComplete={onComplete} isDark={isDark} setIsDark={setIsDark} />}
+        {kind === "preferences" && <UserPreferencesModalForm identity={identity} onClose={onClose} onComplete={onComplete} isDark={isDark} setIsDark={setIsDark} uiScale={uiScale} setUiScale={setUiScale} />}
         {kind === "activity" && <UserActivityModalForm identity={identity} onClose={onClose} />}
       </div>
     </div>
