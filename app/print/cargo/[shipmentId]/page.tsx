@@ -33,27 +33,27 @@ export default async function CargoLabelPage({ params, searchParams }: { params:
   const marginMm = isThermal ? 2 : 10;
   let pageStyle = "";
   if (paperSize === "A4") pageStyle = `@page { size: A4; margin: ${marginMm}mm; } body { font-size: 0.9em; }`;
-  else if (paperSize === "A5") pageStyle = `@page { size: A5; margin: ${marginMm}mm; } body { font-size: 0.75em; }`;
+  else if (paperSize === "A5") pageStyle = `@page { size: A5; margin: ${marginMm}mm; } body { font-size: 0.7em; }`;
   else if (paperSize === "THERMAL_100x150") pageStyle = `@page { size: 100mm 150mm; margin: ${marginMm}mm; }`;
   else if (paperSize === "THERMAL_80x100") pageStyle = `@page { size: 80mm 100mm; margin: ${marginMm}mm; }`;
   else pageStyle = `@page { size: auto; margin: ${marginMm}mm; }`;
 
-  const scale = paperSize === "A5" ? 0.75 : 1;
+  const scale = paperSize === "A5" ? 0.65 : 1;
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: pageStyle }} />
       <main className={`${styles.sheet} ${isThermal ? styles.thermal : ""} ${paperSize === "A5" ? styles.a5 : ""}`}>
         <div className={styles.tagsContainer}>
-          <div className={styles.tagWrap} style={{ borderColor: color, borderWidth: "8px 0", borderStyle: "solid" }}>
+          <div className={styles.tagWrap} style={{ borderColor: color }}>
             <div className={styles.tagContent}>
-              <div className={styles.tagDestCode} style={{ color, fontSize: "3rem", fontWeight: "900" }}>{shipment.destination}</div>
+              <div className={styles.tagDestCode} style={{ color }}>{shipment.destination}</div>
               <div className={styles.tagLogoWrap} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <Image src="/logo.png" alt="System Logo" width={140} height={50} style={{ objectFit: "contain" }} unoptimized />
-                <span style={{ fontSize: "10px", marginTop: "4px", textAlign: "center", color: "#555" }}>{shipment.company.address || "System Address"}</span>
-                {shipment.company.phone && <span style={{ fontSize: "10px", marginTop: "2px", textAlign: "center", color: "#555" }}>{shipment.company.phone}</span>}
+                <Image src="/logo.png" alt="System Logo" width={140 * scale} height={50 * scale} style={{ objectFit: "contain" }} unoptimized />
+                <span style={{ marginTop: "4px", textAlign: "center", color: "#555" }}>{shipment.company.address || "System Address"}</span>
+                {shipment.company.phone && <span style={{ marginTop: "2px", textAlign: "center", color: "#555" }}>{shipment.company.phone}</span>}
               </div>
-              <div className={styles.tagDestCode} style={{ color, fontSize: "3rem", fontWeight: "900" }}>{shipment.destination}</div>
+              <div className={styles.tagDestCode} style={{ color }}>{shipment.destination}</div>
             </div>
             <div className={styles.tagBottomLine} style={{ backgroundColor: color, height: "12px" }} />
           </div>
