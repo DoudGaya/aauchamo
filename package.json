@@ -10,6 +10,7 @@
     "desktop:dev": "concurrently \"npm run dev\" \"electron -r tsx electron/main.ts\"",
     "desktop:build:ts": "tsc -p tsconfig.electron.json",
     "desktop:build": "npm run desktop:build:ts && electron-builder",
+    "deploy:s3": "node scripts/upload-to-s3.js",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -24,6 +25,41 @@
     "db:export:sql": "tsx scripts/export-sql.ts",
     "postinstall": "prisma generate"
   },
+  "build": {
+    "appId": "com.aauchamo.erp",
+    "productName": "AAU Chamo Operations Suite",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/dist/**/*",
+      "electron/splash.html",
+      "public/company-icon.png"
+    ],
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.business",
+      "icon": "build/icon.png"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.png"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Office",
+      "icon": "build/icon.png"
+    }
+  },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
@@ -31,7 +67,6 @@
     "@serwist/precaching": "^9.5.12",
     "bcryptjs": "^3.0.3",
     "bwip-js": "^4.11.2",
-    "dotenv": "^17.4.2",
     "idb-keyval": "^6.3.0",
     "lucide-react": "^1.28.0",
     "next": "16.2.12",
@@ -46,6 +81,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.1116.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/pg": "^8.20.3",
@@ -54,6 +90,7 @@
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^4.1.10",
     "concurrently": "^10.0.5",
+    "dotenv": "^17.4.2",
     "electron": "^43.4.1",
     "electron-builder": "^26.15.3",
     "eslint": "^9",

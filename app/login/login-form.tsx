@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { InstallAppButton } from "./install-app-button";
 
 import styles from "./login.module.css";
 
@@ -86,6 +87,8 @@ export default function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
         <ShieldCheck size={17} />
         <span>Access is permission-scoped and every sensitive action is audited.</span>
       </div>
+
+      <InstallAppButton />
     </form>
   );
 }

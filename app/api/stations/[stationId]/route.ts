@@ -102,3 +102,36 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ st
     return apiFailure(error, requestId);
   }
 }
+
+export async function DELETE(request: Request, { params }: { params: Promise<{ stationId: string }> }) {
+  const requestId = requestIdFrom(request);
+  try {
+    const access = requirePermission(await requireAccess(), "stations.manage");
+    const { stationId } = await params;
+    const before = await db.station.findFirst({ where: { id: stationId, companyId: access.companyId } });
+    if (!before) throw new NotFoundError("Station not found.");
+    
+    await db.$transaction(async (tx) => {
+      // Clean up linked data to allow deletion
+      await tx.stationBusinessUnit.deleteMany({ where: { stationId } });
+      await tx.stationManagerAssignment.deleteMany({ where: { stationId } });
+      
+      await tx.station.delete({ where: { id: stationId } });
+      
+      await writeAudit(tx, {
+        companyId: access.companyId,
+        actorId: access.userId,
+        action: "station.deleted",
+        entityType: "Station",
+        entityId: stationId,
+        requestId,
+        reason: "User initiated hard delete via configuration",
+        before,
+        after: null,
+      });
+    });
+    return apiSuccess({ deleted: true }, requestId);
+  } catch (error) {
+    return apiFailure(error, requestId);
+  }
+}

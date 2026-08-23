@@ -1,4 +1,4 @@
-import { Building2, CheckCircle2, Gauge, ShieldCheck } from "lucide-react";
+import { Building2, CheckCircle2, Gauge, ShieldCheck, Download } from "lucide-react";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 
@@ -48,6 +48,18 @@ export default async function LoginPage({
           <div><ShieldCheck size={18} /><span><strong>Built for accountability</strong><small>Approvals and immutable evidence</small></span></div>
         </div>
         <div className={styles.systemStatus}><CheckCircle2 size={15} /><span>Operations platform</span><strong>SECURE</strong></div>
+        
+        <div style={{ marginTop: "32px", display: "flex", justifyContent: "center" }}>
+          <a 
+            href="https://jigawa-state.s3.amazonaws.com/downloads/AAU-Chamo-Operations-Suite-Setup-0.1.0.exe" 
+            className="secondary-button" 
+            style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", textDecoration: "none", padding: "10px 20px", borderRadius: "8px", fontSize: "14px", transition: "all 0.2s" }}
+            onMouseOver={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.15)"}
+            onMouseOut={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.08)"}
+          >
+            <Download size={16} /> Download Desktop App
+          </a>
+        </div>
       </section>
       <section className={styles.formPanel}>
         <LoginForm callbackUrl={callbackUrl} />

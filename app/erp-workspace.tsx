@@ -72,7 +72,7 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState, createContext, useContext, ReactNode } from "react";
 import React from "react";
 import { signOut } from "next-auth/react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
@@ -84,6 +84,98 @@ import {
   reportCatalogue,
   type Tone,
 } from "@/lib/erp-data";
+
+type PromptState = {
+  type: "prompt" | "confirm";
+  message: string;
+  expected?: string;
+  defaultValue?: string;
+  resolve: (value: any) => void;
+};
+
+const PromptContext = createContext<{
+  prompt: (message: string, expected?: string, defaultValue?: string) => Promise<string | null>;
+  confirm: (message: string) => Promise<boolean>;
+} | null>(null);
+
+export const usePrompt = () => {
+  const ctx = useContext(PromptContext);
+  if (!ctx) throw new Error("Missing PromptContext");
+  return ctx;
+};
+
+function PromptModal({ state, onClose }: { state: PromptState, onClose: (value: any) => void }) {
+  const [input, setInput] = useState(state.defaultValue || "");
+  
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (state.type === "confirm") {
+      onClose(true);
+    } else {
+      if (state.expected && input !== state.expected) {
+        alert("Input does not match expected value.");
+        return;
+      }
+      onClose(input);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" style={{ zIndex: 9999 }}>
+      <div className="modal-content" style={{ maxWidth: 400, padding: 24, textAlign: "left" }}>
+        <h3 style={{ margin: "0 0 16px", color: "var(--text-primary)", fontSize: "18px", fontWeight: 700 }}>Confirmation required</h3>
+        <p style={{ margin: "0 0 20px", color: "var(--text-secondary)", fontSize: "14px", lineHeight: 1.5 }}>{state.message}</p>
+        <form onSubmit={handleSubmit}>
+          {state.type === "prompt" && (
+            <input 
+              autoFocus
+              className="field-input"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={state.expected ? `Type "${state.expected}" to confirm` : ""}
+              style={{ width: "100%", marginBottom: 16 }}
+            />
+          )}
+          <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+            <button type="button" className="secondary-button" onClick={() => onClose(state.type === "confirm" ? false : null)}>Cancel</button>
+            <button type="submit" className={state.expected ? "danger-button" : "primary-button"}>Confirm</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export function PromptProvider({ children }: { children: ReactNode }) {
+  const [promptState, setPromptState] = useState<PromptState | null>(null);
+  
+  const prompt = (message: string, expected?: string, defaultValue?: string) => {
+    return new Promise<string | null>((resolve) => {
+      setPromptState({ type: "prompt", message, expected, defaultValue, resolve });
+    });
+  };
+
+  const confirm = (message: string) => {
+    return new Promise<boolean>((resolve) => {
+      setPromptState({ type: "confirm", message, resolve });
+    });
+  };
+
+  return (
+    <PromptContext.Provider value={{ prompt, confirm }}>
+      {children}
+      {promptState && (
+        <PromptModal
+          state={promptState}
+          onClose={(val: any) => {
+            promptState.resolve(val);
+            setPromptState(null);
+          }}
+        />
+      )}
+    </PromptContext.Provider>
+  );
+}
 
 type ModalKind = "sale" | "product" | "cargo" | "deposit" | "customer" | "purchase" | "ticket" | "finance" | "staff" | "station" | "invite" | "agent" | "profile" | "preferences" | "activity" | null;
 
@@ -254,16 +346,29 @@ function useApiData<T>(url: string | null) {
     setRevision(r => r + 1);
   };
   
-  return url ? { data, total, loading, error, reload } : { data: null, total: 0, loading: false, error: null, reload: async () => {} };
+  return url ? { data, total, loading, error, reload, mutate: setData } : { data: null, total: 0, loading: false, error: null, reload: async () => {}, mutate: () => {} };
 }
 
 async function workflowPost<T>(url: string, body: unknown, method = "POST") {
-  const response = await fetch(url, { method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-  const result = await response.json() as ApiEnvelope<T>;
-  if (!response.ok || !result.ok || result.data === undefined) throw new Error(result.error?.message ?? "The workflow could not be completed.");
-  mutate((key) => typeof key === 'string' && key.startsWith('/api/'));
-  window.dispatchEvent(new Event("erp-data-changed"));
-  return result.data;
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error?.message ?? "Operation failed.");
+    window.dispatchEvent(new Event("erp-data-changed"));
+    return data.data as T;
+  } catch (err: any) {
+    if (err instanceof TypeError && err.message.includes("Failed to fetch") && !navigator.onLine) {
+      const { enqueueOfflineTransaction } = await import("@/lib/client/offline-sync");
+      await enqueueOfflineTransaction(url, method, body, { "content-type": "application/json", accept: "application/json" });
+      window.dispatchEvent(new Event("erp-data-changed"));
+      return { id: "offline-" + Date.now(), status: "QUEUED_OFFLINE", awbNumber: "QUEUED", entryNumber: "QUEUED", saleNumber: "QUEUED", displayName: "Saved Offline", customerNumber: "QUEUED" } as unknown as T;
+    }
+    throw err;
+  }
 }
 
 const modulePermission: Record<string, string | undefined> = {
@@ -481,6 +586,7 @@ export default function ERPWorkspace({
   };
 
   return (
+    <PromptProvider>
     <div className={classNames("erp-app", isDark && "theme-dark")} style={uiScale !== 1.0 ? { zoom: uiScale } as any : undefined}>
       <Sidebar
         active={activeModule}
@@ -615,6 +721,7 @@ export default function ERPWorkspace({
         </div>
       )}
     </div>
+    </PromptProvider>
   );
 }
 
@@ -3741,6 +3848,7 @@ function InventoryView({
 }) {
   const [tab, setTab] = useState(purchases ? "Purchase orders" : "All products");
   const [referenceNow] = useState(() => Date.now());
+  const { prompt, confirm } = usePrompt();
   const productApi = useApiData<ProductRecord[]>("/api/inventory/catalogue?pageSize=100");
   const purchaseApi = useApiData<PurchaseRecord[]>("/api/purchases?pageSize=100");
   const movementApi = useApiData<MovementRecord[]>("/api/inventory/movements?pageSize=100");
@@ -4168,15 +4276,19 @@ function InventoryView({
                           title="Delete Product"
                           style={{ padding: "4px 8px", fontSize: "11px", height: "26px", color: "#dc2626", background: "rgba(220, 38, 38, 0.1)", border: "none", borderRadius: "4px", fontWeight: "600", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
                           onClick={async () => {
-                            if (!window.confirm(`Delete product "${product.name}" (${product.code}) from inventory?`)) return;
+                            const input = await prompt(`Type "${product.name}" exactly to confirm deletion:`, product.name);
+                            if (input !== product.name) {
+                              return;
+                            }
                             try {
+                              productApi.mutate((prev: ProductRecord[] | null) => prev ? prev.filter(p => p.id !== product.id) : null);
                               const res = await fetch(`/api/inventory/catalogue/${product.id}`, { method: "DELETE" });
                               const body = await res.json();
                               if (!res.ok || !body.ok) throw new Error(body.error?.message || "Failed to delete product.");
                               window.dispatchEvent(new Event("erp-data-changed"));
-                              productApi.reload();
                             } catch (err: any) {
                               alert(err.message || "Failed to delete product.");
+                              productApi.reload();
                             }
                           }}
                         >
@@ -7079,6 +7191,7 @@ function StationProfilePanel({ station, onDone }: { station: StationRecord; onDo
   const detailApi = useApiData<StationDetailRecord>(`/api/stations/${station.id}`);
   const detail = detailApi.data;
   const buApi = useApiData<any[]>("/api/settings/business-units");
+  const { prompt } = usePrompt();
   
   const [busy, setBusy] = useState(false);
   const [disableBusy, setDisableBusy] = useState(false);
@@ -7145,6 +7258,23 @@ function StationProfilePanel({ station, onDone }: { station: StationRecord; onDo
     finally { setDisableBusy(false); }
   };
 
+  const handleDelete = async () => {
+    const input = await prompt(`Type "${station.name}" exactly to confirm deletion:`, station.name);
+    if (input !== station.name) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/stations/${station.id}`, { method: "DELETE" });
+      const body = await res.json();
+      if (!res.ok || !body.ok) throw new Error(body.error?.message || "Failed to delete station.");
+      window.dispatchEvent(new Event("erp-data-changed"));
+      onDone();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Delete failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   if (detailApi.loading) return <EmptyState icon={RefreshCcw} title="Loading station details" detail="Fetching current configuration." compact />;
   if (detailApi.error) return <EmptyState icon={AlertTriangle} title="Could not load station" detail={detailApi.error} compact />;
 
@@ -7203,6 +7333,12 @@ function StationProfilePanel({ station, onDone }: { station: StationRecord; onDo
           </form>
         </div>
       )}
+
+      <div className="disable-zone" style={{ marginTop: 24, background: "rgba(220, 38, 38, 0.05)", border: "1px solid rgba(220, 38, 38, 0.2)" }}>
+        <p className="disable-zone-label" style={{ color: "#dc2626" }}><Trash2 size={14} /> Delete this station</p>
+        <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: 12 }}>This action will permanently delete this station and its configuration.</p>
+        <button type="button" className="danger-button" onClick={handleDelete} disabled={busy}>{busy ? "Deleting..." : "Delete station permanently"}</button>
+      </div>
     </div>
   );
 }
@@ -8496,13 +8632,12 @@ function AttendanceView({
             </select>
           )}
         </div>
-
         {tab === "Clock portal" ? (
-          <div style={{ maxWidth: "560px", margin: "20px auto", padding: "10px" }}>
+          <div className="workflow-body" style={{ padding: "16px 20px" }}>
             {/* Mobile PWA Launcher Banner */}
             <div style={{
-              background: "linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(11, 31, 58, 0.4) 100%)",
-              border: "1px solid rgba(16, 185, 129, 0.3)",
+              background: "linear-gradient(135deg, rgba(220, 38, 38, 0.08) 0%, rgba(16, 36, 61, 0.2) 100%)",
+              border: "1px solid rgba(220, 38, 38, 0.2)",
               borderRadius: "12px",
               padding: "14px 18px",
               marginBottom: "24px",
@@ -8514,7 +8649,7 @@ function AttendanceView({
             }}>
               <div>
                 <strong style={{ fontSize: "14px", color: "var(--text-primary)", display: "block" }}>
-                  📱 Standalone Mobile Punch Clock App
+                  [Mobile] Standalone Mobile Punch Clock App
                 </strong>
                 <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
                   Open directly on your phone or install as a PWA home screen app.
@@ -8525,9 +8660,9 @@ function AttendanceView({
                 target="_blank"
                 rel="noopener noreferrer"
                 className="primary-button"
-                style={{ height: "36px", padding: "0 14px", fontSize: "12px", background: "#10b981", color: "white", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                style={{ height: "36px", padding: "0 14px", fontSize: "12px", background: "var(--brand-primary, #dc2626)", color: "white", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}
               >
-                <span>Launch Mobile PWA ↗</span>
+                <span>Launch Mobile PWA -</span>
               </a>
             </div>
 
@@ -8535,11 +8670,11 @@ function AttendanceView({
               <div style={{ fontSize: "14px", textTransform: "uppercase", letterSpacing: "1px", color: "var(--text-secondary)" }}>
                 {new Date().toLocaleDateString("en-NG", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
               </div>
-              <div style={{ fontSize: "42px", fontWeight: "bold", fontFamily: "monospace", margin: "10px 0", color: "var(--text-primary)" }}>
+              <div style={{ fontSize: "42px", fontWeight: "bold", fontFamily: "monospace", margin: "10px 0", color: "var(--brand-dark, #10243d)" }}>
                 {time}
               </div>
               <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "var(--field-bg)", padding: "8px 16px", borderRadius: "20px", fontSize: "12px" }}>
-                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: coords ? "#10b981" : "#ef4444" }} />
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: coords ? "#22c55e" : "#ef4444" }} />
                 <span style={{ color: "var(--text-secondary)" }}>
                   {coords ? `GPS Connected: ${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}` : gpsError || "Initializing GPS..."}
                 </span>
@@ -8580,7 +8715,7 @@ function AttendanceView({
                   <button
                     type="button"
                     className="primary-button"
-                    style={{ height: "46px", fontSize: "15px", justifyContent: "center", background: "#10b981", color: "white" }}
+                    style={{ height: "46px", fontSize: "15px", justifyContent: "center", background: "var(--brand-dark, #10243d)", color: "white" }}
                     onClick={() => handleClock("in")}
                     disabled={busy || !coords}
                   >
@@ -8601,8 +8736,8 @@ function AttendanceView({
             )}
 
             {isClockedOutToday && (
-              <div style={{ textAlign: "center", color: "#10b981", fontWeight: "bold", fontSize: "14px", background: "rgba(16, 185, 129, 0.1)", padding: "12px", borderRadius: "6px" }}>
-                ✓ You have successfully completed your attendance for today.
+              <div style={{ textAlign: "center", color: "var(--brand-primary, #dc2626)", fontWeight: "bold", fontSize: "14px", background: "rgba(220, 38, 38, 0.08)", border: "1px solid rgba(220, 38, 38, 0.2)", padding: "12px", borderRadius: "6px" }}>
+                [OK] You have successfully completed your attendance for today.
               </div>
             )}
           </div>
@@ -11278,10 +11413,12 @@ function QuickSaleForm({
   onComplete,
   onClose,
   allowedStations,
+  identity,
 }: {
   onComplete: (title: string, detail: string) => void;
   onClose: () => void;
   allowedStations: AllowedStation[];
+  identity: WorkspaceIdentity;
 }) {
   const [stationId, setStationId] = useState(allowedStations[0]?.id || "");
   const { data: posData, loading } = useApiData<POSBootstrap>(stationId ? `/api/pos/bootstrap?stationId=${stationId}` : null);
@@ -11290,7 +11427,7 @@ function QuickSaleForm({
   const [quantity, setQuantity] = useState("1");
   const [customerId, setCustomerId] = useState("");
   const [paymentMethodId, setPaymentMethodId] = useState("");
-  const [paymentRef, setPaymentRef] = useState("");
+  const [paymentRef, setPaymentRef] = useState(identity?.name || "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -11311,29 +11448,16 @@ function QuickSaleForm({
     const selectedPayId = paymentMethodId || posData?.paymentMethods[0]?.id;
 
     try {
-      const res = await fetch("/api/sales", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          accept: "application/json",
-          "idempotency-key": `pos-modal-${crypto.randomUUID()}`,
-        },
-        body: JSON.stringify({
-          stationId,
-          businessUnitId: posData?.businessUnits[0]?.id,
-          customerId: selectedCustId,
-          lines: [{ productId, quantity: String(Math.max(1, Number(quantity) || 1)) }],
-          payments: [{ paymentMethodId: selectedPayId, amount: totalAmount.toFixed(2), reference: paymentRef || undefined }],
-        }),
-      });
-
-      const body = await res.json();
-      if (!res.ok || !body.ok) {
-        throw new Error(body.error?.message || "Failed to complete sale.");
-      }
+      const data = await workflowPost<{ saleNumber: string }>("/api/sales", {
+        stationId,
+        businessUnitId: posData?.businessUnits[0]?.id,
+        customerId: selectedCustId,
+        lines: [{ productId, quantity: String(Math.max(1, Number(quantity) || 1)) }],
+        payments: [{ paymentMethodId: selectedPayId, amount: totalAmount.toFixed(2), reference: paymentRef || undefined }],
+      }, "POST");
 
       window.dispatchEvent(new Event("erp-data-changed"));
-      onComplete("Sale Completed", `Order #${body.data?.saleNumber ?? "AUG"} recorded successfully.`);
+      onComplete("Sale Completed", `Order #${data?.saleNumber ?? "QUEUED"} recorded successfully.`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to record sale.");
     } finally {
@@ -11471,7 +11595,7 @@ function WorkflowModal({
     <div className="modal-layer" role="dialog" aria-modal="true" aria-labelledby="workflow-title" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <div className="workflow-dialog">
         <div className="workflow-header"><div><span>{config.eyebrow}</span><h2 id="workflow-title">{config.title}</h2><p>{config.description}</p></div><button onClick={onClose} aria-label="Close modal"><X size={19} /></button></div>
-        {kind === "sale" && <QuickSaleForm onComplete={onComplete} onClose={onClose} allowedStations={allowedStations} />}
+        {kind === "sale" && <QuickSaleForm onComplete={onComplete} onClose={onClose} allowedStations={allowedStations} identity={identity} />}
         {kind === "product" && <ProductForm onComplete={onComplete} onClose={onClose} allowedStations={allowedStations} />}
         {kind === "cargo" && <CargoForm onComplete={onComplete} onClose={onClose} allowedStations={allowedStations} />}
         {kind === "deposit" && <DepositForm onComplete={onComplete} onClose={onClose} allowedStations={allowedStations} />}
@@ -11538,22 +11662,22 @@ function ProductForm({ onComplete, onClose, allowedStations }: { onComplete: (ti
     event.preventDefault(); setBusy(true); setError(null); const form = new FormData(event.currentTarget);
     const stationId = String(form.get("stationId")); const quantity = String(form.get("stock") || "0");
     try {
-      const response = await fetch("/api/inventory/catalogue", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code: String(form.get("code")), barcode: String(form.get("barcode") || "") || undefined, name: String(form.get("name")), categoryId: String(form.get("categoryId")), unitId: String(form.get("unitId")), defaultSupplierId: String(form.get("supplierId") || "") || undefined, purchasePrice: String(form.get("purchasePrice") || "0"), sellingPrice: String(form.get("sellingPrice")), reorderLevel: String(form.get("reorder") || "0"), minimumLevel: String(form.get("minimum") || "0"), openingBalances: Number(quantity) > 0 ? [{ stationId, quantity }] : [] }) });
+      const response = await fetch("/api/inventory/catalogue", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code: String(form.get("code")), name: String(form.get("name")), categoryId: String(form.get("categoryId") || setup?.categories[0]?.id || ""), unitId: String(form.get("unitId")), defaultSupplierId: String(form.get("supplierId") || "") || undefined, purchasePrice: String(form.get("purchasePrice") || "0"), sellingPrice: String(form.get("sellingPrice")), reorderLevel: String(form.get("reorder") || "0"), minimumLevel: String(form.get("minimum") || "0"), openingBalances: Number(quantity) > 0 ? [{ stationId, quantity }] : [] }) });
       const body = await response.json() as ApiEnvelope<{ id: string; code: string; name: string }>;
       if (!response.ok || !body.ok || !body.data) throw new Error(body.error?.message ?? "Product could not be created.");
       window.dispatchEvent(new Event("erp-data-changed"));
       onComplete("Product created", `${body.data.code} · ${body.data.name} and its opening stock movement were committed.`);
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Product could not be created."); } finally { setBusy(false); }
   };
-  return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="Product name" full><input name="name" required placeholder="e.g. Binani Premium Rice 50kg" /></Field><Field label="Product code"><input name="code" required placeholder="BNA-RCE-050" /></Field><Field label="Barcode"><input name="barcode" placeholder="Scan or enter barcode" /></Field><Field label="Category"><div style={{ display: "flex", gap: "6px" }}><select name="categoryId" required defaultValue="" style={{ flex: 1 }}><option value="" disabled>Select category</option>{setup?.categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><button type="button" className="secondary-button" onClick={addCategory} title="Create new category" style={{ height: "36px", padding: "0 10px", fontSize: "12px", whiteSpace: "nowrap" }}>+ New</button></div></Field><Field label="Unit"><div style={{ display: "flex", gap: "6px" }}><select name="unitId" required defaultValue="" style={{ flex: 1 }}><option value="" disabled>Select unit</option>{setup?.units.map((item) => <option key={item.id} value={item.id}>{item.name} ({item.code})</option>)}</select><button type="button" className="secondary-button" onClick={addUnit} title="Create new unit of measure" style={{ height: "36px", padding: "0 10px", fontSize: "12px", whiteSpace: "nowrap" }}>+ New</button></div></Field><Field label="Default supplier"><select name="supplierId" defaultValue=""><option value="">No default supplier</option>{setup?.suppliers.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field><Field label="Opening station"><select name="stationId" required defaultValue={allowedStations[0]?.id}>{allowedStations.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select></Field><Field label="Opening quantity"><input name="stock" type="number" step="0.001" min="0" defaultValue="0" /></Field><Field label="Reorder level"><input name="reorder" type="number" step="0.001" min="0" defaultValue="20" /></Field><Field label="Minimum level"><input name="minimum" type="number" step="0.001" min="0" defaultValue="0" /></Field><Field label="Purchase price"><div className="money-input"><span>₦</span><input name="purchasePrice" type="number" step="0.01" min="0" defaultValue="0" /></div></Field><Field label="Selling price"><div className="money-input"><span>₦</span><input name="sellingPrice" type="number" step="0.01" min="0.01" required /></div></Field></div>{(error || setupError) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? setupError}</span></div>}<div className="form-note"><PackageCheck size={16} /><span>Product creation and opening stock are committed atomically to the immutable movement ledger.</span></div></div><ModalFooter onClose={onClose} submitLabel={busy ? "Creating…" : loading ? "Loading setup…" : "Create product"} icon={PackagePlus} disabled={busy || loading || !setup || !allowedStations.length} /></form>;
+  return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="Product name" full><input name="name" required placeholder="e.g. Binani Premium Rice 50kg" /></Field><Field label="Product code"><input name="code" required placeholder="BNA-RCE-050" /></Field><Field label="Unit"><div style={{ display: "flex", gap: "6px" }}><select name="unitId" required defaultValue="" style={{ flex: 1 }}><option value="" disabled>Select unit</option>{setup?.units.map((item) => <option key={item.id} value={item.id}>{item.name} ({item.code})</option>)}</select><button type="button" className="secondary-button" onClick={addUnit} title="Create new unit of measure" style={{ height: "36px", padding: "0 10px", fontSize: "12px", whiteSpace: "nowrap" }}>+ New</button></div></Field><Field label="Default supplier"><select name="supplierId" defaultValue=""><option value="">No default supplier</option>{setup?.suppliers.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field><Field label="Opening station"><select name="stationId" required defaultValue={allowedStations[0]?.id}>{allowedStations.map((item) => <option key={item.id} value={item.id}>{item.code} — {item.name}</option>)}</select></Field><Field label="Opening quantity"><input name="stock" type="number" step="0.001" min="0" defaultValue="0" /></Field><Field label="Reorder level"><input name="reorder" type="number" step="0.001" min="0" defaultValue="20" /></Field><Field label="Minimum sale quantity"><input name="minimum" type="number" step="1" min="0" defaultValue="1" /></Field><Field label="Purchase price"><div className="money-input"><span>₦</span><input name="purchasePrice" type="number" step="0.01" min="0" defaultValue="0" /></div></Field><Field label="Selling price"><div className="money-input"><span>₦</span><input name="sellingPrice" type="number" step="0.01" min="0.01" required /></div></Field></div>{(error || setupError) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? setupError}</span></div>}<div className="form-note"><PackageCheck size={16} /><span>Product creation and opening stock are committed atomically to the immutable movement ledger.</span></div></div><ModalFooter onClose={onClose} submitLabel={busy ? "Creating…" : loading ? "Loading setup…" : "Create product"} icon={PackagePlus} disabled={busy || loading || !setup || !allowedStations.length} /></form>;
 }
 
 function CargoForm({ onComplete, onClose, allowedStations }: { onComplete: (title: string, detail: string) => void; onClose: () => void; allowedStations: AllowedStation[] }) {
   const { data: customerData, loading, error: customerError } = useApiData<CustomerRecord[]>("/api/customers?pageSize=100");
   const { data: settings } = useApiData<SettingsRecord>("/api/settings");
   const [busy, setBusy] = useState(false); const [error, setError] = useState<string | null>(null);
-  const submit = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setBusy(true); setError(null); const form = new FormData(event.currentTarget); const optional = (name: string) => String(form.get(name) ?? "").trim() || undefined; try { const response = await fetch("/api/cargo", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ stationId: String(form.get("stationId")), customerId: String(form.get("customerId")), senderName: String(form.get("senderName")), senderPhone: String(form.get("senderPhone")), receiverName: String(form.get("receiverName")), receiverPhone: String(form.get("receiverPhone")), receiverAddress: optional("receiverAddress"), origin: String(form.get("origin")), destination: String(form.get("destination")), weightKg: String(form.get("weightKg")), pieces: Number(form.get("pieces")), commodity: String(form.get("commodity")), airline: optional("airline"), flightNumber: optional("flightNumber"), handlingNotes: optional("handlingNotes"), declaredValue: optional("declaredValue"), isFragile: form.get("isFragile") === "on" }) }); const body = await response.json() as ApiEnvelope<{ id: string; awbNumber: string; labelUrl: string }>; if (!response.ok || !body.ok || !body.data) throw new Error(body.error?.message ?? "Cargo record could not be created."); window.dispatchEvent(new Event("erp-data-changed")); window.open(body.data.labelUrl, "_blank", "noopener,noreferrer"); onComplete("Cargo record created", `${body.data.awbNumber} was posted and its traceable label opened for printing.`); } catch (reason) { setError(reason instanceof Error ? reason.message : "Cargo record could not be created."); } finally { setBusy(false); } };
-  return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="Station"><select name="stationId" required defaultValue={allowedStations[0]?.id}>{allowedStations.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select></Field><Field label="Customer"><select name="customerId" required defaultValue=""><option value="" disabled>Select customer</option>{customerData?.map((item) => <option key={item.id} value={item.id}>{item.displayName} · {item.primaryPhone}</option>)}</select></Field><Field label="Sender name"><input name="senderName" required /></Field><Field label="Sender phone"><input name="senderPhone" required autoComplete="tel" pattern="[0-9]+" title="Only digits are allowed" /></Field><Field label="Receiver"><input name="receiverName" required /></Field><Field label="Receiver phone"><input name="receiverPhone" required autoComplete="tel" pattern="[0-9]+" title="Only digits are allowed" /></Field><Field label="Receiver address" full><input name="receiverAddress" /></Field><Field label="Origin"><select name="origin" required defaultValue=""><option value="" disabled>Select origin</option>{settings?.cargoLocations?.map(l => <option key={l.id} value={l.code}>{l.name} ({l.code})</option>)}</select></Field><Field label="Destination"><select name="destination" required defaultValue=""><option value="" disabled>Select destination</option>{settings?.cargoLocations?.map(l => <option key={l.id} value={l.code}>{l.name} ({l.code})</option>)}</select></Field><Field label="Weight (kg)"><input name="weightKg" type="number" step="0.001" min="0.001" required /></Field><Field label="Pieces"><input name="pieces" type="number" min="1" defaultValue="1" required /></Field><Field label="Commodity" full><input name="commodity" required placeholder="Describe the cargo contents" /></Field><Field label="Declared value"><div className="money-input"><span>₦</span><input name="declaredValue" type="number" step="0.01" min="0" /></div></Field><Field label="Airline"><input name="airline" /></Field><Field label="Flight number"><input name="flightNumber" placeholder="e.g. VM-1642" /></Field><Field label="Handling notes"><textarea name="handlingNotes" placeholder="Orientation, special handling..." /></Field><Field label="Fragile"><div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}><input type="checkbox" name="isFragile" /><span>Mark as fragile</span></div></Field></div>{(error || customerError) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? customerError}</span></div>}</div><ModalFooter onClose={onClose} submitLabel={busy ? "Creating…" : loading ? "Loading customers…" : "Create & print label"} icon={Printer} disabled={busy || loading || !customerData?.length || !allowedStations.length} /></form>;
+  const submit = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setBusy(true); setError(null); const form = new FormData(event.currentTarget); const optional = (name: string) => String(form.get(name) ?? "").trim() || undefined; try { const response = await fetch("/api/cargo", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ stationId: String(form.get("stationId")), customerId: String(form.get("customerId")), senderName: String(form.get("senderName")), senderPhone: String(form.get("senderPhone")), receiverName: String(form.get("receiverName")), receiverPhone: String(form.get("receiverPhone")), receiverAddress: optional("receiverAddress"), origin: String(form.get("origin")), destination: String(form.get("destination")), weightKg: String(form.get("weightKg")), pieces: Number(form.get("pieces")), commodity: String(form.get("commodity")), airline: optional("airline"), flightNumber: optional("flightNumber"), flightDate: optional("flightDate") ? new Date(String(form.get("flightDate"))).toISOString() : undefined, handlingNotes: optional("handlingNotes"), declaredValue: optional("declaredValue"), isFragile: form.get("isFragile") === "on" }) }); const body = await response.json() as ApiEnvelope<{ id: string; awbNumber: string; labelUrl: string }>; if (!response.ok || !body.ok || !body.data) throw new Error(body.error?.message ?? "Cargo record could not be created."); window.dispatchEvent(new Event("erp-data-changed")); window.open(body.data.labelUrl, "_blank", "noopener,noreferrer"); onComplete("Cargo record created", `${body.data.awbNumber} was posted and its traceable label opened for printing.`); } catch (reason) { setError(reason instanceof Error ? reason.message : "Cargo record could not be created."); } finally { setBusy(false); } };
+  return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="Station"><select name="stationId" required defaultValue={allowedStations[0]?.id}>{allowedStations.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select></Field><Field label="Customer"><select name="customerId" required defaultValue=""><option value="" disabled>Select customer</option>{customerData?.map((item) => <option key={item.id} value={item.id}>{item.displayName} · {item.primaryPhone}</option>)}</select></Field><Field label="Sender name"><input name="senderName" required /></Field><Field label="Sender phone"><input name="senderPhone" required autoComplete="tel" pattern="[0-9]+" title="Only digits are allowed" /></Field><Field label="Receiver"><input name="receiverName" required /></Field><Field label="Receiver phone"><input name="receiverPhone" required autoComplete="tel" pattern="[0-9]+" title="Only digits are allowed" /></Field><Field label="Receiver address" full><input name="receiverAddress" /></Field><Field label="Origin"><select name="origin" required defaultValue=""><option value="" disabled>Select origin</option>{settings?.cargoLocations?.map(l => <option key={l.id} value={l.code}>{l.name} ({l.code})</option>)}</select></Field><Field label="Destination"><select name="destination" required defaultValue=""><option value="" disabled>Select destination</option>{settings?.cargoLocations?.map(l => <option key={l.id} value={l.code}>{l.name} ({l.code})</option>)}</select></Field><Field label="Weight (kg)"><input name="weightKg" type="number" step="0.001" min="0.001" required /></Field><Field label="Pieces"><input name="pieces" type="number" min="1" defaultValue="1" required /></Field><Field label="Commodity" full><input name="commodity" required placeholder="Describe the cargo contents" /></Field><Field label="Declared value"><div className="money-input"><span>₦</span><input name="declaredValue" type="number" step="0.01" min="0" /></div></Field><Field label="Airline"><input name="airline" /></Field><Field label="Flight number"><input name="flightNumber" placeholder="e.g. VM-1642" /></Field><Field label="Flight date"><input name="flightDate" type="date" /></Field><Field label="Handling notes"><textarea name="handlingNotes" placeholder="Orientation, special handling..." /></Field><Field label="Fragile"><div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}><input type="checkbox" name="isFragile" /><span>Mark as fragile</span></div></Field></div>{(error || customerError) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? customerError}</span></div>}</div><ModalFooter onClose={onClose} submitLabel={busy ? "Creating…" : loading ? "Loading customers…" : "Create & print label"} icon={Printer} disabled={busy || loading || !customerData?.length || !allowedStations.length} /></form>;
 }
 
 function DepositForm({ onComplete, onClose, allowedStations, initialAgentId }: { onComplete: (title: string, detail: string) => void; onClose: () => void; allowedStations: AllowedStation[]; initialAgentId?: string }) {
@@ -11937,32 +12061,23 @@ function CustomerForm({ onComplete, onClose, allowedStations }: { onComplete: (t
     const data = new FormData(event.currentTarget);
     const optional = (name: string) => String(data.get(name) ?? "").trim() || undefined;
     try {
-      const response = await fetch("/api/customers", {
-        method: "POST",
-        headers: { "content-type": "application/json", accept: "application/json" },
-        body: JSON.stringify({
-          type,
-          firstName: type === "INDIVIDUAL" ? optional("firstName") : undefined,
-          lastName: type === "INDIVIDUAL" ? optional("lastName") : undefined,
-          companyName: type === "BUSINESS" ? optional("companyName") : undefined,
-          phone: optional("phone"),
-          email: optional("email"),
-          nationalId: optional("nationalId"),
-          pnr: optional("pnr"),
-          destination: optional("destination"),
-          airline: optional("airline"),
-          remarks: optional("remarks"),
-          homeStationId: optional("homeStationId") || allowedStations[0]?.id,
-          allowDuplicate: true,
-        }),
+      const customerData = await workflowPost<{ customerNumber: string; displayName: string }>("/api/customers", {
+        type,
+        firstName: type === "INDIVIDUAL" ? optional("firstName") : undefined,
+        lastName: type === "INDIVIDUAL" ? optional("lastName") : undefined,
+        companyName: type === "BUSINESS" ? optional("companyName") : undefined,
+        phone: optional("phone"),
+        email: optional("email"),
+        nationalId: optional("nationalId"),
+        pnr: optional("pnr"),
+        destination: optional("destination"),
+        airline: optional("airline"),
+        remarks: optional("remarks"),
+        homeStationId: optional("homeStationId") || allowedStations[0]?.id,
+        allowDuplicate: true,
       });
-      const body = (await response.json()) as ApiEnvelope<{ customerNumber: string; displayName: string }>;
-      if (!response.ok || !body.ok || !body.data) {
-        if (response.status === 409) setAllowDuplicate(true);
-        throw new Error(body.error?.message || "The customer could not be registered.");
-      }
       window.dispatchEvent(new Event("erp-data-changed"));
-      onComplete("Customer registered", `${body.data.displayName} (${body.data.customerNumber}) is ready for sales, cargo and booking workflows.`);
+      onComplete("Customer registered", `${customerData.displayName} (${customerData.customerNumber}) is ready for sales, cargo and booking workflows.`);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "The customer could not be registered.");
     } finally {

@@ -49,7 +49,7 @@ export default async function CargoLabelPage({ params, searchParams }: { params:
             <div className={styles.tagContent}>
               <div className={styles.tagDestCode} style={{ color }}>{shipment.destination}</div>
               <div className={styles.tagLogoWrap} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <Image src="/logo.png" alt="System Logo" width={140 * scale} height={50 * scale} style={{ objectFit: "contain" }} unoptimized />
+                <Image src={shipment.company.logoDarkObjectKey || shipment.company.logoObjectKey || "/logo.png"} alt="System Logo" width={140 * scale} height={50 * scale} style={{ objectFit: "contain" }} unoptimized />
                 <span style={{ marginTop: "4px", textAlign: "center", color: "#555" }}>{shipment.company.address || "System Address"}</span>
                 {shipment.company.phone && <span style={{ marginTop: "2px", textAlign: "center", color: "#555" }}>{shipment.company.phone}</span>}
               </div>
@@ -59,16 +59,9 @@ export default async function CargoLabelPage({ params, searchParams }: { params:
           </div>
         </div>
 
-        <header style={{ marginTop: "16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <span style={{ fontSize: "12px", fontWeight: 700, marginTop: "4px", color: "#555" }}>{shipment.company.address || shipment.company.legalName}</span>
-              <strong>CARGO / AIR WAYBILL</strong>
-            </div>
-          </div>
-          <div><small>Origin station</small><b>{shipment.station.code}</b></div>
-        </header>
-        <section className={styles.route}><div><small>FROM</small><strong>{shipment.origin}</strong></div><i>→</i><div><small>TO</small><strong>{shipment.destination}</strong></div></section>
+
+
+        <section className={styles.route} style={{ marginTop: "16px" }}><div><small>FROM</small><strong>{shipment.origin}</strong></div><i>→</i><div><small>TO</small><strong>{shipment.destination}</strong></div></section>
         <section className={styles.parties}><div><small>SENDER</small><strong>{shipment.senderName}</strong><span>{shipment.senderPhone}</span></div><div><small>RECEIVER</small><strong>{shipment.receiverName}</strong><span>{shipment.receiverPhone}</span><span>{shipment.receiverAddress}</span></div></section>
         <section className={styles.metrics}><div><small>PIECES</small><strong>{shipment.pieces}</strong></div><div><small>WEIGHT</small><strong>{shipment.weightKg.toString()} kg</strong></div><div><small>AIRLINE / FLIGHT</small><strong>{[shipment.airline, shipment.flightNumber].filter(Boolean).join(" · ") || "—"}</strong></div><div><small>FLIGHT DATE</small><strong>{shipment.flightDate ? new Intl.DateTimeFormat("en-NG", { dateStyle: "medium" }).format(shipment.flightDate) : "—"}</strong></div></section>
         <section className={styles.commodity}><small>COMMODITY</small><strong>{shipment.commodity}</strong></section>

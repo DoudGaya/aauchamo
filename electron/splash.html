@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Loading...</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #050505;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        color: white;
+        font-family: system-ui, -apple-system, sans-serif;
+        -webkit-app-region: drag; /* Makes the window draggable */
+      }
+      img {
+        width: 120px;
+        height: auto;
+        margin-bottom: 30px;
+      }
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-left-color: #ca0b12; /* Brand red */
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <img src="../public/company-icon.png" alt="AAU Chamo Logo" />
+    <div class="spinner"></div>
+  </body>
+</html>
