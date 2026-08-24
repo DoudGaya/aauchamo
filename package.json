@@ -4,7 +4,7 @@
   "private": true,
   "main": "electron/dist/main.js",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3001 -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
     "desktop:dev": "concurrently \"npm run dev\" \"electron -r tsx electron/main.ts\"",
