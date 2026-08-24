@@ -59,6 +59,24 @@
 .systemStatus svg { color: #5cbf9c; }
 .systemStatus strong { margin-left: auto; color: #78d2b2; font-size: 10px; letter-spacing: .16em; }
 
+.downloadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.downloadBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
 .formPanel { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 56px clamp(30px, 7vw, 110px) 30px; }
 .form { width: min(100%, 470px); }
 .formHeading { margin-bottom: 36px; }
