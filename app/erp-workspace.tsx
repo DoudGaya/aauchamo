@@ -4555,27 +4555,39 @@ function CargoView({
     }
   };
 
-  const printLabel = (item: CargoRecord) => {
-    const isThermal = window.confirm("Print in thermal format? Click OK for Zebra/Thermal, Cancel for A4 standard.");
-    window.dispatchEvent(new CustomEvent("erp-print", { detail: { url: `/print/cargo/${item.id}?format=${isThermal ? "thermal" : "a4"}`, title: "Cargo Label" } }));
-  };
+  const [printOptionsItem, setPrintOptionsItem] = useState<{ item: CargoRecord; type: "PRINT" | "REPRINT" } | null>(null);
+  const [printFormat, setPrintFormat] = useState<"AUTO" | "THERMAL" | "A4">("AUTO");
+  const [reprintReason, setReprintReason] = useState("Customer copy");
 
-  const reprint = async (item: CargoRecord) => {
-    const isThermal = window.confirm("Reprint in thermal format? Click OK for Zebra/Thermal, Cancel for A4 standard.");
-    const reason = window.prompt(`Reason to reprint the label for ${item.awbNumber}`, "Customer copy");
-    if (!reason?.trim()) return;
-    try {
-      const format = isThermal ? "THERMAL" : "A4";
-      await workflowPost(`/api/cargo/${item.id}/reprint`, { format, reason });
-      reload();
-      window.dispatchEvent(new CustomEvent("erp-print", { detail: { url: `/print/cargo/${item.id}`, title: "Cargo Label" } }));
-      onToast({ title: "Label reprinted", detail: `An audited reprint of ${item.awbNumber} was recorded.` });
-    } catch (error_) {
-      onToast({
-        title: "Reprint failed",
-        detail: error_ instanceof Error ? error_.message : "The label could not be reprinted.",
-      });
+  const submitPrint = async (mode: "MODAL" | "FULL_PAGE") => {
+    if (!printOptionsItem) return;
+    const { item, type } = printOptionsItem;
+    let url = `/print/cargo/${item.id}`;
+    if (printFormat !== "AUTO") {
+      url += `?format=${printFormat.toLowerCase()}`;
     }
+
+    if (type === "REPRINT") {
+      if (!reprintReason.trim()) {
+        onToast({ title: "Validation error", detail: "Reason is required for reprint." });
+        return;
+      }
+      try {
+        await workflowPost(`/api/cargo/${item.id}/reprint`, { format: printFormat === "AUTO" ? "A4" : printFormat, reason: reprintReason });
+        reload();
+        onToast({ title: "Label reprinted", detail: `An audited reprint of ${item.awbNumber} was recorded.` });
+      } catch (error_) {
+        onToast({ title: "Reprint failed", detail: error_ instanceof Error ? error_.message : "The label could not be reprinted." });
+        return;
+      }
+    }
+
+    if (mode === "MODAL") {
+      window.dispatchEvent(new CustomEvent("erp-print", { detail: { url, title: `AWB ${item.awbNumber}` } }));
+    } else {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+    setPrintOptionsItem(null);
   };
 
   const exportManifest = () => {
@@ -4768,7 +4780,7 @@ function CargoView({
                           type="button"
                           className="icon-ghost"
                           title="Open label"
-                          onClick={() => printLabel(item)}
+                          onClick={() => setPrintOptionsItem({ item, type: "PRINT" })}
                         >
                           <Printer size={16} />
                         </button>
@@ -4776,7 +4788,7 @@ function CargoView({
                           type="button"
                           className="icon-ghost"
                           title="Reprint label (audited)"
-                          onClick={() => reprint(item)}
+                          onClick={() => setPrintOptionsItem({ item, type: "REPRINT" })}
                         >
                           <RotateCcw size={16} />
                         </button>
@@ -4825,6 +4837,44 @@ function CargoView({
             onToast({ title, detail });
           }}
         />
+      )}
+
+      {printOptionsItem && (
+        <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && setPrintOptionsItem(null)}>
+          <div className="workflow-dialog" style={{ maxWidth: "400px" }}>
+            <div className="workflow-header">
+              <div>
+                <div className="eyebrow">{printOptionsItem.type === "REPRINT" ? "Audited Action" : "Print Label"}</div>
+                <h2>{printOptionsItem.item.awbNumber}</h2>
+                <p>Select print options for this cargo label</p>
+              </div>
+              <button className="icon-ghost" onClick={() => setPrintOptionsItem(null)} aria-label="Close modal"><X size={18} /></button>
+            </div>
+            <div className="workflow-body">
+              <div className="form-grid">
+                <Field label="Print Format">
+                  <select value={printFormat} onChange={(e) => setPrintFormat(e.target.value as any)}>
+                    <option value="AUTO">Auto (System Default)</option>
+                    <option value="THERMAL">Thermal (e.g. 100x150mm)</option>
+                    <option value="A4">A4 Standard</option>
+                  </select>
+                </Field>
+                {printOptionsItem.type === "REPRINT" && (
+                  <Field label="Reprint Reason (Required)" full>
+                    <input type="text" value={reprintReason} onChange={(e) => setReprintReason(e.target.value)} required />
+                  </Field>
+                )}
+              </div>
+            </div>
+            <div className="workflow-footer" style={{ justifyContent: "space-between" }}>
+              <button type="button" className="secondary-button" onClick={() => setPrintOptionsItem(null)}>Cancel</button>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button type="button" className="secondary-button" onClick={() => submitPrint("MODAL")}><Printer size={16} /> Modal View</button>
+                <button type="button" className="primary-button" onClick={() => submitPrint("FULL_PAGE")}><Printer size={16} /> Full Page View</button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
