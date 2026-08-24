@@ -1,36 +1,42 @@
 import Image from "next/image";
-import { notFound } from "next/navigation";
-import bwipjs from "bwip-js/node";
+import styles from "../[shipmentId]/print.module.css";
 import QRCode from "qrcode";
+import bwipjs from "bwip-js/node";
 
-import { requireAccess, requirePermission, requireStation } from "@/lib/server/access";
-import { db } from "@/lib/server/db";
-import { getRuntimeEnv } from "@/lib/server/env";
-import { cargoTrackingToken } from "@/lib/server/tracking";
-import styles from "./print.module.css";
-
-export default async function CargoLabelPage({ params, searchParams }: { params: Promise<{ shipmentId: string }>; searchParams: Promise<{ format?: string }> }) {
-  const access = requirePermission(await requireAccess(), "cargo.view");
-  const { shipmentId } = await params;
-  const { format: urlFormat } = await searchParams;
-  const shipment = await db.cargoShipment.findFirst({ where: { id: shipmentId, companyId: access.companyId }, include: { station: true, company: true } }); if (!shipment) notFound(); requireStation(access, shipment.stationId);
-  const token = cargoTrackingToken(shipment.id, shipment.awbNumber); const trackingUrl = `${getRuntimeEnv().APP_URL}/track/${encodeURIComponent(shipment.awbNumber)}?token=${encodeURIComponent(token)}`;
-  const barcode = await bwipjs.toBuffer({ bcid: "code128", text: shipment.awbNumber, scale: 3, height: 13, includetext: true, textxalign: "center", backgroundcolor: "FFFFFF" });
-  const qr = await QRCode.toDataURL(trackingUrl, { errorCorrectionLevel: "M", margin: 1, width: 180, color: { dark: "#10243d", light: "#ffffff" } });
-  const barcodeUrl = `data:image/png;base64,${barcode.toString("base64")}`;
-  const settings = await db.systemSetting.findMany({ where: { companyId: access.companyId, namespace: "printer" } });
-  let paperSize = (settings.find(s => s.key === "paperSize")?.value as string) || "A4";
-  if (urlFormat === "thermal") {
-    paperSize = "THERMAL_100x150";
-  } else if (urlFormat === "a4") {
-    paperSize = "A4";
-  }
+export default async function PreviewLabelPage({ searchParams }: { searchParams: Promise<{ paperSize?: string; marginMm?: string }> }) {
+  const { paperSize = "A4", marginMm = "10" } = await searchParams;
   const isThermal = paperSize.startsWith("THERMAL");
 
-  const destinationLocation = await db.cargoLocation.findFirst({ where: { companyId: access.companyId, code: shipment.destination } });
-  const color = destinationLocation?.color || "#000000";
+  const shipment = {
+    awbNumber: "AWB-MOCK-000001",
+    origin: "LOS",
+    destination: "KAD",
+    senderName: "John Doe",
+    senderPhone: "08012345678",
+    receiverName: "Jane Doe",
+    receiverPhone: "08098765432",
+    receiverAddress: "123 Mockingbird Lane, Kaduna",
+    pieces: 1,
+    weightKg: 5,
+    airline: "MOCK AIR",
+    flightNumber: "MA-123",
+    flightDate: new Date(),
+    commodity: "Documents",
+    isFragile: false,
+    handlingNotes: "Deliver before 5PM",
+    status: "PENDING",
+    company: {
+      displayName: "AAU Chamo",
+      address: "68 Chamo Plaza, Kano",
+      phone: "+2349168340588",
+    },
+  };
 
-  const marginMm = isThermal ? 2 : 10;
+  const barcode = await bwipjs.toBuffer({ bcid: "code128", text: shipment.awbNumber, scale: 3, height: 13, includetext: true, textxalign: "center", backgroundcolor: "FFFFFF" });
+  const qr = await QRCode.toDataURL("https://example.com/track/mock", { errorCorrectionLevel: "M", margin: 1, width: 180, color: { dark: "#10243d", light: "#ffffff" } });
+  const barcodeUrl = `data:image/png;base64,${barcode.toString("base64")}`;
+  const color = "#000000";
+
   let pageStyle = "";
   if (paperSize === "A4") pageStyle = `@page { size: A4; margin: ${marginMm}mm; } body { font-size: 0.9em; }`;
   else if (paperSize === "A5") pageStyle = `@page { size: A5; margin: ${marginMm}mm; } body { font-size: 0.7em; }`;
@@ -42,18 +48,18 @@ export default async function CargoLabelPage({ params, searchParams }: { params:
   const scale = paperSize === "A5" ? 0.65 : paperSize === "LETTER" ? 0.9 : 1;
 
   return (
-    <>
+    <div style={{ background: "#e5e7eb", minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", padding: "20px" }}>
       <style dangerouslySetInnerHTML={{ __html: pageStyle }} />
-      <main className={`${styles.sheet} ${isThermal ? styles.thermal : ""} ${paperSize === "A5" ? styles.a5 : ""} ${paperSize === "LETTER" ? styles.letter : ""}`}>
+      <main className={`${styles.sheet} ${isThermal ? styles.thermal : ""} ${paperSize === "A5" ? styles.a5 : ""} ${paperSize === "LETTER" ? styles.letter : ""}`} style={{ margin: 0, boxShadow: "0 10px 25px rgba(0,0,0,0.1)" }}>
         <div className={styles.tagsContainer}>
           <div className={styles.tagWrap} style={{ borderColor: color }}>
             <div className={styles.tagBottomLine} style={{ backgroundColor: color, height: "12px" }} />
             <div className={styles.tagContent}>
               <div className={styles.tagDestCode} style={{ color }}>{shipment.destination}</div>
               <div className={styles.tagLogoWrap} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <Image src={shipment.company.logoDarkObjectKey || shipment.company.logoObjectKey || "/logo.png"} alt="System Logo" width={140 * scale} height={50 * scale} style={{ objectFit: "contain" }} unoptimized />
-                <span style={{ marginTop: "4px", textAlign: "center", color: "#555" }}>{shipment.company.address || "System Address"}</span>
-                {shipment.company.phone && <span style={{ marginTop: "2px", textAlign: "center", color: "#555" }}>{shipment.company.phone}</span>}
+                <Image src="/logo.png" alt="System Logo" width={140 * scale} height={50 * scale} style={{ objectFit: "contain" }} unoptimized />
+                <span style={{ marginTop: "4px", textAlign: "center", color: "#555" }}>{shipment.company.address}</span>
+                <span style={{ marginTop: "2px", textAlign: "center", color: "#555" }}>{shipment.company.phone}</span>
               </div>
               <div className={styles.tagDestCode} style={{ color }}>{shipment.destination}</div>
             </div>
@@ -61,11 +67,9 @@ export default async function CargoLabelPage({ params, searchParams }: { params:
           </div>
         </div>
 
-
-
         <section className={styles.route} style={{ marginTop: "16px" }}><div><small>FROM</small><strong>{shipment.origin}</strong></div><i>→</i><div><small>TO</small><strong>{shipment.destination}</strong></div></section>
         <section className={styles.parties}><div><small>SENDER</small><strong>{shipment.senderName}</strong><span>{shipment.senderPhone}</span></div><div><small>RECEIVER</small><strong>{shipment.receiverName}</strong><span>{shipment.receiverPhone}</span><span>{shipment.receiverAddress}</span></div></section>
-        <section className={styles.metrics}><div><small>PIECES</small><strong>{shipment.pieces}</strong></div><div><small>WEIGHT</small><strong>{shipment.weightKg.toString()} kg</strong></div><div><small>AIRLINE / FLIGHT</small><strong>{[shipment.airline, shipment.flightNumber].filter(Boolean).join(" · ") || "—"}</strong></div><div><small>FLIGHT DATE</small><strong>{shipment.flightDate ? new Intl.DateTimeFormat("en-NG", { dateStyle: "medium" }).format(shipment.flightDate) : "—"}</strong></div></section>
+        <section className={styles.metrics}><div><small>PIECES</small><strong>{shipment.pieces}</strong></div><div><small>WEIGHT</small><strong>{shipment.weightKg.toString()} kg</strong></div><div><small>AIRLINE / FLIGHT</small><strong>{[shipment.airline, shipment.flightNumber].filter(Boolean).join(" · ") || "—"}</strong></div><div><small>FLIGHT DATE</small><strong>{new Intl.DateTimeFormat("en-NG", { dateStyle: "medium" }).format(shipment.flightDate)}</strong></div></section>
         <section className={styles.commodity}><small>COMMODITY</small><strong>{shipment.commodity}</strong></section>
         
         <section className={styles.codes}>
@@ -90,8 +94,8 @@ export default async function CargoLabelPage({ params, searchParams }: { params:
           </div>
         )}
 
-        <footer><span>{shipment.company.displayName} · {shipment.awbNumber}</span><span>Status: {shipment.status.replaceAll("_", " ")}</span></footer>
+        <footer><span>{shipment.company.displayName} · {shipment.awbNumber}</span><span>Status: {shipment.status}</span></footer>
       </main>
-    </>
+    </div>
   );
 }

@@ -77,6 +77,9 @@ import React from "react";
 import { signOut } from "next-auth/react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { SalesTrendChart } from "./components/SalesTrendChart";
+import { PrinterSettingsSection } from "./components/PrinterSettingsSection";
+import { IframePrintModal } from "./components/IframePrintModal";
+import { exportTableToPDF } from "@/lib/client/pdf";
 import {
   formatNaira,
   moduleMeta,
@@ -468,9 +471,16 @@ export default function ERPWorkspace({
   const [isDark, setIsDark] = useState(false);
   const [uiScale, setUiScale] = useState(1.0);
   const [modal, setModal] = useState<ModalKind>(null);
+  const [printModal, setPrintModal] = useState<{ url: string; title: string } | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(brand.logoUrl);
   const [logoDarkUrl, setLogoDarkUrl] = useState<string | null>(brand.logoDarkUrl);
+
+  useEffect(() => {
+    const handler = (e: Event) => setPrintModal((e as CustomEvent).detail);
+    window.addEventListener("erp-print", handler);
+    return () => window.removeEventListener("erp-print", handler);
+  }, []);
 
   useEffect(() => {
     const handleLogoUpdate = (e: Event) => {
@@ -719,6 +729,14 @@ export default function ERPWorkspace({
           <div><strong>{toast.title}</strong><span>{toast.detail}</span></div>
           <button aria-label="Dismiss notification" onClick={() => setToast(null)}><X size={16} /></button>
         </div>
+      )}
+      
+      {printModal && (
+        <IframePrintModal 
+          url={printModal.url} 
+          title={printModal.title} 
+          onClose={() => setPrintModal(null)} 
+        />
       )}
     </div>
     </PromptProvider>
@@ -3010,6 +3028,27 @@ function SalesView({ station, allowedStations, identity }: { station: string; al
           search={table.search}
           onSearch={table.setSearch}
           onExport={() => window.open(`/api/sales/export?${filterParams.toString()}`, "_blank", "noopener,noreferrer")}
+          onExportPdf={() => {
+            const rows = table.filtered.map((s) => [
+              s.transactionId,
+              `${s.customerName} (${s.customerPhone})`,
+              s.businessUnit?.name || "—",
+              s.station?.name || "—",
+              formatNaira(s.totalAmount),
+              new Date(s.createdAt).toLocaleString("en-NG")
+            ]);
+            exportTableToPDF({
+              title: `Sales Report - ${tab}`,
+              columns: ["Transaction", "Customer", "Business Unit", "Station", "Total", "Date"],
+              rows,
+              companyProfile: {
+                displayName: "AAU Chamo",
+                address: "68 Chamo Plaza, Kano",
+                phone: "+2349168340588"
+              },
+              filename: `aau-chamo-sales-${Date.now()}`
+            });
+          }}
         />
         {listApi.error ? (
           <EmptyState icon={AlertTriangle} title="Sales could not be loaded" detail={listApi.error} />
@@ -4518,7 +4557,7 @@ function CargoView({
 
   const printLabel = (item: CargoRecord) => {
     const isThermal = window.confirm("Print in thermal format? Click OK for Zebra/Thermal, Cancel for A4 standard.");
-    window.open(`/print/cargo/${item.id}?format=${isThermal ? "thermal" : "a4"}`, "_blank", "noopener,noreferrer");
+    window.dispatchEvent(new CustomEvent("erp-print", { detail: { url: `/print/cargo/${item.id}?format=${isThermal ? "thermal" : "a4"}`, title: "Cargo Label" } }));
   };
 
   const reprint = async (item: CargoRecord) => {
@@ -4529,7 +4568,7 @@ function CargoView({
       const format = isThermal ? "THERMAL" : "A4";
       await workflowPost(`/api/cargo/${item.id}/reprint`, { format, reason });
       reload();
-      window.open(`/print/cargo/${item.id}?format=${format.toLowerCase()}`, "_blank", "noopener,noreferrer");
+      window.dispatchEvent(new CustomEvent("erp-print", { detail: { url: `/print/cargo/${item.id}`, title: "Cargo Label" } }));
       onToast({ title: "Label reprinted", detail: `An audited reprint of ${item.awbNumber} was recorded.` });
     } catch (error_) {
       onToast({
@@ -4639,6 +4678,28 @@ function CargoView({
           }}
           exportable
           onExport={exportManifest}
+          onExportPdf={() => {
+            const rows = table.filtered.map((c) => [
+              c.awbNumber,
+              `${c.origin.code} > ${c.destination.code}`,
+              c.pieces,
+              `${c.weightKg} kg`,
+              c.airline || "—",
+              c.flightNumber || "—",
+              c.status
+            ]);
+            exportTableToPDF({
+              title: `Cargo Manifest - ${tab}`,
+              columns: ["AWB", "Route", "Pieces", "Weight", "Airline", "Flight", "Status"],
+              rows,
+              companyProfile: {
+                displayName: "AAU Chamo",
+                address: "68 Chamo Plaza, Kano",
+                phone: "+2349168340588"
+              },
+              filename: `aau-chamo-manifest-${Date.now()}`
+            });
+          }}
           placeholder="Search AWB, sender, receiver or route"
           search={table.search}
           onSearch={table.setSearch}
@@ -9912,14 +9973,14 @@ function DocumentsView({ onToast }: { onToast: (toast: Toast) => void }) {
       // Open print page based on sourceType
       if (reprintModalDoc.sourceType === "Sale") {
         if (reprintModalDoc.documentType.includes("INVOICE")) {
-          window.open(`/print/invoice/${reprintModalDoc.sourceId}`, "_blank", "noopener,noreferrer");
+        window.dispatchEvent(new CustomEvent("erp-print", { detail: { url: `/print/invoice/${reprintModalDoc.sourceId}`, title: "Invoice" } }));
         } else {
-          window.open(`/print/receipt/${reprintModalDoc.sourceId}?format=${reprintFormat}`, "_blank", "noopener,noreferrer");
+          window.dispatchEvent(new CustomEvent("erp-print", { detail: { url: `/print/receipt/${reprintModalDoc.sourceId}`, title: "Receipt" } }));
         }
       } else if (reprintModalDoc.sourceType === "CargoShipment") {
-        window.open(`/print/cargo/${reprintModalDoc.sourceId}?format=${reprintFormat === "a4" ? "a4" : "thermal"}`, "_blank", "noopener,noreferrer");
+        window.dispatchEvent(new CustomEvent("erp-print", { detail: { url: `/print/cargo/${reprintModalDoc.sourceId}`, title: "Cargo Label" } }));
       } else if (reprintModalDoc.sourceType === "WalletAccount") {
-        window.open(`/print/statement/${reprintModalDoc.sourceId}`, "_blank", "noopener,noreferrer");
+        window.dispatchEvent(new CustomEvent("erp-print", { detail: { url: `/print/statement/${reprintModalDoc.sourceId}`, title: "Statement" } }));
       } else {
         window.open(`/api/documents/${reprintModalDoc.id}`, "_blank", "noopener,noreferrer");
       }
@@ -11057,6 +11118,8 @@ function SettingsView({ onToast, onModal }: { onToast: (toast: Toast) => void; o
                     <EmptyState icon={Plane} title="No locations configured" detail="Add your first cargo location." compact />
                   )}
                 </>
+              ) : section === "Printer settings" ? (
+                <PrinterSettingsSection api={api} onToast={onToast} />
               ) : section === "Product units & categories" ? (
                 <ProductUnitsCategoriesSettings onToast={onToast} />
               ) : (
@@ -11676,7 +11739,7 @@ function CargoForm({ onComplete, onClose, allowedStations }: { onComplete: (titl
   const { data: customerData, loading, error: customerError } = useApiData<CustomerRecord[]>("/api/customers?pageSize=100");
   const { data: settings } = useApiData<SettingsRecord>("/api/settings");
   const [busy, setBusy] = useState(false); const [error, setError] = useState<string | null>(null);
-  const submit = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setBusy(true); setError(null); const form = new FormData(event.currentTarget); const optional = (name: string) => String(form.get(name) ?? "").trim() || undefined; try { const response = await fetch("/api/cargo", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ stationId: String(form.get("stationId")), customerId: String(form.get("customerId")), senderName: String(form.get("senderName")), senderPhone: String(form.get("senderPhone")), receiverName: String(form.get("receiverName")), receiverPhone: String(form.get("receiverPhone")), receiverAddress: optional("receiverAddress"), origin: String(form.get("origin")), destination: String(form.get("destination")), weightKg: String(form.get("weightKg")), pieces: Number(form.get("pieces")), commodity: String(form.get("commodity")), airline: optional("airline"), flightNumber: optional("flightNumber"), flightDate: optional("flightDate") ? new Date(String(form.get("flightDate"))).toISOString() : undefined, handlingNotes: optional("handlingNotes"), declaredValue: optional("declaredValue"), isFragile: form.get("isFragile") === "on" }) }); const body = await response.json() as ApiEnvelope<{ id: string; awbNumber: string; labelUrl: string }>; if (!response.ok || !body.ok || !body.data) throw new Error(body.error?.message ?? "Cargo record could not be created."); window.dispatchEvent(new Event("erp-data-changed")); window.open(body.data.labelUrl, "_blank", "noopener,noreferrer"); onComplete("Cargo record created", `${body.data.awbNumber} was posted and its traceable label opened for printing.`); } catch (reason) { setError(reason instanceof Error ? reason.message : "Cargo record could not be created."); } finally { setBusy(false); } };
+  const submit = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setBusy(true); setError(null); const form = new FormData(event.currentTarget); const optional = (name: string) => String(form.get(name) ?? "").trim() || undefined; try { const response = await fetch("/api/cargo", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ stationId: String(form.get("stationId")), customerId: String(form.get("customerId")), senderName: String(form.get("senderName")), senderPhone: String(form.get("senderPhone")), receiverName: String(form.get("receiverName")), receiverPhone: String(form.get("receiverPhone")), receiverAddress: optional("receiverAddress"), origin: String(form.get("origin")), destination: String(form.get("destination")), weightKg: String(form.get("weightKg")), pieces: Number(form.get("pieces")), commodity: String(form.get("commodity")), airline: optional("airline"), flightNumber: optional("flightNumber"), flightDate: optional("flightDate") ? new Date(String(form.get("flightDate"))).toISOString() : undefined, handlingNotes: optional("handlingNotes"), declaredValue: optional("declaredValue"), isFragile: form.get("isFragile") === "on" }) }); const body = await response.json() as ApiEnvelope<{ id: string; awbNumber: string; labelUrl: string }>; if (!response.ok || !body.ok || !body.data) throw new Error(body.error?.message ?? "Cargo record could not be created."); window.dispatchEvent(new Event("erp-data-changed")); window.dispatchEvent(new CustomEvent("erp-print", { detail: { url: body.data.labelUrl, title: "Cargo Label" } })); onComplete("Cargo record created", `${body.data.awbNumber} was posted and its traceable label opened for printing.`); } catch (reason) { setError(reason instanceof Error ? reason.message : "Cargo record could not be created."); } finally { setBusy(false); } };
   return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="Station"><select name="stationId" required defaultValue={allowedStations[0]?.id}>{allowedStations.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select></Field><Field label="Customer"><select name="customerId" required defaultValue=""><option value="" disabled>Select customer</option>{customerData?.map((item) => <option key={item.id} value={item.id}>{item.displayName} · {item.primaryPhone}</option>)}</select></Field><Field label="Sender name"><input name="senderName" required /></Field><Field label="Sender phone"><input name="senderPhone" required autoComplete="tel" pattern="[0-9]+" title="Only digits are allowed" /></Field><Field label="Receiver"><input name="receiverName" required /></Field><Field label="Receiver phone"><input name="receiverPhone" required autoComplete="tel" pattern="[0-9]+" title="Only digits are allowed" /></Field><Field label="Receiver address" full><input name="receiverAddress" /></Field><Field label="Origin"><select name="origin" required defaultValue=""><option value="" disabled>Select origin</option>{settings?.cargoLocations?.map(l => <option key={l.id} value={l.code}>{l.name} ({l.code})</option>)}</select></Field><Field label="Destination"><select name="destination" required defaultValue=""><option value="" disabled>Select destination</option>{settings?.cargoLocations?.map(l => <option key={l.id} value={l.code}>{l.name} ({l.code})</option>)}</select></Field><Field label="Weight (kg)"><input name="weightKg" type="number" step="0.001" min="0.001" required /></Field><Field label="Pieces"><input name="pieces" type="number" min="1" defaultValue="1" required /></Field><Field label="Commodity" full><input name="commodity" required placeholder="Describe the cargo contents" /></Field><Field label="Declared value"><div className="money-input"><span>₦</span><input name="declaredValue" type="number" step="0.01" min="0" /></div></Field><Field label="Airline"><input name="airline" /></Field><Field label="Flight number"><input name="flightNumber" placeholder="e.g. VM-1642" /></Field><Field label="Flight date"><input name="flightDate" type="date" /></Field><Field label="Handling notes"><textarea name="handlingNotes" placeholder="Orientation, special handling..." /></Field><Field label="Fragile"><div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}><input type="checkbox" name="isFragile" /><span>Mark as fragile</span></div></Field></div>{(error || customerError) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? customerError}</span></div>}</div><ModalFooter onClose={onClose} submitLabel={busy ? "Creating…" : loading ? "Loading customers…" : "Create & print label"} icon={Printer} disabled={busy || loading || !customerData?.length || !allowedStations.length} /></form>;
 }
 
@@ -12095,7 +12158,7 @@ function SummaryItem({ label, value, detail, icon: Icon, tone }: { label: string
   return <article className="summary-item"><span className={classNames("summary-icon", tone)}><Icon size={18} /></span><div><span>{label}</span><strong>{value}</strong>{detail && <small>{detail}</small>}</div></article>;
 }
 
-function TableToolbar({ tabs, activeTab, onTab, placeholder, exportable, search, onSearch, onExport }: { tabs: string[]; activeTab: string; onTab: (value: string) => void; placeholder: string; exportable?: boolean; search?: string; onSearch?: (value: string) => void; onExport?: () => void }) {
+function TableToolbar({ tabs, activeTab, onTab, placeholder, exportable, search, onSearch, onExport, onExportPdf }: { tabs: string[]; activeTab: string; onTab: (value: string) => void; placeholder: string; exportable?: boolean; search?: string; onSearch?: (value: string) => void; onExport?: () => void; onExportPdf?: () => void }) {
   return (
     <div className="table-toolbar">
       <div className="table-tabs">{tabs.map((tab) => <button key={tab} className={activeTab === tab ? "active" : ""} onClick={() => onTab(tab)}>{tab}</button>)}</div>
@@ -12106,7 +12169,8 @@ function TableToolbar({ tabs, activeTab, onTab, placeholder, exportable, search,
             : <input placeholder={placeholder} readOnly />}
           {onSearch && search ? <button type="button" className="search-clear" aria-label="Clear search" onClick={() => onSearch("")}><X size={13} /></button> : null}
         </label>
-        {exportable && onExport && <button type="button" className="tool-button" onClick={onExport}><Download size={15} /><span>Export</span></button>}
+        {exportable && onExportPdf && <button type="button" className="tool-button" onClick={onExportPdf}><FileDown size={15} /><span>Export PDF</span></button>}
+        {exportable && onExport && <button type="button" className="tool-button" onClick={onExport}><Download size={15} /><span>Export CSV</span></button>}
       </div>
     </div>
   );
