@@ -31,6 +31,7 @@ import {
   Users,
   UsersRound,
   WalletCards,
+  CircleHelp,
 } from "lucide-react";
 
 export type Tone = "success" | "warning" | "danger" | "info" | "neutral";
@@ -92,6 +93,7 @@ export const navigation: NavGroup[] = [
     items: [
       { id: "notifications", label: "Notifications", icon: Bell },
       { id: "documents", label: "Documents", icon: Archive },
+      { id: "manual", label: "Help & manual", icon: CircleHelp },
       { id: "settings", label: "Configuration", icon: Settings2 },
     ],
   },
@@ -197,6 +199,11 @@ export const moduleMeta: Record<string, { eyebrow: string; title: string; descri
     eyebrow: "Attention centre",
     title: "Notifications",
     description: "Prioritise inventory, wallet, login, approval and transaction alerts in one queue.",
+  },
+  manual: {
+    eyebrow: "Documentation",
+    title: "User Manual",
+    description: "Comprehensive non-technical guide explaining roles, navigation, and features.",
   },
   documents: {
     eyebrow: "Document centre",

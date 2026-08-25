@@ -79,6 +79,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { SalesTrendChart } from "./components/SalesTrendChart";
 import { PrinterSettingsSection } from "./components/PrinterSettingsSection";
 import { IframePrintModal } from "./components/IframePrintModal";
+import { ManualView } from "./components/ManualView";
 import { exportTableToPDF } from "@/lib/client/pdf";
 import {
   formatNaira,
@@ -396,6 +397,7 @@ const modulePermission: Record<string, string | undefined> = {
   notifications: "notifications.view",
   documents: "documents.view",
   settings: "settings.view",
+  manual: undefined,
 };
 
 const classNames = (...values: Array<string | false | null | undefined>) =>
@@ -427,6 +429,7 @@ const pageActions: Record<string, { label: string; modal?: ModalKind; navigate?:
   notifications: { label: "Mark all read", icon: Check },
   documents: { label: "Refresh documents", icon: RefreshCcw },
   settings: { label: "Review settings", icon: Settings2 },
+  manual: { label: "Print manual", icon: Printer },
 };
 
 export default function ERPWorkspace({
@@ -575,6 +578,11 @@ export default function ERPWorkspace({
     if (activeModule === "audit") {
       window.open("/api/audit/export", "_blank", "noopener,noreferrer");
       setToast({ title: "Evidence export prepared", detail: "A verified audit CSV is being downloaded." });
+      return;
+    }
+
+    if (activeModule === "manual") {
+      window.dispatchEvent(new CustomEvent("erp-print", { detail: { url: "/print/manual", title: "AAU Chamo Manual" } }));
       return;
     }
 
@@ -1066,6 +1074,8 @@ function ModuleView({
       return <DocumentsView onToast={onToast} />;
     case "settings":
       return <SettingsView onToast={onToast} onModal={onModal} />;
+    case "manual":
+      return <ManualView />;
     default:
       return <OverviewView onNavigate={onNavigate} period={period} station={station} allowedStations={allowedStations} />;
   }
@@ -1403,7 +1413,7 @@ function MetricCard({ label, value, detail, change, positive, icon: Icon, accent
   );
 }
 
-function Panel({ children, className }: { children: React.ReactNode; className?: string }) {
+export function Panel({ children, className }: { children: React.ReactNode; className?: string }) {
   return <section className={classNames("panel", className)}>{children}</section>;
 }
 
@@ -3030,12 +3040,12 @@ function SalesView({ station, allowedStations, identity }: { station: string; al
           onExport={() => window.open(`/api/sales/export?${filterParams.toString()}`, "_blank", "noopener,noreferrer")}
           onExportPdf={() => {
             const rows = table.filtered.map((s) => [
-              s.transactionId,
-              `${s.customerName} (${s.customerPhone})`,
+              s.saleNumber,
+              s.customer?.displayName || "—",
               s.businessUnit?.name || "—",
               s.station?.name || "—",
-              formatNaira(s.totalAmount),
-              new Date(s.createdAt).toLocaleString("en-NG")
+              formatNaira(Number(s.total) || 0),
+              new Date(s.postedAt).toLocaleString("en-NG")
             ]);
             exportTableToPDF({
               title: `Sales Report - ${tab}`,
@@ -4693,7 +4703,7 @@ function CargoView({
           onExportPdf={() => {
             const rows = table.filtered.map((c) => [
               c.awbNumber,
-              `${c.origin.code} > ${c.destination.code}`,
+              `${c.origin} > ${c.destination}`,
               c.pieces,
               `${c.weightKg} kg`,
               c.airline || "—",
