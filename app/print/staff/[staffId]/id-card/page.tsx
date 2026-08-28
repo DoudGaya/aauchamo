@@ -26,7 +26,7 @@ export default async function StaffIdCard({ params }: { params: Promise<{ staffI
       <div className={styles.cardWrapper}>
         <div className={styles.idCardFront}>
           <div className={styles.header}>
-            <img src="/logo.png" alt="AAU Chamo Logo" className={styles.logo} style={{ maxWidth: 80, maxHeight: 30 }} />
+            <img src={staff.company.logoDarkObjectKey || staff.company.logoObjectKey || "/logo.png"} alt="AAU Chamo Logo" className={styles.logo} style={{ maxWidth: 80, maxHeight: 30 }} />
           </div>
           
           <div className={styles.photoContainer}>

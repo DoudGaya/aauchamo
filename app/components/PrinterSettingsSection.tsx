@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
-import { Field } from "@/app/erp-workspace"; // assuming Field is exported, or I can just use div. Wait, Field is not exported.
+
 
 export function PrinterSettingsSection({ api, onToast }: { api: any, onToast: (toast: any) => void }) {
   const settings = api.data?.settings.filter((s: any) => s.namespace === "printer") || [];

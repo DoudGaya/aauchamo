@@ -20,7 +20,7 @@ const destinationColors: Record<string, string> = {
 export default async function CargoTagPage({ params }: { params: Promise<{ shipmentId: string }> }) {
   const access = requirePermission(await requireAccess(), "cargo.view");
   const { shipmentId } = await params;
-  const shipment = await db.cargoShipment.findFirst({ where: { id: shipmentId, companyId: access.companyId } });
+  const shipment = await db.cargoShipment.findFirst({ where: { id: shipmentId, companyId: access.companyId }, include: { company: true } });
   
   if (!shipment) notFound();
   requireStation(access, shipment.stationId);
@@ -33,23 +33,26 @@ export default async function CargoTagPage({ params }: { params: Promise<{ shipm
   return (
     <>
       {tags.map((_, i) => (
-        <main key={i} className={styles.sheet}>
-          <div className={styles.content}>
-            <div className={styles.destCode} style={{ color }}>
-              {shipment.destination}
-            </div>
+        <div key={i} className={styles.sheet}>
+          <div className={styles.tagWrap} style={{ borderColor: color }}>
+            <div className={styles.topLine} style={{ backgroundColor: color }} />
+            <div className={styles.tagContent}>
+              <div className={styles.destCode} style={{ color }}>
+                {shipment.destination}
+              </div>
+              
+              <div className={styles.logoWrap}>
+                <Image src={shipment.company.logoDarkObjectKey || shipment.company.logoObjectKey || "/logo.png"} alt="AAU Chamo" width={140} height={50} style={{ objectFit: "contain" }} unoptimized />
+              </div>
             
-            <div className={styles.logoWrap}>
-              <Image src="/logo.png" alt="AAU Chamo" width={140} height={50} style={{ objectFit: "contain" }} unoptimized />
+              <div className={styles.destCode} style={{ color }}>
+                {shipment.destination}
+              </div>
             </div>
-            
-            <div className={styles.destCode} style={{ color }}>
-              {shipment.destination}
-            </div>
-          </div>
           
-          <div className={styles.bottomLine} style={{ backgroundColor: color }} />
-        </main>
+            <div className={styles.bottomLine} style={{ backgroundColor: color }} />
+          </div>
+        </div>
       ))}
     </>
   );

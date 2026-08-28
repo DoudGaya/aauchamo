@@ -25,6 +25,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ agen
       where: { id: agentId, companyId: access.companyId },
       include: {
         homeStation: { select: { id: true, code: true, name: true } },
+        company: { select: { legalName: true, displayName: true, address: true, phone: true, logoObjectKey: true, logoDarkObjectKey: true } },
         wallet: true,
         customer: { select: { id: true, customerNumber: true, displayName: true } },
       },

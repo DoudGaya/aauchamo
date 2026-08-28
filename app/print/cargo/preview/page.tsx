@@ -2,10 +2,13 @@ import Image from "next/image";
 import styles from "../[shipmentId]/print.module.css";
 import QRCode from "qrcode";
 import bwipjs from "bwip-js/node";
+import { db } from "@/lib/server/db";
 
 export default async function PreviewLabelPage({ searchParams }: { searchParams: Promise<{ paperSize?: string; marginMm?: string }> }) {
   const { paperSize = "A4", marginMm = "10" } = await searchParams;
   const isThermal = paperSize.startsWith("THERMAL");
+
+  const company = await db.company.findFirst();
 
   const shipment = {
     awbNumber: "AWB-MOCK-000001",
@@ -26,9 +29,9 @@ export default async function PreviewLabelPage({ searchParams }: { searchParams:
     handlingNotes: "Deliver before 5PM",
     status: "PENDING",
     company: {
-      displayName: "AAU Chamo",
-      address: "68 Chamo Plaza, Kano",
-      phone: "+2349168340588",
+      displayName: company?.displayName || "AAU Chamo",
+      address: company?.address || "Address not configured",
+      phone: company?.phone || "Phone not configured",
     },
   };
 
@@ -57,7 +60,7 @@ export default async function PreviewLabelPage({ searchParams }: { searchParams:
             <div className={styles.tagContent}>
               <div className={styles.tagDestCode} style={{ color }}>{shipment.destination}</div>
               <div className={styles.tagLogoWrap} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <Image src="/logo.png" alt="System Logo" width={140 * scale} height={50 * scale} style={{ objectFit: "contain" }} unoptimized />
+                <Image src={company?.logoDarkObjectKey || company?.logoObjectKey || "/logo.png"} alt="System Logo" width={140 * scale} height={50 * scale} style={{ objectFit: "contain" }} unoptimized />
                 <span style={{ marginTop: "4px", textAlign: "center", color: "#555" }}>{shipment.company.address}</span>
                 <span style={{ marginTop: "2px", textAlign: "center", color: "#555" }}>{shipment.company.phone}</span>
               </div>

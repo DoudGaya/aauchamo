@@ -35,6 +35,7 @@ export async function GET(request: Request) {
     if (stationId) requireStation(access, stationId);
     const where = {
       companyId: access.companyId,
+      status: { not: "DISABLED" as const },
       ...(search ? { OR: [{ name: { contains: search, mode: "insensitive" as const } }, { code: { contains: search, mode: "insensitive" as const } }, { barcode: { contains: search } }] } : {}),
     };
     const [items, total] = await Promise.all([

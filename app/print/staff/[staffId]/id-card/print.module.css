@@ -45,8 +45,8 @@
 }
 
 .idCardFront {
-  background: linear-gradient(135deg, #d32f2f, #b71c1c); /* Red background per user request */
-  color: white;
+  background: linear-gradient(135deg, #d32f2f, #b71c1c) !important; /* Red background per user request */
+  color: white !important;
 }
 
 .header {
@@ -224,7 +224,7 @@
   }
   .idCardFront, .idCardBack {
     box-shadow: none;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }

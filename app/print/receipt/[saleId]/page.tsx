@@ -14,7 +14,7 @@ type SaleDetail = {
   paidTotal: string;
   outstandingTotal: string;
   postedAt: string;
-  company: { legalName: string; displayName: string; address: string; phone: string; currencyCode: string };
+  company: { legalName: string; displayName: string; address: string; phone: string; currencyCode: string; logoObjectKey?: string | null; logoDarkObjectKey?: string | null };
   station: { code: string; name: string };
   customer: { displayName: string; primaryPhone: string } | null;
   officer: { email: string } | null;
@@ -110,7 +110,7 @@ export default function ReceiptPrintPage() {
         {/* Header with Logo */}
         <div style={{ textAlign: "center", borderBottom: isThermal ? "1px dashed #000" : "2px solid #800000", paddingBottom: "12px", marginBottom: "12px" }}>
           <div style={{ display: "inline-block", background: "#800000", padding: "6px", borderRadius: "4px", marginBottom: "6px" }}>
-            <img src="/logo.png" alt="AAU Chamo Logo" style={{ height: isThermal ? "30px" : "44px", display: "block" }} />
+            <img src={sale.company.logoDarkObjectKey || sale.company.logoObjectKey || "/logo.png"} alt="AAU Chamo Logo" style={{ height: isThermal ? "30px" : "44px", display: "block" }} />
           </div>
           <h2 style={{ margin: "4px 0", fontSize: isThermal ? "14px" : "20px", color: "#800000" }}>{sale.company.displayName}</h2>
           <p style={{ margin: "2px 0", fontSize: isThermal ? "10px" : "12px", color: "#555" }}>{sale.company.legalName}</p>

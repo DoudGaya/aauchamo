@@ -1,4 +1,5 @@
 import { db } from "@/lib/server/db";
+import nodemailer from "nodemailer";
 
 export type EmailDeliveryPayload = {
   companyId: string;
@@ -120,6 +121,64 @@ export class ResendEmailAdapter implements EmailAdapter {
   }
 }
 
+export class SmtpEmailAdapter implements EmailAdapter {
+  private transporter: nodemailer.Transporter;
+
+  constructor() {
+    this.transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port: Number(process.env.SMTP_PORT || 465),
+      secure: Number(process.env.SMTP_PORT || 465) === 465,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+  }
+
+  async send(payload: EmailDeliveryPayload) {
+    const isMandatory = MANDATORY_SECURITY_EVENT_TYPES.has(payload.eventType);
+
+    if (!isMandatory && payload.recipientEmail) {
+      const user = await db.user.findFirst({
+        where: { email: payload.recipientEmail },
+        select: { id: true },
+      });
+      if (user) {
+        const pref = await db.notificationPreference.findFirst({
+          where: { userId: user.id, type: payload.eventType, channel: "EMAIL" },
+        });
+        if (pref && !pref.enabled) {
+          return { success: true, messageId: "opted_out_by_user" };
+        }
+      }
+    }
+
+    if (!payload.recipientEmail) {
+        // Send to all admins if recipientEmail is not provided
+        return { success: true, messageId: "skipped_no_recipient" };
+    }
+
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.warn("[SmtpEmailAdapter] SMTP credentials not configured. Falling back to mock.");
+      return new ConsoleEmailAdapter().send(payload);
+    }
+
+    try {
+        const info = await this.transporter.sendMail({
+            from: process.env.EMAIL_FROM || process.env.SMTP_USER || "system@aauchamo.com",
+            to: payload.recipientEmail,
+            subject: payload.title,
+            text: payload.message,
+            html: payload.htmlBody,
+        });
+        return { success: true, messageId: info.messageId };
+    } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : "SMTP error" };
+    }
+  }
+}
+
 /**
  * Mock SMS Adapter — Provider ready for Twilio, Termii, or Infobip swap.
  */
@@ -203,7 +262,14 @@ export class TermiiSmsAdapter implements SmsAdapter {
 }
 
 // Active provider instances
-export const emailProvider: EmailAdapter = process.env.RESEND_API_KEY ? new ResendEmailAdapter() : new ConsoleEmailAdapter();
+let configuredEmailProvider: EmailAdapter = new ConsoleEmailAdapter();
+if (process.env.EMAIL_PROVIDER === "smtp") {
+  configuredEmailProvider = new SmtpEmailAdapter();
+} else if (process.env.EMAIL_PROVIDER === "resend" || process.env.RESEND_API_KEY) {
+  configuredEmailProvider = new ResendEmailAdapter();
+}
+
+export const emailProvider: EmailAdapter = configuredEmailProvider;
 export const smsProvider: SmsAdapter = process.env.TERMII_API_KEY ? new TermiiSmsAdapter() : new ConsoleSmsAdapter();
 
 export async function sendEmail(payload: EmailDeliveryPayload) {

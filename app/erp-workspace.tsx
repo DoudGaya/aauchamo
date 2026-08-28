@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useOfflineSync } from "@/lib/client/offline-sync";
+import Select from "react-select";
 
 import {
   Activity,
@@ -125,8 +126,8 @@ function PromptModal({ state, onClose }: { state: PromptState, onClose: (value: 
   };
 
   return (
-    <div className="modal-overlay" style={{ zIndex: 9999 }}>
-      <div className="modal-content" style={{ maxWidth: 400, padding: 24, textAlign: "left" }}>
+    <div className="modal-layer" style={{ zIndex: 9999 }}>
+      <div className="workflow-dialog" style={{ maxWidth: 400, padding: 24, textAlign: "left", margin: "auto" }}>
         <h3 style={{ margin: "0 0 16px", color: "var(--text-primary)", fontSize: "18px", fontWeight: 700 }}>Confirmation required</h3>
         <p style={{ margin: "0 0 20px", color: "var(--text-secondary)", fontSize: "14px", lineHeight: 1.5 }}>{state.message}</p>
         <form onSubmit={handleSubmit}>
@@ -2766,6 +2767,7 @@ function SaleDetailModal({ saleId, onClose, canViewProfit }: { saleId: string; o
 function SalesView({ station, allowedStations, identity }: { station: string; allowedStations: AllowedStation[]; identity: WorkspaceIdentity }) {
   const [tab, setTab] = useState("All sales");
   const stationId = allowedStations.find((item) => item.name === station)?.id;
+  const settingsApi = useApiData<any>("/api/settings");
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -3053,8 +3055,8 @@ function SalesView({ station, allowedStations, identity }: { station: string; al
               rows,
               companyProfile: {
                 displayName: "AAU Chamo",
-                address: "68 Chamo Plaza, Kano",
-                phone: "+2349168340588"
+                address: settingsApi.data?.company?.address || "Address not configured",
+                phone: settingsApi.data?.company?.phone || "+2349168340588"
               },
               filename: `aau-chamo-sales-${Date.now()}`
             });
@@ -4509,6 +4511,7 @@ function CargoView({
 }) {
   const [tab, setTab] = useState("All cargo");
   const { data, total, loading, error, reload } = useApiData<CargoRecord[]>("/api/cargo?pageSize=100");
+  const settingsApi = useApiData<any>("/api/settings");
   const [editingShipment, setEditingShipment] = useState<CargoRecord | null>(null);
 
   const cargo = data ?? [];
@@ -4716,8 +4719,8 @@ function CargoView({
               rows,
               companyProfile: {
                 displayName: "AAU Chamo",
-                address: "68 Chamo Plaza, Kano",
-                phone: "+2349168340588"
+                address: settingsApi.data?.company?.address || "Address not configured",
+                phone: settingsApi.data?.company?.phone || "+2349168340588"
               },
               filename: `aau-chamo-manifest-${Date.now()}`
             });
@@ -7711,6 +7714,7 @@ function StaffDetailModal({
 }) {
   const detailApi = useApiData<any>(`/api/staff/${staff.id}`);
   const hrSetupApi = useApiData<HrSetup>("/api/hr/catalogue");
+  const settingsApi = useApiData<any>("/api/settings");
   
   const [busy, setBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
@@ -7788,7 +7792,7 @@ function StaffDetailModal({
     if (!printWindow) return;
     const name = [detail.firstName, detail.middleName, detail.lastName].filter(Boolean).join(" ");
     const passport = passportPhoto || "";
-    const logoUrl = new URL("/aauchamo-logo.png", window.location.origin).toString();
+    const logoUrl = settingsApi.data?.company?.logoDarkUrl || settingsApi.data?.company?.logoUrl || new URL("/aauchamo-logo.png", window.location.origin).toString();
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=STAFF:${detail.staffNumber}`;
     
     // Calculate 5 years expiry
@@ -8045,9 +8049,9 @@ function StaffDetailModal({
               
               <div class="office-details">
                 <strong>Head Office</strong>
-                BLOCK AL, Maiduguri Road<br />
-                Phone: 08062249834<br />
-                Email: doudgaya@gmail.com
+                ${settingsApi.data?.company?.address || "Address not configured"}<br />
+                Phone: ${settingsApi.data?.company?.phone || "N/A"}<br />
+                Email: ${settingsApi.data?.company?.email || "N/A"}
               </div>
 
               <div class="qr-container">
@@ -8184,7 +8188,7 @@ function StaffDetailModal({
           <div class="letterhead">
             <img src="${logoUrl}" alt="AAU Chamo Logo" /><br />
             <h1>A.A.U Chamo International Business Agency Services Limited</h1>
-            <p>Corporate Headquarters: BLOCK AL, Maiduguri Road | Tel: +234 (0) 806 224 9834 | Email: hr@aauchamo.com</p>
+            <p>Corporate Headquarters: ${settingsApi.data?.company?.address || "N/A"} | Tel: ${settingsApi.data?.company?.phone || "N/A"} | Email: ${settingsApi.data?.company?.email || "N/A"}</p>
             <p>www.aauchamo.com</p>
           </div>
           
@@ -9465,46 +9469,36 @@ function UserEditModal({
               </Field>
               
               <Field label="Roles (multiple)" full>
-                <select
-                  className="field-input"
-                  multiple
-                  required
-                  value={selectedRoles}
-                  onChange={(e) => setSelectedRoles(Array.from(e.target.selectedOptions).map(o => o.value))}
-                  style={{ height: "120px" }}
-                >
-                  {(setupApi.data?.roles ?? []).map((r) => (
-                    <option key={r.id} value={r.id}>{r.name} · {r.scope.toLowerCase()}</option>
-                  ))}
-                </select>
+                <Select
+                  isMulti
+                  options={(setupApi.data?.roles ?? []).map((r: any) => ({ value: r.id, label: r.name + " · " + r.scope.toLowerCase() }))}
+                  value={(setupApi.data?.roles ?? []).filter((r: any) => selectedRoles.includes(r.id)).map((r: any) => ({ value: r.id, label: r.name + " · " + r.scope.toLowerCase() }))}
+                  onChange={(val: any) => setSelectedRoles(val.map((v: any) => v.value))}
+                  menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                  styles={{ menuPortal: (base: any) => ({ ...base, zIndex: 9999 }) }}
+                />
               </Field>
 
               <Field label="Station scope (multiple)" full>
-                <select
-                  className="field-input"
-                  multiple
-                  value={selectedStations}
-                  onChange={(e) => setSelectedStations(Array.from(e.target.selectedOptions).map(o => o.value))}
-                  style={{ height: "120px" }}
-                >
-                  {allowedStations.map((s) => (
-                    <option key={s.id} value={s.id}>{s.code} · {s.name}</option>
-                  ))}
-                </select>
+                <Select
+                  isMulti
+                  options={allowedStations.map((s: any) => ({ value: s.id, label: s.code + " · " + s.name }))}
+                  value={allowedStations.filter((s: any) => selectedStations.includes(s.id)).map((s: any) => ({ value: s.id, label: s.code + " · " + s.name }))}
+                  onChange={(val: any) => setSelectedStations(val.map((v: any) => v.value))}
+                  menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                  styles={{ menuPortal: (base: any) => ({ ...base, zIndex: 9999 }) }}
+                />
               </Field>
 
               <Field label="Business-unit scope (multiple)" full>
-                <select
-                  className="field-input"
-                  multiple
-                  value={selectedBUs}
-                  onChange={(e) => setSelectedBUs(Array.from(e.target.selectedOptions).map(o => o.value))}
-                  style={{ height: "100px" }}
-                >
-                  {(setupApi.data?.businessUnits ?? []).map((b) => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))}
-                </select>
+                <Select
+                  isMulti
+                  options={(setupApi.data?.businessUnits ?? []).map((b: any) => ({ value: b.id, label: b.name }))}
+                  value={(setupApi.data?.businessUnits ?? []).filter((b: any) => selectedBUs.includes(b.id)).map((b: any) => ({ value: b.id, label: b.name }))}
+                  onChange={(val: any) => setSelectedBUs(val.map((v: any) => v.value))}
+                  menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                  styles={{ menuPortal: (base: any) => ({ ...base, zIndex: 9999 }) }}
+                />
               </Field>
 
               <Field label="Reason for change" full>
@@ -12014,7 +12008,15 @@ function StaffForm({
 function StationForm({ onComplete, onClose }: { onComplete: (title: string, detail: string) => void; onClose: () => void }) {
   const api = useApiData<{ businessUnits: Array<{ id: string; code: string; name: string }> }>("/api/stations/setup"); const [busy, setBusy] = useState(false); const [error, setError] = useState<string | null>(null);
   const submit = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setBusy(true); setError(null); const form = new FormData(event.currentTarget); try { const data = await workflowPost<{ code: string; name: string }>("/api/stations", { code: String(form.get("code")), name: String(form.get("name")), email: String(form.get("email") || ""), phone: String(form.get("phone") || "") || undefined, address: String(form.get("address") || "") || undefined, city: String(form.get("city") || "") || undefined, state: String(form.get("state") || "") || undefined, businessUnitIds: form.getAll("businessUnitIds").map(String) }); onComplete("Station created", `${data.code} · ${data.name} is now available for scoped assignments.`); } catch (reason) { setError(reason instanceof Error ? reason.message : "Station could not be created."); } finally { setBusy(false); } };
-  return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="Station code"><input name="code" required placeholder="LOS" /></Field><Field label="Station name"><input name="name" required /></Field><Field label="Email"><input name="email" type="email" /></Field><Field label="Phone"><input name="phone" /></Field><Field label="City"><input name="city" /></Field><Field label="State"><input name="state" /></Field><Field label="Address" full><textarea name="address" /></Field><Field label="Enabled business units" full><select name="businessUnitIds" multiple size={Math.min(5, api.data?.businessUnits.length ?? 3)}>{api.data?.businessUnits.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select></Field></div>{(error || api.error) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? api.error}</span></div>}</div><ModalFooter onClose={onClose} submitLabel={busy ? "Creating…" : "Create station"} icon={Building2} disabled={busy || api.loading} /></form>;
+  return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="Station code"><input name="code" required placeholder="LOS" /></Field><Field label="Station name"><input name="name" required /></Field><Field label="Email"><input name="email" type="email" /></Field><Field label="Phone"><input name="phone" /></Field><Field label="City"><input name="city" /></Field><Field label="State"><input name="state" /></Field><Field label="Address" full><textarea name="address" /></Field><Field label="Enabled business units" full>
+  <Select
+    isMulti
+    name="businessUnitIds"
+    options={(api.data?.businessUnits ?? []).map((b: any) => ({ value: b.id, label: b.code + ' · ' + b.name }))}
+    menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+    styles={{ menuPortal: (base: any) => ({ ...base, zIndex: 9999 }) }}
+  />
+</Field></div>{(error || api.error) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? api.error}</span></div>}</div><ModalFooter onClose={onClose} submitLabel={busy ? "Creating…" : "Create station"} icon={Building2} disabled={busy || api.loading} /></form>;
 }
 
 function InviteForm({
@@ -12137,25 +12139,31 @@ function InviteForm({
           </Field>
 
           <Field label="Roles" full>
-            <select name="roleIds" className="field-input" multiple required size={Math.min(6, api.data?.roles.length ?? 4)}>
-              {api.data?.roles.map((item) => (
-                <option key={item.id} value={item.id}>{item.name} · {item.scope.toLowerCase()}</option>
-              ))}
-            </select>
+            <Select
+              isMulti
+              name="roleIds"
+              options={(api.data?.roles ?? []).map((r: any) => ({ value: r.id, label: r.name + ' · ' + r.scope.toLowerCase() }))}
+              menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+              styles={{ menuPortal: (base: any) => ({ ...base, zIndex: 9999 }) }}
+            />
           </Field>
           <Field label="Station scope" full>
-            <select name="stationIds" className="field-input" multiple size={Math.min(6, allowedStations.length)}>
-              {allowedStations.map((item) => (
-                <option key={item.id} value={item.id}>{item.code} · {item.name}</option>
-              ))}
-            </select>
+            <Select
+              isMulti
+              name="stationIds"
+              options={allowedStations.map((s: any) => ({ value: s.id, label: s.code + ' · ' + s.name }))}
+              menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+              styles={{ menuPortal: (base: any) => ({ ...base, zIndex: 9999 }) }}
+            />
           </Field>
           <Field label="Business-unit scope" full>
-            <select name="businessUnitIds" className="field-input" multiple size={Math.min(5, api.data?.businessUnits.length ?? 3)}>
-              {api.data?.businessUnits.map((item) => (
-                <option key={item.id} value={item.id}>{item.name}</option>
-              ))}
-            </select>
+            <Select
+              isMulti
+              name="businessUnitIds"
+              options={(api.data?.businessUnits ?? []).map((b: any) => ({ value: b.id, label: b.name }))}
+              menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+              styles={{ menuPortal: (base: any) => ({ ...base, zIndex: 9999 }) }}
+            />
           </Field>
         </div>
         {(error || api.error) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? api.error}</span></div>}

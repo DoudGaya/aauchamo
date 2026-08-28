@@ -19,7 +19,7 @@ type AgentStatementDetail = {
   creditLimit: string;
   status: string;
   homeStation: { code: string; name: string };
-  company: { legalName: string; displayName: string; address: string; phone: string; currencyCode: string };
+  company: { legalName: string; displayName: string; address: string; phone: string; currencyCode: string; logoObjectKey?: string | null; logoDarkObjectKey?: string | null };
   account: { id: string; balance: string } | null;
   entries: WalletEntryRecord[];
 };
@@ -100,7 +100,7 @@ export default function StatementPrintPage() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "2px solid #800000", paddingBottom: "20px", marginBottom: "24px" }}>
           <div>
             <div style={{ background: "#800000", display: "inline-block", padding: "8px 12px", borderRadius: "6px", marginBottom: "8px" }}>
-              <img src="/logo.png" alt="AAU Chamo Logo" style={{ height: "40px", display: "block" }} />
+              <img src={agent.company?.logoDarkObjectKey || agent.company?.logoObjectKey || "/logo.png"} alt="AAU Chamo Logo" style={{ height: "40px", display: "block" }} />
             </div>
             <h1 style={{ margin: "4px 0 2px 0", fontSize: "22px", color: "#800000" }}>{agent.company.displayName}</h1>
             <p style={{ margin: 0, color: "#666", fontSize: "12px" }}>{agent.company.legalName}</p>

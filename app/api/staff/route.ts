@@ -117,7 +117,7 @@ export async function POST(request: Request) {
         companyId: access.companyId,
         stationId: input.homeStationId,
         documentType: "STAFF",
-        prefix: "STF",
+        prefix: "AAU",
         includeDate: false,
         padding: 5,
       });
