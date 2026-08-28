@@ -73,19 +73,25 @@ describe("Financial Management Integration Tests (Module 11)", () => {
     vi.spyOn(accessModule, "requireAccess").mockResolvedValue(access as any);
     vi.spyOn(accessModule, "requirePermission").mockImplementation((ctx, perm) => ctx as any);
 
-    // Pre-clean: delete any stale test period for Aug 2026 from prior runs
+    // Pre-clean: delete any stale test periods from prior runs or manual testing
     await db.financialPeriod.deleteMany({
-      where: { companyId, name: "Test Period Aug 2026" },
+      where: { companyId },
     });
 
-    // 1. Create a period spanning today's date (2026-08-16) so the lock test is deterministic
+    const now = new Date();
+    const startStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+    // Create an end date in the next month to safely cover today
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 15);
+    const endStr = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-15`;
+
+    // 1. Create a period spanning today's date so the lock test is deterministic
     const req1 = new Request("http://localhost/api/finance/periods", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        name: "Test Period Aug 2026",
-        startsAt: "2026-08-01",
-        endsAt: "2026-08-31",
+        name: "Test Period Current",
+        startsAt: startStr,
+        endsAt: endStr,
       }),
     });
     const res1 = await createPeriod(req1);

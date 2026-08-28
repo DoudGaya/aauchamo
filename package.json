@@ -13,7 +13,7 @@
     "deploy:s3": "node scripts/upload-to-s3.js",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --fileParallelism false",
     "test:watch": "vitest",
     "db:format": "prisma format",
     "db:validate": "prisma validate",
