@@ -7742,6 +7742,68 @@ function StaffDetailModal({
   const [nokEmail, setNokEmail] = useState("");
   const [nokAddress, setNokAddress] = useState("");
 
+  const [tab, setTab] = useState("Profile");
+
+  // Transfer & Posting State
+  const [transferStationId, setTransferStationId] = useState("");
+  const [transferDate, setTransferDate] = useState(new Date().toISOString().slice(0, 10));
+  const [transferReason, setTransferReason] = useState("");
+  const [transferBusy, setTransferBusy] = useState(false);
+
+  const [postingStationId, setPostingStationId] = useState("");
+  const [postingStartsAt, setPostingStartsAt] = useState(new Date().toISOString().slice(0, 10));
+  const [postingEndsAt, setPostingEndsAt] = useState("");
+  const [postingReason, setPostingReason] = useState("");
+  const [postingBusy, setPostingBusy] = useState(false);
+
+  const handleTransfer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!detail) return;
+    setError(null); setTransferBusy(true);
+    try {
+      const startsAt = new Date(transferDate).toISOString();
+      const response = await fetch(`/api/staff/${staff.id}/transfer`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          version: detail.version,
+          stationId: transferStationId,
+          startsAt,
+          reason: transferReason
+        })
+      });
+      const body = await response.json() as ApiEnvelope<any>;
+      if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Transfer failed.");
+      onComplete("Staff Transferred", `${detail.firstName} ${detail.lastName} was transferred.`);
+    } catch (err) { setError(err instanceof Error ? err.message : "Transfer failed."); }
+    finally { setTransferBusy(false); }
+  };
+
+  const handlePosting = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!detail) return;
+    setError(null); setPostingBusy(true);
+    try {
+      const startsAt = new Date(postingStartsAt).toISOString();
+      const endsAt = postingEndsAt ? new Date(postingEndsAt).toISOString() : undefined;
+      const response = await fetch(`/api/staff/${staff.id}/posting`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          stationId: postingStationId,
+          startsAt,
+          endsAt,
+          reason: postingReason,
+          isPrimary: false
+        })
+      });
+      const body = await response.json() as ApiEnvelope<any>;
+      if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Posting failed.");
+      onComplete("Staff Posted", `${detail.firstName} ${detail.lastName} was posted.`);
+    } catch (err) { setError(err instanceof Error ? err.message : "Posting failed."); }
+    finally { setPostingBusy(false); }
+  };
+
   const detail = detailApi.data;
 
   useEffect(() => {
@@ -8341,6 +8403,14 @@ function StaffDetailModal({
           </div>
           <button onClick={onClose} aria-label="Close modal"><X size={19} /></button>
         </div>
+        <div style={{ padding: "0 24px", borderBottom: "1px solid var(--border-color)", display: "flex", gap: "16px" }}>
+          {["Profile", "Transfers & Postings"].map(t => (
+            <button key={t} onClick={() => setTab(t)} style={{ background: "none", border: "none", borderBottom: tab === t ? "2px solid var(--primary)" : "2px solid transparent", padding: "12px 0", cursor: "pointer", fontWeight: tab === t ? 600 : 400, color: tab === t ? "var(--text-primary)" : "var(--text-muted)" }}>
+              {t}
+            </button>
+          ))}
+        </div>
+        {tab === "Profile" ? (
         <form onSubmit={handleSubmit}>
           <div className="workflow-body">
             <div style={{ display: "flex", gap: "20px", marginBottom: "20px", alignItems: "center" }}>
@@ -8480,6 +8550,95 @@ function StaffDetailModal({
             </div>
           </div>
         </form>
+        ) : (
+        <div className="workflow-body" style={{ maxHeight: "70vh", overflowY: "auto" }}>
+          <div className="content-stack">
+            <div style={{ marginBottom: "24px" }}>
+              <div style={{ marginBottom: "16px" }}>
+                <h3 style={{ fontSize: "16px", fontWeight: 600, color: "var(--text-primary)" }}>Permanent Transfer</h3>
+                <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>Move this staff member to a new home station. This updates their permanent base assignment.</p>
+              </div>
+              <form onSubmit={handleTransfer} className="form-grid">
+                <Field label="New Home Station">
+                  <select className="field-input" value={transferStationId} onChange={e => setTransferStationId(e.target.value)} required>
+                    <option value="" disabled>Select station</option>
+                    {allowedStations.map(st => <option key={st.id} value={st.id}>{st.name}</option>)}
+                  </select>
+                </Field>
+                <Field label="Effective Date">
+                  <input type="date" className="field-input" value={transferDate} onChange={e => setTransferDate(e.target.value)} required />
+                </Field>
+                <Field label="Reason for Transfer" full>
+                  <input className="field-input" value={transferReason} onChange={e => setTransferReason(e.target.value)} required minLength={5} placeholder="e.g. Relocation to Abuja branch" />
+                </Field>
+                <div style={{ gridColumn: "1 / -1", textAlign: "right", marginTop: "8px" }}>
+                  <button type="submit" className="primary-button" disabled={transferBusy || !transferStationId}>{transferBusy ? "Transferring..." : "Transfer Staff"}</button>
+                </div>
+              </form>
+            </div>
+
+            <div style={{ paddingTop: "24px", borderTop: "1px dashed var(--border-color)", marginBottom: "24px" }}>
+              <div style={{ marginBottom: "16px" }}>
+                <h3 style={{ fontSize: "16px", fontWeight: 600, color: "var(--text-primary)" }}>Temporary Posting</h3>
+                <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>Assign this staff member to a secondary station for a specific period (e.g. relief duty).</p>
+              </div>
+              <form onSubmit={handlePosting} className="form-grid">
+                <Field label="Destination Station">
+                  <select className="field-input" value={postingStationId} onChange={e => setPostingStationId(e.target.value)} required>
+                    <option value="" disabled>Select station</option>
+                    {allowedStations.map(st => <option key={st.id} value={st.id}>{st.name}</option>)}
+                  </select>
+                </Field>
+                <Field label="Start Date">
+                  <input type="date" className="field-input" value={postingStartsAt} onChange={e => setPostingStartsAt(e.target.value)} required />
+                </Field>
+                <Field label="End Date (Optional)">
+                  <input type="date" className="field-input" value={postingEndsAt} onChange={e => setPostingEndsAt(e.target.value)} />
+                </Field>
+                <Field label="Reason for Posting" full>
+                  <input className="field-input" value={postingReason} onChange={e => setPostingReason(e.target.value)} required minLength={5} placeholder="e.g. Relief duty for 2 weeks" />
+                </Field>
+                <div style={{ gridColumn: "1 / -1", textAlign: "right", marginTop: "8px" }}>
+                  <button type="submit" className="secondary-button" disabled={postingBusy || !postingStationId}>{postingBusy ? "Posting..." : "Create Posting"}</button>
+                </div>
+              </form>
+            </div>
+
+            {detail?.stationHistory?.length > 0 && (
+              <div style={{ paddingTop: "24px", borderTop: "1px dashed var(--border-color)" }}>
+                <div style={{ marginBottom: "16px" }}>
+                  <h3 style={{ fontSize: "16px", fontWeight: 600, color: "var(--text-primary)" }}>Assignment History</h3>
+                  <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>Previous and current station postings.</p>
+                </div>
+                <div className="table-wrap">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>Station</th>
+                        <th>Primary?</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Reason</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detail.stationHistory.map((h: any) => (
+                        <tr key={h.id}>
+                          <td><strong>{h.station?.name || h.stationId}</strong></td>
+                          <td>{h.isPrimary ? <span style={{ color: "var(--success)" }}>Primary</span> : "Secondary"}</td>
+                          <td>{new Date(h.startsAt).toLocaleDateString()}</td>
+                          <td>{h.endsAt ? new Date(h.endsAt).toLocaleDateString() : <span style={{ color: "var(--text-muted)" }}>Present</span>}</td>
+                          <td>{h.reason}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        )}
       </div>
     </div>
   );
@@ -9565,7 +9724,7 @@ function AccessView({
   const visibleRoles = roles.filter((role) => !q || `${role.name} ${role.code} ${role.scope}`.toLowerCase().includes(q));
   const permissions = (permissionApi.data ?? []).filter((item) => !q || `${item.key} ${item.module} ${item.action} ${item.description}`.toLowerCase().includes(q));
   const sessions = (sessionApi.data ?? []).filter((item) => !q || `${item.user.name ?? ""} ${item.user.username} ${item.user.email ?? ""} ${item.ipAddress ?? ""}`.toLowerCase().includes(q));
-  return <div className="content-stack"><section className="security-banner"><div><ShieldCheck size={22} /><div><strong>Server-enforced access control</strong><span>{roles.length} roles, {userApi.total} users and {permissionApi.total} granular permissions are configured.</span></div></div><button onClick={reload}><RefreshCcw size={14} /> Refresh access</button></section><Panel><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap", marginBottom: "8px" }}><TableToolbar tabs={["Users", "Roles", "Permissions", "Sessions"]} activeTab={tab} onTab={(value) => { setTab(value); setQuery(""); }} placeholder="Search users, roles, permissions or sessions" search={query} onSearch={setQuery} />{tab === "Users" && onModal && <button className="primary-button" onClick={() => onModal("invite")} style={{ height: "36px", padding: "0 16px" }}><UserPlus size={15} /><span>Invite user</span></button>}</div>{error ? <EmptyState icon={AlertTriangle} title="Access configuration could not be loaded" detail={error} /> : loading ? <EmptyState icon={RefreshCcw} title="Loading access configuration" detail="Retrieving users, grants and active sessions." compact /> : tab === "Roles" ? visibleRoles.length ? <div className="role-grid">{visibleRoles.map((role, index) => <article className="role-card" key={role.id}><div><span className={classNames("role-icon", tones[index % tones.length])}><KeyRound size={17} /></span><StatusPill value={role.scope} /></div><strong>{role.name}</strong><span>{role.code}</span><div className="role-meta"><span><Users size={14} />{role._count.users} users</span><span><Fingerprint size={14} />{role.permissions.length} permissions</span></div><button>Server enforced <ShieldCheck size={13} /></button></article>)}</div> : <EmptyState icon={KeyRound} title={q ? "No matching roles" : "No roles configured"} detail={q ? "Try a different role name or code." : "Create a role and assign only the permissions needed for the job."} /> : tab === "Permissions" ? <div className="table-wrap"><table className="data-table"><thead><tr><th>Permission</th><th>Module</th><th>Action</th><th>Description</th><th>Control</th></tr></thead><tbody>{permissions.map((item) => <tr key={item.id}><td><code>{item.key}</code></td><td>{item.module}</td><td>{item.action}</td><td>{item.description}</td><td><StatusPill value={item.elevated ? "Elevated" : "Standard"} /></td></tr>)}</tbody></table></div> : tab === "Sessions" ? <div className="table-wrap"><table className="data-table"><thead><tr><th>User</th><th>IP address</th><th>User agent</th><th>Last seen</th><th>Expires</th><th>Status</th><th /></tr></thead><tbody>{sessions.map((item) => { const active = !item.revokedAt && new Date(item.expires) >= new Date(); return <tr key={item.id}><td><div className="primary-cell"><strong>{item.user.name ?? item.user.username}</strong><span>{item.user.email ?? item.user.username}</span></div></td><td>{item.ipAddress ?? "Unknown"}</td><td>{item.userAgent?.slice(0, 60) ?? "Unknown"}</td><td>{new Date(item.lastSeenAt).toLocaleString("en-NG")}</td><td>{formatDate(item.expires)}</td><td><StatusPill value={item.revokedAt ? "Revoked" : new Date(item.expires) < new Date() ? "Expired" : "Active"} /></td><td>{active ? <button className="row-button" onClick={() => revokeSession(item)}>Revoke</button> : <span className="verified-cell"><ShieldCheck size={13} />Closed</span>}</td></tr>; })}</tbody></table></div> : users.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>User</th><th>Username</th><th>Roles</th><th>Station scopes</th><th>Last login</th><th>Status</th><th /></tr></thead><tbody>{users.map((item) => <tr key={item.id}><td><div className="agent-cell staff"><span>{`${item.firstName[0]}${item.lastName[0]}`}</span><div><strong>{item.name ?? `${item.firstName} ${item.lastName}`}</strong><small>{item.email ?? "No email"}</small></div></div></td><td><code>{item.username}</code></td><td>{item.roleAssignments.map((grant) => grant.role.name).join(", ") || "—"}</td><td>{item.stationScopes.length}</td><td>{item.lastLoginAt ? new Date(item.lastLoginAt).toLocaleString("en-NG") : "Never"}</td><td><StatusPill value={item.status.replaceAll("_", " ")} /></td><td><div className="row-actions">{item.status === "ACTIVE" ? <button className="row-button" onClick={() => userAction(item, "deactivate", "Deactivate user")}>Disable</button> : <button className="row-button" onClick={() => userAction(item, "activate", "Activate user")}>Activate</button>}<button className="icon-ghost" title="Edit user access" onClick={() => setEditingUser(item)}><Settings2 size={15} /></button><button className="icon-ghost" title="Reset password" onClick={() => userAction(item, "reset-password", "Password reset")}><KeyRound size={15} /></button><button className="icon-ghost" title="Revoke all sessions" onClick={() => userAction(item, "revoke-sessions", "Revoke sessions")}><LogOut size={15} /></button></div></td></tr>)}</tbody></table></div> : <EmptyState icon={Users} title={q ? "No matching users" : "No users"} detail={q ? "Try a different name, username or email." : "Invite a user to grant scoped access."} />}{editingUser && <UserEditModal user={editingUser} allowedStations={allowedStations} onClose={() => setEditingUser(null)} onComplete={(title, detail) => { setEditingUser(null); userApi.reload(); onToast({ title, detail }); }} />}<div className="permission-note"><LockKeyhole size={17} /><div><strong>Server-enforced permissions</strong><span>Menu visibility, API authorization and database query scope use the same permission policy.</span></div></div></Panel></div>;
+  return <div className="content-stack"><section className="security-banner"><div><ShieldCheck size={22} /><div><strong>Server-enforced access control</strong><span>{roles.length} roles, {userApi.total} users and {permissionApi.total} granular permissions are configured.</span></div></div><button onClick={reload}><RefreshCcw size={14} /> Refresh access</button></section><Panel><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap", marginBottom: "8px" }}><TableToolbar tabs={["Users", "Roles", "Permissions", "Sessions"]} activeTab={tab} onTab={(value) => { setTab(value); setQuery(""); }} placeholder="Search users, roles, permissions or sessions" search={query} onSearch={setQuery} />{tab === "Users" && onModal && <button className="primary-button" onClick={() => onModal("invite")} style={{ height: "36px", padding: "0 16px" }}><UserPlus size={15} /><span>Add user</span></button>}</div>{error ? <EmptyState icon={AlertTriangle} title="Access configuration could not be loaded" detail={error} /> : loading ? <EmptyState icon={RefreshCcw} title="Loading access configuration" detail="Retrieving users, grants and active sessions." compact /> : tab === "Roles" ? visibleRoles.length ? <div className="role-grid">{visibleRoles.map((role, index) => <article className="role-card" key={role.id}><div><span className={classNames("role-icon", tones[index % tones.length])}><KeyRound size={17} /></span><StatusPill value={role.scope} /></div><strong>{role.name}</strong><span>{role.code}</span><div className="role-meta"><span><Users size={14} />{role._count.users} users</span><span><Fingerprint size={14} />{role.permissions.length} permissions</span></div><button>Server enforced <ShieldCheck size={13} /></button></article>)}</div> : <EmptyState icon={KeyRound} title={q ? "No matching roles" : "No roles configured"} detail={q ? "Try a different role name or code." : "Create a role and assign only the permissions needed for the job."} /> : tab === "Permissions" ? <div className="table-wrap"><table className="data-table"><thead><tr><th>Permission</th><th>Module</th><th>Action</th><th>Description</th><th>Control</th></tr></thead><tbody>{permissions.map((item) => <tr key={item.id}><td><code>{item.key}</code></td><td>{item.module}</td><td>{item.action}</td><td>{item.description}</td><td><StatusPill value={item.elevated ? "Elevated" : "Standard"} /></td></tr>)}</tbody></table></div> : tab === "Sessions" ? <div className="table-wrap"><table className="data-table"><thead><tr><th>User</th><th>IP address</th><th>User agent</th><th>Last seen</th><th>Expires</th><th>Status</th><th /></tr></thead><tbody>{sessions.map((item) => { const active = !item.revokedAt && new Date(item.expires) >= new Date(); return <tr key={item.id}><td><div className="primary-cell"><strong>{item.user.name ?? item.user.username}</strong><span>{item.user.email ?? item.user.username}</span></div></td><td>{item.ipAddress ?? "Unknown"}</td><td>{item.userAgent?.slice(0, 60) ?? "Unknown"}</td><td>{new Date(item.lastSeenAt).toLocaleString("en-NG")}</td><td>{formatDate(item.expires)}</td><td><StatusPill value={item.revokedAt ? "Revoked" : new Date(item.expires) < new Date() ? "Expired" : "Active"} /></td><td>{active ? <button className="row-button" onClick={() => revokeSession(item)}>Revoke</button> : <span className="verified-cell"><ShieldCheck size={13} />Closed</span>}</td></tr>; })}</tbody></table></div> : users.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>User</th><th>Username</th><th>Roles</th><th>Station scopes</th><th>Last login</th><th>Status</th><th /></tr></thead><tbody>{users.map((item) => <tr key={item.id}><td><div className="agent-cell staff"><span>{`${item.firstName[0]}${item.lastName[0]}`}</span><div><strong>{item.name ?? `${item.firstName} ${item.lastName}`}</strong><small>{item.email ?? "No email"}</small></div></div></td><td><code>{item.username}</code></td><td>{item.roleAssignments.map((grant) => grant.role.name).join(", ") || "—"}</td><td>{item.stationScopes.length}</td><td>{item.lastLoginAt ? new Date(item.lastLoginAt).toLocaleString("en-NG") : "Never"}</td><td><StatusPill value={item.status.replaceAll("_", " ")} /></td><td><div className="row-actions">{item.status === "ACTIVE" ? <button className="row-button" onClick={() => userAction(item, "deactivate", "Deactivate user")}>Disable</button> : <button className="row-button" onClick={() => userAction(item, "activate", "Activate user")}>Activate</button>}<button className="icon-ghost" title="Edit user access" onClick={() => setEditingUser(item)}><Settings2 size={15} /></button><button className="icon-ghost" title="Reset password" onClick={() => userAction(item, "reset-password", "Password reset")}><KeyRound size={15} /></button><button className="icon-ghost" title="Revoke all sessions" onClick={() => userAction(item, "revoke-sessions", "Revoke sessions")}><LogOut size={15} /></button></div></td></tr>)}</tbody></table></div> : <EmptyState icon={Users} title={q ? "No matching users" : "No users"} detail={q ? "Try a different name, username or email." : "Add a user to grant scoped access."} />}{editingUser && <UserEditModal user={editingUser} allowedStations={allowedStations} onClose={() => setEditingUser(null)} onComplete={(title, detail) => { setEditingUser(null); userApi.reload(); onToast({ title, detail }); }} />}<div className="permission-note"><LockKeyhole size={17} /><div><strong>Server-enforced permissions</strong><span>Menu visibility, API authorization and database query scope use the same permission policy.</span></div></div></Panel></div>;
 }
 
 function AuditDetailPanel({ id, onClose }: { id: string; onClose: () => void }) {
@@ -11702,7 +11861,7 @@ function WorkflowModal({
     finance: { eyebrow: "Cashbook", title: "Record finance entry", description: "Post an income or expense entry to the controlled cashbook." },
     staff: { eyebrow: "Human resources", title: "Add staff member", description: "Create an employment record and home-station assignment." },
     station: { eyebrow: "Station administration", title: "Add station", description: "Create an operating location and enable its business units." },
-    invite: { eyebrow: "Access control", title: "Invite user", description: "Provision a user with explicit roles and station scope." },
+    invite: { eyebrow: "Access control", title: "Add user", description: "Provision a user with explicit roles and station scope." },
     agent: { eyebrow: "Agent management", title: "Create agent", description: "Register an agent and provision a zero-balance wallet." },
     profile: { eyebrow: "User Account", title: "My Profile", description: "View your user account identity, station scope permissions, and security credentials." },
     preferences: { eyebrow: "User Settings", title: "Preferences", description: "Configure notification alert channels, appearance theme, and quiet hours." },
@@ -12104,7 +12263,7 @@ function InviteForm({
           </div>
         </div>
         <div className="workflow-actions" style={{ justifyContent: "flex-end", borderTop: "none", paddingTop: 0 }}>
-          <button type="button" className="primary-button" onClick={() => onComplete("User invited", `${credentials.username} provisioned.`)}>
+          <button type="button" className="primary-button" onClick={() => onComplete("User added", `${credentials.username} provisioned.`)}>
             Done
           </button>
         </div>
@@ -12130,7 +12289,7 @@ function InviteForm({
                 type="text"
                 value={customPassword}
                 onChange={(e) => setCustomPassword(e.target.value)}
-                placeholder="Leave blank to generate randomly and send email invitation"
+                placeholder="Leave blank to auto-generate. Min 12 chars, upper, lower, number, symbol"
               />
               <button type="button" className="secondary-button" onClick={generatePassword} style={{ whiteSpace: "nowrap" }}>
                 Generate
@@ -12140,7 +12299,6 @@ function InviteForm({
 
           <Field label="Roles" full>
             <Select
-              isMulti
               name="roleIds"
               options={(api.data?.roles ?? []).map((r: any) => ({ value: r.id, label: r.name + ' · ' + r.scope.toLowerCase() }))}
               menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
@@ -12149,7 +12307,6 @@ function InviteForm({
           </Field>
           <Field label="Station scope" full>
             <Select
-              isMulti
               name="stationIds"
               options={allowedStations.map((s: any) => ({ value: s.id, label: s.code + ' · ' + s.name }))}
               menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
@@ -12158,7 +12315,6 @@ function InviteForm({
           </Field>
           <Field label="Business-unit scope" full>
             <Select
-              isMulti
               name="businessUnitIds"
               options={(api.data?.businessUnits ?? []).map((b: any) => ({ value: b.id, label: b.name }))}
               menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
@@ -12169,7 +12325,7 @@ function InviteForm({
         {(error || api.error) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? api.error}</span></div>}
         <div className="form-note"><LockKeyhole size={16} /><span>Providing a custom password will mark the user active immediately. Leaving it blank triggers an email invite.</span></div>
       </div>
-      <ModalFooter onClose={onClose} submitLabel={busy ? "Inviting..." : "Invite user"} icon={UserPlus} disabled={busy || api.loading} />
+      <ModalFooter onClose={onClose} submitLabel={busy ? "Adding..." : "Add user"} icon={UserPlus} disabled={busy || api.loading} />
     </form>
   );
 }
