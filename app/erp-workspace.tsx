@@ -8382,7 +8382,7 @@ function StaffDetailModal({
     } catch (e) { setError(e instanceof Error ? e.message : "Delete failed."); }
     finally { setDeleteBusy(false); }
   };
-
+  
   if (detailApi.loading || hrSetupApi.loading) return (
     <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={onClose}>
       <div className="workflow-dialog" style={{ maxWidth: "500px" }}>
@@ -12194,11 +12194,27 @@ function InviteForm({
   const [credentials, setCredentials] = useState<{ username: string; password?: string } | null>(null);
 
   const generatePassword = () => {
-    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+    const lowers = "abcdefghijklmnopqrstuvwxyz";
+    const uppers = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const numbers = "0123456789";
+    const symbols = "!@#$%^&*()_+";
+    const all = lowers + uppers + numbers + symbols;
+    
     let pwd = "";
-    for (let i = 0; i < 14; i++) {
-      pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    // Guarantee one of each required type
+    pwd += lowers.charAt(Math.floor(Math.random() * lowers.length));
+    pwd += uppers.charAt(Math.floor(Math.random() * uppers.length));
+    pwd += numbers.charAt(Math.floor(Math.random() * numbers.length));
+    pwd += symbols.charAt(Math.floor(Math.random() * symbols.length));
+    
+    // Fill the rest to reach 14 characters
+    for (let i = 4; i < 14; i++) {
+      pwd += all.charAt(Math.floor(Math.random() * all.length));
     }
+    
+    // Shuffle the password
+    pwd = pwd.split('').sort(() => 0.5 - Math.random()).join('');
+    
     setCustomPassword(pwd);
   };
 
@@ -12287,9 +12303,10 @@ function InviteForm({
                 className="field-input"
                 style={{ flex: 1 }}
                 type="text"
+                minLength={6}
                 value={customPassword}
                 onChange={(e) => setCustomPassword(e.target.value)}
-                placeholder="Leave blank to auto-generate. Min 12 chars, upper, lower, number, symbol"
+                placeholder="Leave blank to auto-generate (min 6 characters)"
               />
               <button type="button" className="secondary-button" onClick={generatePassword} style={{ whiteSpace: "nowrap" }}>
                 Generate
