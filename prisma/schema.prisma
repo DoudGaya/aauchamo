@@ -426,7 +426,6 @@ model Station {
   ticketBookings       TicketBooking[]
   generatedDocuments   GeneratedDocument[]
 
-  @@unique([companyId, code])
   @@index([companyId, status])
   @@map("stations")
 }

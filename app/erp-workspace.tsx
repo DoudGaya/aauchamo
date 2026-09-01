@@ -363,13 +363,13 @@ async function workflowPost<T>(url: string, body: unknown, method = "POST") {
     });
     const data = await res.json();
     if (!res.ok || !data.ok) throw new Error(data.error?.message ?? "Operation failed.");
-    window.dispatchEvent(new Event("erp-data-changed"));
+    window.dispatchEvent(new Event("erp-global-mutate"));
     return data.data as T;
   } catch (err: any) {
     if (err instanceof TypeError && err.message.includes("Failed to fetch") && !navigator.onLine) {
       const { enqueueOfflineTransaction } = await import("@/lib/client/offline-sync");
       await enqueueOfflineTransaction(url, method, body, { "content-type": "application/json", accept: "application/json" });
-      window.dispatchEvent(new Event("erp-data-changed"));
+      window.dispatchEvent(new Event("erp-global-mutate"));
       return { id: "offline-" + Date.now(), status: "QUEUED_OFFLINE", awbNumber: "QUEUED", entryNumber: "QUEUED", saleNumber: "QUEUED", displayName: "Saved Offline", customerNumber: "QUEUED" } as unknown as T;
     }
     throw err;
@@ -589,7 +589,7 @@ export default function ERPWorkspace({
 
     if (activeModule === "notifications") {
       const response = await fetch("/api/notifications", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "MARK_ALL_READ" }) });
-      window.dispatchEvent(new Event("erp-data-changed"));
+      window.dispatchEvent(new Event("erp-global-mutate"));
       setToast({ title: response.ok ? "Inbox cleared" : "Inbox update failed", detail: response.ok ? "All notifications have been marked as read." : "The notification state could not be updated." });
       return;
     }
@@ -600,7 +600,7 @@ export default function ERPWorkspace({
       return;
     }
 
-    window.dispatchEvent(new Event("erp-data-changed"));
+    window.dispatchEvent(new Event("erp-global-mutate"));
     setToast({ title: "Data refreshed", detail: `${meta.title} was refreshed from the server.` });
   };
 
@@ -2193,7 +2193,7 @@ function POSView({
       setDiscounts({});
       setPaymentAllocations([]);
       reload();
-      window.dispatchEvent(new Event("erp-data-changed"));
+      window.dispatchEvent(new Event("erp-global-mutate"));
       onToast({
         title: "Sale completed",
         detail: `${body.data.saleNumber} posted for ${formatNaira(Number(body.data.total))}.`,
@@ -4336,7 +4336,7 @@ function InventoryView({
                               const res = await fetch(`/api/inventory/catalogue/${product.id}`, { method: "DELETE" });
                               const body = await res.json();
                               if (!res.ok || !body.ok) throw new Error(body.error?.message || "Failed to delete product.");
-                              window.dispatchEvent(new Event("erp-data-changed"));
+                              window.dispatchEvent(new Event("erp-global-mutate"));
                             } catch (err: any) {
                               alert(err.message || "Failed to delete product.");
                               productApi.reload();
@@ -4416,7 +4416,7 @@ function CargoEditModal({
       const body = await response.json() as ApiEnvelope<any>;
       if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Failed to save updates.");
 
-      window.dispatchEvent(new Event("erp-data-changed"));
+      window.dispatchEvent(new Event("erp-global-mutate"));
 
       if (body.data?.approvalRequired) {
         onComplete("Correction requested", "Label correction has been routed to supervisor approvals.");
@@ -5179,7 +5179,7 @@ function AgentDetailModal({
       const body = (await response.json()) as ApiEnvelope<any>;
       if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Failed to save profile.");
 
-      window.dispatchEvent(new Event("erp-data-changed"));
+      window.dispatchEvent(new Event("erp-global-mutate"));
       onComplete("Agent updated", "Agent profile has been updated successfully.");
       reloadDetails();
     } catch (reason) {
@@ -5203,7 +5203,7 @@ function AgentDetailModal({
       const body = (await response.json()) as ApiEnvelope<any>;
       if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Reversal failed.");
 
-      window.dispatchEvent(new Event("erp-data-changed"));
+      window.dispatchEvent(new Event("erp-global-mutate"));
       onComplete("Entry reversed", "A compensating ledger entry has been posted.");
       reloadDetails();
       reloadLedger();
@@ -7390,7 +7390,7 @@ function StationProfilePanel({ station, onDone }: { station: StationRecord; onDo
       const res = await fetch(`/api/stations/${station.id}`, { method: "DELETE" });
       const body = await res.json();
       if (!res.ok || !body.ok) throw new Error(body.error?.message || "Failed to delete station.");
-      window.dispatchEvent(new Event("erp-data-changed"));
+      window.dispatchEvent(new Event("erp-global-mutate"));
       onDone();
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Delete failed");
@@ -9719,7 +9719,7 @@ function AccessView({
   const loading = roleApi.loading || userApi.loading || permissionApi.loading || sessionApi.loading; const error = roleApi.error ?? userApi.error ?? permissionApi.error ?? sessionApi.error; const reload = () => { roleApi.reload(); userApi.reload(); permissionApi.reload(); sessionApi.reload(); };
   const q = query.trim().toLowerCase();
   const userAction = async (user: UserRecord, action: string, label: string) => { const reason = window.prompt(`${label} — enter a reason (recorded in the audit trail)`); if (!reason?.trim()) return; try { await workflowPost(`/api/users/${user.id}/${action}`, { reason }); onToast({ title: label, detail: `${user.name ?? user.username}: completed and audited.` }); } catch (reason_) { onToast({ title: `${label} failed`, detail: reason_ instanceof Error ? reason_.message : "The action could not be completed." }); } };
-  const revokeSession = async (session: SessionRecord) => { if (!window.confirm(`Revoke this session for ${session.user.name ?? session.user.username}?`)) return; try { const response = await fetch(`/api/sessions/${session.id}`, { method: "DELETE" }); const body = await response.json() as ApiEnvelope<unknown>; if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Session could not be revoked."); window.dispatchEvent(new Event("erp-data-changed")); onToast({ title: "Session revoked", detail: "The session was revoked and must re-authenticate." }); } catch (reason_) { onToast({ title: "Revoke failed", detail: reason_ instanceof Error ? reason_.message : "The session could not be revoked." }); } };
+  const revokeSession = async (session: SessionRecord) => { if (!window.confirm(`Revoke this session for ${session.user.name ?? session.user.username}?`)) return; try { const response = await fetch(`/api/sessions/${session.id}`, { method: "DELETE" }); const body = await response.json() as ApiEnvelope<unknown>; if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Session could not be revoked."); window.dispatchEvent(new Event("erp-global-mutate")); onToast({ title: "Session revoked", detail: "The session was revoked and must re-authenticate." }); } catch (reason_) { onToast({ title: "Revoke failed", detail: reason_ instanceof Error ? reason_.message : "The session could not be revoked." }); } };
   const users = (userApi.data ?? []).filter((item) => !q || `${item.name ?? ""} ${item.firstName} ${item.lastName} ${item.username} ${item.email ?? ""}`.toLowerCase().includes(q));
   const visibleRoles = roles.filter((role) => !q || `${role.name} ${role.code} ${role.scope}`.toLowerCase().includes(q));
   const permissions = (permissionApi.data ?? []).filter((item) => !q || `${item.key} ${item.module} ${item.action} ${item.description}`.toLowerCase().includes(q));
@@ -11027,7 +11027,7 @@ function SettingsView({ onToast, onModal }: { onToast: (toast: Toast) => void; o
       if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Configuration could not be saved.");
       onToast({ title: "Configuration saved", detail: "Company profile changes were committed and added to the audit chain." });
       api.reload();
-      window.dispatchEvent(new Event("erp-data-changed"));
+      window.dispatchEvent(new Event("erp-global-mutate"));
     } catch (reason) {
       onToast({ title: "Configuration failed", detail: reason instanceof Error ? reason.message : "Configuration could not be saved." });
     } finally {
@@ -11078,7 +11078,7 @@ function SettingsView({ onToast, onModal }: { onToast: (toast: Toast) => void; o
       onToast({ title: `${theme === "dark" ? "Dark" : "Light"} logo updated`, detail: "Company logo was updated successfully." });
       api.reload();
       window.dispatchEvent(new CustomEvent("erp-logo-updated", { detail: { theme, url: body.data?.logoUrl ?? null } }));
-      window.dispatchEvent(new Event("erp-data-changed"));
+      window.dispatchEvent(new Event("erp-global-mutate"));
     } catch (err) {
       onToast({ title: "Upload failed", detail: err instanceof Error ? err.message : "Failed to upload logo." });
     } finally {
@@ -11096,7 +11096,7 @@ function SettingsView({ onToast, onModal }: { onToast: (toast: Toast) => void; o
       onToast({ title: `${theme === "dark" ? "Dark" : "Light"} logo removed`, detail: "Company logo was cleared." });
       api.reload();
       window.dispatchEvent(new CustomEvent("erp-logo-updated", { detail: { theme, url: null } }));
-      window.dispatchEvent(new Event("erp-data-changed"));
+      window.dispatchEvent(new Event("erp-global-mutate"));
     } catch (err) {
       onToast({ title: "Delete failed", detail: err instanceof Error ? err.message : "Failed to remove logo." });
     } finally {
@@ -11732,7 +11732,7 @@ function QuickSaleForm({
         payments: [{ paymentMethodId: selectedPayId, amount: totalAmount.toFixed(2), reference: paymentRef || undefined }],
       }, "POST");
 
-      window.dispatchEvent(new Event("erp-data-changed"));
+      window.dispatchEvent(new Event("erp-global-mutate"));
       onComplete("Sale Completed", `Order #${data?.saleNumber ?? "QUEUED"} recorded successfully.`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to record sale.");
@@ -11941,7 +11941,7 @@ function ProductForm({ onComplete, onClose, allowedStations }: { onComplete: (ti
       const response = await fetch("/api/inventory/catalogue", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code: String(form.get("code")), name: String(form.get("name")), categoryId: String(form.get("categoryId") || setup?.categories[0]?.id || ""), unitId: String(form.get("unitId")), defaultSupplierId: String(form.get("supplierId") || "") || undefined, purchasePrice: String(form.get("purchasePrice") || "0"), sellingPrice: String(form.get("sellingPrice")), reorderLevel: String(form.get("reorder") || "0"), minimumLevel: String(form.get("minimum") || "0"), openingBalances: Number(quantity) > 0 ? [{ stationId, quantity }] : [] }) });
       const body = await response.json() as ApiEnvelope<{ id: string; code: string; name: string }>;
       if (!response.ok || !body.ok || !body.data) throw new Error(body.error?.message ?? "Product could not be created.");
-      window.dispatchEvent(new Event("erp-data-changed"));
+      window.dispatchEvent(new Event("erp-global-mutate"));
       onComplete("Product created", `${body.data.code} · ${body.data.name} and its opening stock movement were committed.`);
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Product could not be created."); } finally { setBusy(false); }
   };
@@ -11952,8 +11952,8 @@ function CargoForm({ onComplete, onClose, allowedStations }: { onComplete: (titl
   const { data: customerData, loading, error: customerError } = useApiData<CustomerRecord[]>("/api/customers?pageSize=100");
   const { data: settings } = useApiData<SettingsRecord>("/api/settings");
   const [busy, setBusy] = useState(false); const [error, setError] = useState<string | null>(null);
-  const submit = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setBusy(true); setError(null); const form = new FormData(event.currentTarget); const optional = (name: string) => String(form.get(name) ?? "").trim() || undefined; try { const response = await fetch("/api/cargo", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ stationId: String(form.get("stationId")), customerId: String(form.get("customerId")), senderName: String(form.get("senderName")), senderPhone: String(form.get("senderPhone")), receiverName: String(form.get("receiverName")), receiverPhone: String(form.get("receiverPhone")), receiverAddress: optional("receiverAddress"), origin: String(form.get("origin")), destination: String(form.get("destination")), weightKg: String(form.get("weightKg")), pieces: Number(form.get("pieces")), commodity: String(form.get("commodity")), airline: optional("airline"), flightNumber: optional("flightNumber"), flightDate: optional("flightDate") ? new Date(String(form.get("flightDate"))).toISOString() : undefined, handlingNotes: optional("handlingNotes"), declaredValue: optional("declaredValue"), isFragile: form.get("isFragile") === "on" }) }); const body = await response.json() as ApiEnvelope<{ id: string; awbNumber: string; labelUrl: string }>; if (!response.ok || !body.ok || !body.data) throw new Error(body.error?.message ?? "Cargo record could not be created."); window.dispatchEvent(new Event("erp-data-changed")); window.dispatchEvent(new CustomEvent("erp-print", { detail: { url: body.data.labelUrl, title: "Cargo Label" } })); onComplete("Cargo record created", `${body.data.awbNumber} was posted and its traceable label opened for printing.`); } catch (reason) { setError(reason instanceof Error ? reason.message : "Cargo record could not be created."); } finally { setBusy(false); } };
-  return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="Station"><select name="stationId" required defaultValue={allowedStations[0]?.id}>{allowedStations.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select></Field><Field label="Customer"><select name="customerId" required defaultValue=""><option value="" disabled>Select customer</option>{customerData?.map((item) => <option key={item.id} value={item.id}>{item.displayName} · {item.primaryPhone}</option>)}</select></Field><Field label="Sender name"><input name="senderName" required /></Field><Field label="Sender phone"><input name="senderPhone" required autoComplete="tel" pattern="[0-9]+" title="Only digits are allowed" /></Field><Field label="Receiver"><input name="receiverName" required /></Field><Field label="Receiver phone"><input name="receiverPhone" required autoComplete="tel" pattern="[0-9]+" title="Only digits are allowed" /></Field><Field label="Receiver address" full><input name="receiverAddress" /></Field><Field label="Origin"><select name="origin" required defaultValue=""><option value="" disabled>Select origin</option>{settings?.cargoLocations?.map(l => <option key={l.id} value={l.code}>{l.name} ({l.code})</option>)}</select></Field><Field label="Destination"><select name="destination" required defaultValue=""><option value="" disabled>Select destination</option>{settings?.cargoLocations?.map(l => <option key={l.id} value={l.code}>{l.name} ({l.code})</option>)}</select></Field><Field label="Weight (kg)"><input name="weightKg" type="number" step="0.001" min="0.001" required /></Field><Field label="Pieces"><input name="pieces" type="number" min="1" defaultValue="1" required /></Field><Field label="Commodity" full><input name="commodity" required placeholder="Describe the cargo contents" /></Field><Field label="Declared value"><div className="money-input"><span>₦</span><input name="declaredValue" type="number" step="0.01" min="0" /></div></Field><Field label="Airline"><input name="airline" /></Field><Field label="Flight number"><input name="flightNumber" placeholder="e.g. VM-1642" /></Field><Field label="Flight date"><input name="flightDate" type="date" /></Field><Field label="Handling notes"><textarea name="handlingNotes" placeholder="Orientation, special handling..." /></Field><Field label="Fragile"><div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}><input type="checkbox" name="isFragile" /><span>Mark as fragile</span></div></Field></div>{(error || customerError) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? customerError}</span></div>}</div><ModalFooter onClose={onClose} submitLabel={busy ? "Creating…" : loading ? "Loading customers…" : "Create & print label"} icon={Printer} disabled={busy || loading || !customerData?.length || !allowedStations.length} /></form>;
+  const submit = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setBusy(true); setError(null); const form = new FormData(event.currentTarget); const optional = (name: string) => String(form.get(name) ?? "").trim() || undefined; try { const response = await fetch("/api/cargo", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ stationId: String(form.get("stationId")), customerId: String(form.get("customerId")), senderName: String(form.get("senderName")), senderPhone: String(form.get("senderPhone")), receiverName: String(form.get("receiverName")), receiverPhone: String(form.get("receiverPhone")), receiverAddress: optional("receiverAddress"), origin: String(form.get("origin")), destination: String(form.get("destination")), weightKg: String(form.get("weightKg")), pieces: Number(form.get("pieces")), commodity: String(form.get("commodity")), airline: optional("airline"), flightNumber: optional("flightNumber"), flightDate: optional("flightDate") ? new Date(String(form.get("flightDate"))).toISOString() : undefined, handlingNotes: optional("handlingNotes"), declaredValue: optional("declaredValue"), isFragile: form.get("isFragile") === "on" }) }); const body = await response.json() as ApiEnvelope<{ id: string; awbNumber: string; labelUrl: string }>; if (!response.ok || !body.ok || !body.data) throw new Error(body.error?.message ?? "Cargo record could not be created."); window.dispatchEvent(new Event("erp-global-mutate")); window.dispatchEvent(new CustomEvent("erp-print", { detail: { url: body.data.labelUrl, title: "Cargo Label" } })); onComplete("Cargo record created", `${body.data.awbNumber} was posted and its traceable label opened for printing.`); } catch (reason) { setError(reason instanceof Error ? reason.message : "Cargo record could not be created."); } finally { setBusy(false); } };
+  return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="Station"><select name="stationId" required defaultValue={allowedStations[0]?.id}>{allowedStations.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select></Field><Field label="Customer"><select name="customerId" required defaultValue=""><option value="" disabled>Select customer</option>{customerData?.map((item) => <option key={item.id} value={item.id}>{item.displayName} · {item.primaryPhone}</option>)}</select></Field><Field label="Sender name"><input name="senderName" required /></Field><Field label="Sender phone"><input name="senderPhone" required autoComplete="tel" pattern="[0-9]+" title="Only digits are allowed" /></Field><Field label="Receiver"><input name="receiverName" required /></Field><Field label="Receiver phone"><input name="receiverPhone" required autoComplete="tel" pattern="[0-9]+" title="Only digits are allowed" /></Field><Field label="Receiver address" full><input name="receiverAddress" /></Field><Field label="Origin"><Select name="origin" required placeholder="Select origin" options={settings?.cargoLocations?.map(l => ({ value: l.code, label: `${l.name} (${l.code})` }))} /></Field><Field label="Destination"><Select name="destination" required placeholder="Select destination" options={settings?.cargoLocations?.map(l => ({ value: l.code, label: `${l.name} (${l.code})` }))} /></Field><Field label="Weight (kg)"><input name="weightKg" type="number" step="0.001" min="0.001" required /></Field><Field label="Pieces"><input name="pieces" type="number" min="1" defaultValue="1" required /></Field><Field label="Commodity" full><input name="commodity" required placeholder="Describe the cargo contents" /></Field><Field label="Declared value"><div className="money-input"><span>₦</span><input name="declaredValue" type="number" step="0.01" min="0" /></div></Field><Field label="Airline"><input name="airline" /></Field><Field label="Flight number"><input name="flightNumber" placeholder="e.g. VM-1642" /></Field><Field label="Flight date"><input name="flightDate" type="date" /></Field><Field label="Handling notes"><textarea name="handlingNotes" placeholder="Orientation, special handling..." /></Field><Field label="Fragile"><div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}><input type="checkbox" name="isFragile" /><span>Mark as fragile</span></div></Field></div>{(error || customerError) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? customerError}</span></div>}</div><ModalFooter onClose={onClose} submitLabel={busy ? "Creating…" : loading ? "Loading customers…" : "Create & print label"} icon={Printer} disabled={busy || loading || !customerData?.length || !allowedStations.length} /></form>;
 }
 
 function DepositForm({ onComplete, onClose, allowedStations, initialAgentId }: { onComplete: (title: string, detail: string) => void; onClose: () => void; allowedStations: AllowedStation[]; initialAgentId?: string }) {
@@ -12380,7 +12380,7 @@ function CustomerForm({ onComplete, onClose, allowedStations }: { onComplete: (t
         homeStationId: optional("homeStationId") || allowedStations[0]?.id,
         allowDuplicate: true,
       });
-      window.dispatchEvent(new Event("erp-data-changed"));
+      window.dispatchEvent(new Event("erp-global-mutate"));
       onComplete("Customer registered", `${customerData.displayName} (${customerData.customerNumber}) is ready for sales, cargo and booking workflows.`);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "The customer could not be registered.");
