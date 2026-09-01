@@ -2,14 +2,14 @@ import { normalizeEmail, normalizeName, normalizePhone } from "@/lib/server/norm
 
 export type CustomerMatchInput = {
   displayName: string;
-  phone: string;
+  phone?: string | null;
   email?: string | null;
 };
 
 export function customerMatchScore(left: CustomerMatchInput, right: CustomerMatchInput) {
   let score = 0;
   const reasons: string[] = [];
-  if (normalizePhone(left.phone) === normalizePhone(right.phone)) {
+  if (left.phone && right.phone && normalizePhone(left.phone) === normalizePhone(right.phone)) {
     score += 60;
     reasons.push("phone");
   }

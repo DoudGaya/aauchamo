@@ -316,8 +316,8 @@ export type CustomerGroupByOutputType = {
   lastName: string | null
   companyName: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone: string | null
+  normalizedPhone: string | null
   primaryEmail: string | null
   normalizedEmail: string | null
   defaultPnr: string | null
@@ -368,8 +368,8 @@ export type CustomerWhereInput = {
   lastName?: Prisma.StringNullableFilter<"Customer"> | string | null
   companyName?: Prisma.StringNullableFilter<"Customer"> | string | null
   displayName?: Prisma.StringFilter<"Customer"> | string
-  primaryPhone?: Prisma.StringFilter<"Customer"> | string
-  normalizedPhone?: Prisma.StringFilter<"Customer"> | string
+  primaryPhone?: Prisma.StringNullableFilter<"Customer"> | string | null
+  normalizedPhone?: Prisma.StringNullableFilter<"Customer"> | string | null
   primaryEmail?: Prisma.StringNullableFilter<"Customer"> | string | null
   normalizedEmail?: Prisma.StringNullableFilter<"Customer"> | string | null
   defaultPnr?: Prisma.StringNullableFilter<"Customer"> | string | null
@@ -412,8 +412,8 @@ export type CustomerOrderByWithRelationInput = {
   lastName?: Prisma.SortOrderInput | Prisma.SortOrder
   companyName?: Prisma.SortOrderInput | Prisma.SortOrder
   displayName?: Prisma.SortOrder
-  primaryPhone?: Prisma.SortOrder
-  normalizedPhone?: Prisma.SortOrder
+  primaryPhone?: Prisma.SortOrderInput | Prisma.SortOrder
+  normalizedPhone?: Prisma.SortOrderInput | Prisma.SortOrder
   primaryEmail?: Prisma.SortOrderInput | Prisma.SortOrder
   normalizedEmail?: Prisma.SortOrderInput | Prisma.SortOrder
   defaultPnr?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -460,8 +460,8 @@ export type CustomerWhereUniqueInput = Prisma.AtLeast<{
   lastName?: Prisma.StringNullableFilter<"Customer"> | string | null
   companyName?: Prisma.StringNullableFilter<"Customer"> | string | null
   displayName?: Prisma.StringFilter<"Customer"> | string
-  primaryPhone?: Prisma.StringFilter<"Customer"> | string
-  normalizedPhone?: Prisma.StringFilter<"Customer"> | string
+  primaryPhone?: Prisma.StringNullableFilter<"Customer"> | string | null
+  normalizedPhone?: Prisma.StringNullableFilter<"Customer"> | string | null
   primaryEmail?: Prisma.StringNullableFilter<"Customer"> | string | null
   normalizedEmail?: Prisma.StringNullableFilter<"Customer"> | string | null
   defaultPnr?: Prisma.StringNullableFilter<"Customer"> | string | null
@@ -504,8 +504,8 @@ export type CustomerOrderByWithAggregationInput = {
   lastName?: Prisma.SortOrderInput | Prisma.SortOrder
   companyName?: Prisma.SortOrderInput | Prisma.SortOrder
   displayName?: Prisma.SortOrder
-  primaryPhone?: Prisma.SortOrder
-  normalizedPhone?: Prisma.SortOrder
+  primaryPhone?: Prisma.SortOrderInput | Prisma.SortOrder
+  normalizedPhone?: Prisma.SortOrderInput | Prisma.SortOrder
   primaryEmail?: Prisma.SortOrderInput | Prisma.SortOrder
   normalizedEmail?: Prisma.SortOrderInput | Prisma.SortOrder
   defaultPnr?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -541,8 +541,8 @@ export type CustomerScalarWhereWithAggregatesInput = {
   lastName?: Prisma.StringNullableWithAggregatesFilter<"Customer"> | string | null
   companyName?: Prisma.StringNullableWithAggregatesFilter<"Customer"> | string | null
   displayName?: Prisma.StringWithAggregatesFilter<"Customer"> | string
-  primaryPhone?: Prisma.StringWithAggregatesFilter<"Customer"> | string
-  normalizedPhone?: Prisma.StringWithAggregatesFilter<"Customer"> | string
+  primaryPhone?: Prisma.StringNullableWithAggregatesFilter<"Customer"> | string | null
+  normalizedPhone?: Prisma.StringNullableWithAggregatesFilter<"Customer"> | string | null
   primaryEmail?: Prisma.StringNullableWithAggregatesFilter<"Customer"> | string | null
   normalizedEmail?: Prisma.StringNullableWithAggregatesFilter<"Customer"> | string | null
   defaultPnr?: Prisma.StringNullableWithAggregatesFilter<"Customer"> | string | null
@@ -567,8 +567,8 @@ export type CustomerCreateInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -610,8 +610,8 @@ export type CustomerUncheckedCreateInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -647,8 +647,8 @@ export type CustomerUpdateInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -690,8 +690,8 @@ export type CustomerUncheckedUpdateInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -730,8 +730,8 @@ export type CustomerCreateManyInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -756,8 +756,8 @@ export type CustomerUpdateManyMutationInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -784,8 +784,8 @@ export type CustomerUncheckedUpdateManyInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1220,10 +1220,12 @@ export type CustomerCreateNestedOneWithoutCargoShipmentsInput = {
   connect?: Prisma.CustomerWhereUniqueInput
 }
 
-export type CustomerUpdateOneRequiredWithoutCargoShipmentsNestedInput = {
+export type CustomerUpdateOneWithoutCargoShipmentsNestedInput = {
   create?: Prisma.XOR<Prisma.CustomerCreateWithoutCargoShipmentsInput, Prisma.CustomerUncheckedCreateWithoutCargoShipmentsInput>
   connectOrCreate?: Prisma.CustomerCreateOrConnectWithoutCargoShipmentsInput
   upsert?: Prisma.CustomerUpsertWithoutCargoShipmentsInput
+  disconnect?: Prisma.CustomerWhereInput | boolean
+  delete?: Prisma.CustomerWhereInput | boolean
   connect?: Prisma.CustomerWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.CustomerUpdateToOneWithWhereWithoutCargoShipmentsInput, Prisma.CustomerUpdateWithoutCargoShipmentsInput>, Prisma.CustomerUncheckedUpdateWithoutCargoShipmentsInput>
 }
@@ -1266,8 +1268,8 @@ export type CustomerCreateWithoutCompanyInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -1307,8 +1309,8 @@ export type CustomerUncheckedCreateWithoutCompanyInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -1376,8 +1378,8 @@ export type CustomerScalarWhereInput = {
   lastName?: Prisma.StringNullableFilter<"Customer"> | string | null
   companyName?: Prisma.StringNullableFilter<"Customer"> | string | null
   displayName?: Prisma.StringFilter<"Customer"> | string
-  primaryPhone?: Prisma.StringFilter<"Customer"> | string
-  normalizedPhone?: Prisma.StringFilter<"Customer"> | string
+  primaryPhone?: Prisma.StringNullableFilter<"Customer"> | string | null
+  normalizedPhone?: Prisma.StringNullableFilter<"Customer"> | string | null
   primaryEmail?: Prisma.StringNullableFilter<"Customer"> | string | null
   normalizedEmail?: Prisma.StringNullableFilter<"Customer"> | string | null
   defaultPnr?: Prisma.StringNullableFilter<"Customer"> | string | null
@@ -1402,8 +1404,8 @@ export type CustomerCreateWithoutBusinessUnitInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -1443,8 +1445,8 @@ export type CustomerUncheckedCreateWithoutBusinessUnitInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -1506,8 +1508,8 @@ export type CustomerCreateWithoutHomeStationInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -1547,8 +1549,8 @@ export type CustomerUncheckedCreateWithoutHomeStationInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -1610,8 +1612,8 @@ export type CustomerCreateWithoutMergedCustomersInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -1652,8 +1654,8 @@ export type CustomerUncheckedCreateWithoutMergedCustomersInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -1693,8 +1695,8 @@ export type CustomerCreateWithoutMergedIntoInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -1735,8 +1737,8 @@ export type CustomerUncheckedCreateWithoutMergedIntoInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -1792,8 +1794,8 @@ export type CustomerUpdateWithoutMergedCustomersInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1834,8 +1836,8 @@ export type CustomerUncheckedUpdateWithoutMergedCustomersInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1886,8 +1888,8 @@ export type CustomerCreateWithoutContactsInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -1928,8 +1930,8 @@ export type CustomerUncheckedCreateWithoutContactsInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -1980,8 +1982,8 @@ export type CustomerUpdateWithoutContactsInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2022,8 +2024,8 @@ export type CustomerUncheckedUpdateWithoutContactsInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2058,8 +2060,8 @@ export type CustomerCreateWithoutIdentifiersInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -2100,8 +2102,8 @@ export type CustomerUncheckedCreateWithoutIdentifiersInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -2152,8 +2154,8 @@ export type CustomerUpdateWithoutIdentifiersInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2194,8 +2196,8 @@ export type CustomerUncheckedUpdateWithoutIdentifiersInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2230,8 +2232,8 @@ export type CustomerCreateWithoutMergeSourcesInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -2272,8 +2274,8 @@ export type CustomerUncheckedCreateWithoutMergeSourcesInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -2313,8 +2315,8 @@ export type CustomerCreateWithoutMergeTargetsInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -2355,8 +2357,8 @@ export type CustomerUncheckedCreateWithoutMergeTargetsInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -2407,8 +2409,8 @@ export type CustomerUpdateWithoutMergeSourcesInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2449,8 +2451,8 @@ export type CustomerUncheckedUpdateWithoutMergeSourcesInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2496,8 +2498,8 @@ export type CustomerUpdateWithoutMergeTargetsInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2538,8 +2540,8 @@ export type CustomerUncheckedUpdateWithoutMergeTargetsInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2574,8 +2576,8 @@ export type CustomerCreateWithoutSalesInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -2616,8 +2618,8 @@ export type CustomerUncheckedCreateWithoutSalesInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -2668,8 +2670,8 @@ export type CustomerUpdateWithoutSalesInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2710,8 +2712,8 @@ export type CustomerUncheckedUpdateWithoutSalesInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2746,8 +2748,8 @@ export type CustomerCreateWithoutPaymentsInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -2788,8 +2790,8 @@ export type CustomerUncheckedCreateWithoutPaymentsInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -2840,8 +2842,8 @@ export type CustomerUpdateWithoutPaymentsInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2882,8 +2884,8 @@ export type CustomerUncheckedUpdateWithoutPaymentsInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2918,8 +2920,8 @@ export type CustomerCreateWithoutRefundsInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -2960,8 +2962,8 @@ export type CustomerUncheckedCreateWithoutRefundsInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -3012,8 +3014,8 @@ export type CustomerUpdateWithoutRefundsInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3054,8 +3056,8 @@ export type CustomerUncheckedUpdateWithoutRefundsInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3090,8 +3092,8 @@ export type CustomerCreateWithoutCargoShipmentsInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -3132,8 +3134,8 @@ export type CustomerUncheckedCreateWithoutCargoShipmentsInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -3184,8 +3186,8 @@ export type CustomerUpdateWithoutCargoShipmentsInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3226,8 +3228,8 @@ export type CustomerUncheckedUpdateWithoutCargoShipmentsInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3262,8 +3264,8 @@ export type CustomerCreateWithoutAgentProfileInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -3304,8 +3306,8 @@ export type CustomerUncheckedCreateWithoutAgentProfileInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -3356,8 +3358,8 @@ export type CustomerUpdateWithoutAgentProfileInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3398,8 +3400,8 @@ export type CustomerUncheckedUpdateWithoutAgentProfileInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3434,8 +3436,8 @@ export type CustomerCreateWithoutTicketBookingsInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -3476,8 +3478,8 @@ export type CustomerUncheckedCreateWithoutTicketBookingsInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -3528,8 +3530,8 @@ export type CustomerUpdateWithoutTicketBookingsInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3570,8 +3572,8 @@ export type CustomerUncheckedUpdateWithoutTicketBookingsInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3608,8 +3610,8 @@ export type CustomerCreateManyCompanyInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -3634,8 +3636,8 @@ export type CustomerUpdateWithoutCompanyInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3675,8 +3677,8 @@ export type CustomerUncheckedUpdateWithoutCompanyInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3714,8 +3716,8 @@ export type CustomerUncheckedUpdateManyWithoutCompanyInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3742,8 +3744,8 @@ export type CustomerCreateManyBusinessUnitInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -3768,8 +3770,8 @@ export type CustomerUpdateWithoutBusinessUnitInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3809,8 +3811,8 @@ export type CustomerUncheckedUpdateWithoutBusinessUnitInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3848,8 +3850,8 @@ export type CustomerUncheckedUpdateManyWithoutBusinessUnitInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3876,8 +3878,8 @@ export type CustomerCreateManyHomeStationInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -3902,8 +3904,8 @@ export type CustomerUpdateWithoutHomeStationInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3943,8 +3945,8 @@ export type CustomerUncheckedUpdateWithoutHomeStationInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3982,8 +3984,8 @@ export type CustomerUncheckedUpdateManyWithoutHomeStationInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4011,8 +4013,8 @@ export type CustomerCreateManyMergedIntoInput = {
   lastName?: string | null
   companyName?: string | null
   displayName: string
-  primaryPhone: string
-  normalizedPhone: string
+  primaryPhone?: string | null
+  normalizedPhone?: string | null
   primaryEmail?: string | null
   normalizedEmail?: string | null
   defaultPnr?: string | null
@@ -4036,8 +4038,8 @@ export type CustomerUpdateWithoutMergedIntoInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4078,8 +4080,8 @@ export type CustomerUncheckedUpdateWithoutMergedIntoInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4117,8 +4119,8 @@ export type CustomerUncheckedUpdateManyWithoutMergedIntoInput = {
   lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   companyName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   displayName?: Prisma.StringFieldUpdateOperationsInput | string
-  primaryPhone?: Prisma.StringFieldUpdateOperationsInput | string
-  normalizedPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  normalizedPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   primaryEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   normalizedEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   defaultPnr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4448,8 +4450,8 @@ export type $CustomerPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     lastName: string | null
     companyName: string | null
     displayName: string
-    primaryPhone: string
-    normalizedPhone: string
+    primaryPhone: string | null
+    normalizedPhone: string | null
     primaryEmail: string | null
     normalizedEmail: string | null
     defaultPnr: string | null

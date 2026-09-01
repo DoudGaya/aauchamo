@@ -3,7 +3,8 @@ export function normalizeEmail(value?: string | null) {
   return normalized || null;
 }
 
-export function normalizePhone(value: string, defaultCountryCode = "234") {
+export function normalizePhone(value?: string | null, defaultCountryCode = "234") {
+  if (!value) return null;
   let digits = value.replace(/\D/g, "");
   if (digits.startsWith("00")) digits = digits.slice(2);
   if (digits.startsWith("0")) digits = `${defaultCountryCode}${digits.slice(1)}`;

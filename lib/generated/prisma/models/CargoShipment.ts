@@ -353,7 +353,7 @@ export type CargoShipmentGroupByOutputType = {
   id: string
   companyId: string
   stationId: string
-  customerId: string
+  customerId: string | null
   awbNumber: string
   senderName: string
   senderPhone: string
@@ -409,7 +409,7 @@ export type CargoShipmentWhereInput = {
   id?: Prisma.StringFilter<"CargoShipment"> | string
   companyId?: Prisma.StringFilter<"CargoShipment"> | string
   stationId?: Prisma.StringFilter<"CargoShipment"> | string
-  customerId?: Prisma.StringFilter<"CargoShipment"> | string
+  customerId?: Prisma.StringNullableFilter<"CargoShipment"> | string | null
   awbNumber?: Prisma.StringFilter<"CargoShipment"> | string
   senderName?: Prisma.StringFilter<"CargoShipment"> | string
   senderPhone?: Prisma.StringFilter<"CargoShipment"> | string
@@ -438,7 +438,7 @@ export type CargoShipmentWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"CargoShipment"> | Date | string
   company?: Prisma.XOR<Prisma.CompanyScalarRelationFilter, Prisma.CompanyWhereInput>
   station?: Prisma.XOR<Prisma.StationScalarRelationFilter, Prisma.StationWhereInput>
-  customer?: Prisma.XOR<Prisma.CustomerScalarRelationFilter, Prisma.CustomerWhereInput>
+  customer?: Prisma.XOR<Prisma.CustomerNullableScalarRelationFilter, Prisma.CustomerWhereInput> | null
   events?: Prisma.CargoStatusEventListRelationFilter
 }
 
@@ -446,7 +446,7 @@ export type CargoShipmentOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   companyId?: Prisma.SortOrder
   stationId?: Prisma.SortOrder
-  customerId?: Prisma.SortOrder
+  customerId?: Prisma.SortOrderInput | Prisma.SortOrder
   awbNumber?: Prisma.SortOrder
   senderName?: Prisma.SortOrder
   senderPhone?: Prisma.SortOrder
@@ -487,7 +487,7 @@ export type CargoShipmentWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.CargoShipmentWhereInput | Prisma.CargoShipmentWhereInput[]
   companyId?: Prisma.StringFilter<"CargoShipment"> | string
   stationId?: Prisma.StringFilter<"CargoShipment"> | string
-  customerId?: Prisma.StringFilter<"CargoShipment"> | string
+  customerId?: Prisma.StringNullableFilter<"CargoShipment"> | string | null
   awbNumber?: Prisma.StringFilter<"CargoShipment"> | string
   senderName?: Prisma.StringFilter<"CargoShipment"> | string
   senderPhone?: Prisma.StringFilter<"CargoShipment"> | string
@@ -516,7 +516,7 @@ export type CargoShipmentWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"CargoShipment"> | Date | string
   company?: Prisma.XOR<Prisma.CompanyScalarRelationFilter, Prisma.CompanyWhereInput>
   station?: Prisma.XOR<Prisma.StationScalarRelationFilter, Prisma.StationWhereInput>
-  customer?: Prisma.XOR<Prisma.CustomerScalarRelationFilter, Prisma.CustomerWhereInput>
+  customer?: Prisma.XOR<Prisma.CustomerNullableScalarRelationFilter, Prisma.CustomerWhereInput> | null
   events?: Prisma.CargoStatusEventListRelationFilter
 }, "id" | "companyId_awbNumber">
 
@@ -524,7 +524,7 @@ export type CargoShipmentOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   companyId?: Prisma.SortOrder
   stationId?: Prisma.SortOrder
-  customerId?: Prisma.SortOrder
+  customerId?: Prisma.SortOrderInput | Prisma.SortOrder
   awbNumber?: Prisma.SortOrder
   senderName?: Prisma.SortOrder
   senderPhone?: Prisma.SortOrder
@@ -565,7 +565,7 @@ export type CargoShipmentScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"CargoShipment"> | string
   companyId?: Prisma.StringWithAggregatesFilter<"CargoShipment"> | string
   stationId?: Prisma.StringWithAggregatesFilter<"CargoShipment"> | string
-  customerId?: Prisma.StringWithAggregatesFilter<"CargoShipment"> | string
+  customerId?: Prisma.StringNullableWithAggregatesFilter<"CargoShipment"> | string | null
   awbNumber?: Prisma.StringWithAggregatesFilter<"CargoShipment"> | string
   senderName?: Prisma.StringWithAggregatesFilter<"CargoShipment"> | string
   senderPhone?: Prisma.StringWithAggregatesFilter<"CargoShipment"> | string
@@ -624,7 +624,7 @@ export type CargoShipmentCreateInput = {
   updatedAt?: Date | string
   company: Prisma.CompanyCreateNestedOneWithoutCargoShipmentsInput
   station: Prisma.StationCreateNestedOneWithoutCargoShipmentsInput
-  customer: Prisma.CustomerCreateNestedOneWithoutCargoShipmentsInput
+  customer?: Prisma.CustomerCreateNestedOneWithoutCargoShipmentsInput
   events?: Prisma.CargoStatusEventCreateNestedManyWithoutShipmentInput
 }
 
@@ -632,7 +632,7 @@ export type CargoShipmentUncheckedCreateInput = {
   id?: string
   companyId: string
   stationId: string
-  customerId: string
+  customerId?: string | null
   awbNumber: string
   senderName: string
   senderPhone: string
@@ -692,7 +692,7 @@ export type CargoShipmentUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   company?: Prisma.CompanyUpdateOneRequiredWithoutCargoShipmentsNestedInput
   station?: Prisma.StationUpdateOneRequiredWithoutCargoShipmentsNestedInput
-  customer?: Prisma.CustomerUpdateOneRequiredWithoutCargoShipmentsNestedInput
+  customer?: Prisma.CustomerUpdateOneWithoutCargoShipmentsNestedInput
   events?: Prisma.CargoStatusEventUpdateManyWithoutShipmentNestedInput
 }
 
@@ -700,7 +700,7 @@ export type CargoShipmentUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   companyId?: Prisma.StringFieldUpdateOperationsInput | string
   stationId?: Prisma.StringFieldUpdateOperationsInput | string
-  customerId?: Prisma.StringFieldUpdateOperationsInput | string
+  customerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awbNumber?: Prisma.StringFieldUpdateOperationsInput | string
   senderName?: Prisma.StringFieldUpdateOperationsInput | string
   senderPhone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -734,7 +734,7 @@ export type CargoShipmentCreateManyInput = {
   id?: string
   companyId: string
   stationId: string
-  customerId: string
+  customerId?: string | null
   awbNumber: string
   senderName: string
   senderPhone: string
@@ -797,7 +797,7 @@ export type CargoShipmentUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   companyId?: Prisma.StringFieldUpdateOperationsInput | string
   stationId?: Prisma.StringFieldUpdateOperationsInput | string
-  customerId?: Prisma.StringFieldUpdateOperationsInput | string
+  customerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awbNumber?: Prisma.StringFieldUpdateOperationsInput | string
   senderName?: Prisma.StringFieldUpdateOperationsInput | string
   senderPhone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1136,14 +1136,14 @@ export type CargoShipmentCreateWithoutCompanyInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   station: Prisma.StationCreateNestedOneWithoutCargoShipmentsInput
-  customer: Prisma.CustomerCreateNestedOneWithoutCargoShipmentsInput
+  customer?: Prisma.CustomerCreateNestedOneWithoutCargoShipmentsInput
   events?: Prisma.CargoStatusEventCreateNestedManyWithoutShipmentInput
 }
 
 export type CargoShipmentUncheckedCreateWithoutCompanyInput = {
   id?: string
   stationId: string
-  customerId: string
+  customerId?: string | null
   awbNumber: string
   senderName: string
   senderPhone: string
@@ -1206,7 +1206,7 @@ export type CargoShipmentScalarWhereInput = {
   id?: Prisma.StringFilter<"CargoShipment"> | string
   companyId?: Prisma.StringFilter<"CargoShipment"> | string
   stationId?: Prisma.StringFilter<"CargoShipment"> | string
-  customerId?: Prisma.StringFilter<"CargoShipment"> | string
+  customerId?: Prisma.StringNullableFilter<"CargoShipment"> | string | null
   awbNumber?: Prisma.StringFilter<"CargoShipment"> | string
   senderName?: Prisma.StringFilter<"CargoShipment"> | string
   senderPhone?: Prisma.StringFilter<"CargoShipment"> | string
@@ -1264,14 +1264,14 @@ export type CargoShipmentCreateWithoutStationInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   company: Prisma.CompanyCreateNestedOneWithoutCargoShipmentsInput
-  customer: Prisma.CustomerCreateNestedOneWithoutCargoShipmentsInput
+  customer?: Prisma.CustomerCreateNestedOneWithoutCargoShipmentsInput
   events?: Prisma.CargoStatusEventCreateNestedManyWithoutShipmentInput
 }
 
 export type CargoShipmentUncheckedCreateWithoutStationInput = {
   id?: string
   companyId: string
-  customerId: string
+  customerId?: string | null
   awbNumber: string
   senderName: string
   senderPhone: string
@@ -1449,14 +1449,14 @@ export type CargoShipmentCreateWithoutEventsInput = {
   updatedAt?: Date | string
   company: Prisma.CompanyCreateNestedOneWithoutCargoShipmentsInput
   station: Prisma.StationCreateNestedOneWithoutCargoShipmentsInput
-  customer: Prisma.CustomerCreateNestedOneWithoutCargoShipmentsInput
+  customer?: Prisma.CustomerCreateNestedOneWithoutCargoShipmentsInput
 }
 
 export type CargoShipmentUncheckedCreateWithoutEventsInput = {
   id?: string
   companyId: string
   stationId: string
-  customerId: string
+  customerId?: string | null
   awbNumber: string
   senderName: string
   senderPhone: string
@@ -1531,14 +1531,14 @@ export type CargoShipmentUpdateWithoutEventsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   company?: Prisma.CompanyUpdateOneRequiredWithoutCargoShipmentsNestedInput
   station?: Prisma.StationUpdateOneRequiredWithoutCargoShipmentsNestedInput
-  customer?: Prisma.CustomerUpdateOneRequiredWithoutCargoShipmentsNestedInput
+  customer?: Prisma.CustomerUpdateOneWithoutCargoShipmentsNestedInput
 }
 
 export type CargoShipmentUncheckedUpdateWithoutEventsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   companyId?: Prisma.StringFieldUpdateOperationsInput | string
   stationId?: Prisma.StringFieldUpdateOperationsInput | string
-  customerId?: Prisma.StringFieldUpdateOperationsInput | string
+  customerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awbNumber?: Prisma.StringFieldUpdateOperationsInput | string
   senderName?: Prisma.StringFieldUpdateOperationsInput | string
   senderPhone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1570,7 +1570,7 @@ export type CargoShipmentUncheckedUpdateWithoutEventsInput = {
 export type CargoShipmentCreateManyCompanyInput = {
   id?: string
   stationId: string
-  customerId: string
+  customerId?: string | null
   awbNumber: string
   senderName: string
   senderPhone: string
@@ -1628,14 +1628,14 @@ export type CargoShipmentUpdateWithoutCompanyInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   station?: Prisma.StationUpdateOneRequiredWithoutCargoShipmentsNestedInput
-  customer?: Prisma.CustomerUpdateOneRequiredWithoutCargoShipmentsNestedInput
+  customer?: Prisma.CustomerUpdateOneWithoutCargoShipmentsNestedInput
   events?: Prisma.CargoStatusEventUpdateManyWithoutShipmentNestedInput
 }
 
 export type CargoShipmentUncheckedUpdateWithoutCompanyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   stationId?: Prisma.StringFieldUpdateOperationsInput | string
-  customerId?: Prisma.StringFieldUpdateOperationsInput | string
+  customerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awbNumber?: Prisma.StringFieldUpdateOperationsInput | string
   senderName?: Prisma.StringFieldUpdateOperationsInput | string
   senderPhone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1668,7 +1668,7 @@ export type CargoShipmentUncheckedUpdateWithoutCompanyInput = {
 export type CargoShipmentUncheckedUpdateManyWithoutCompanyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   stationId?: Prisma.StringFieldUpdateOperationsInput | string
-  customerId?: Prisma.StringFieldUpdateOperationsInput | string
+  customerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awbNumber?: Prisma.StringFieldUpdateOperationsInput | string
   senderName?: Prisma.StringFieldUpdateOperationsInput | string
   senderPhone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1700,7 +1700,7 @@ export type CargoShipmentUncheckedUpdateManyWithoutCompanyInput = {
 export type CargoShipmentCreateManyStationInput = {
   id?: string
   companyId: string
-  customerId: string
+  customerId?: string | null
   awbNumber: string
   senderName: string
   senderPhone: string
@@ -1758,14 +1758,14 @@ export type CargoShipmentUpdateWithoutStationInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   company?: Prisma.CompanyUpdateOneRequiredWithoutCargoShipmentsNestedInput
-  customer?: Prisma.CustomerUpdateOneRequiredWithoutCargoShipmentsNestedInput
+  customer?: Prisma.CustomerUpdateOneWithoutCargoShipmentsNestedInput
   events?: Prisma.CargoStatusEventUpdateManyWithoutShipmentNestedInput
 }
 
 export type CargoShipmentUncheckedUpdateWithoutStationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   companyId?: Prisma.StringFieldUpdateOperationsInput | string
-  customerId?: Prisma.StringFieldUpdateOperationsInput | string
+  customerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awbNumber?: Prisma.StringFieldUpdateOperationsInput | string
   senderName?: Prisma.StringFieldUpdateOperationsInput | string
   senderPhone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1798,7 +1798,7 @@ export type CargoShipmentUncheckedUpdateWithoutStationInput = {
 export type CargoShipmentUncheckedUpdateManyWithoutStationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   companyId?: Prisma.StringFieldUpdateOperationsInput | string
-  customerId?: Prisma.StringFieldUpdateOperationsInput | string
+  customerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   awbNumber?: Prisma.StringFieldUpdateOperationsInput | string
   senderName?: Prisma.StringFieldUpdateOperationsInput | string
   senderPhone?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2021,7 +2021,7 @@ export type CargoShipmentSelect<ExtArgs extends runtime.Types.Extensions.Interna
   updatedAt?: boolean
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
   station?: boolean | Prisma.StationDefaultArgs<ExtArgs>
-  customer?: boolean | Prisma.CustomerDefaultArgs<ExtArgs>
+  customer?: boolean | Prisma.CargoShipment$customerArgs<ExtArgs>
   events?: boolean | Prisma.CargoShipment$eventsArgs<ExtArgs>
   _count?: boolean | Prisma.CargoShipmentCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["cargoShipment"]>
@@ -2059,7 +2059,7 @@ export type CargoShipmentSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   updatedAt?: boolean
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
   station?: boolean | Prisma.StationDefaultArgs<ExtArgs>
-  customer?: boolean | Prisma.CustomerDefaultArgs<ExtArgs>
+  customer?: boolean | Prisma.CargoShipment$customerArgs<ExtArgs>
 }, ExtArgs["result"]["cargoShipment"]>
 
 export type CargoShipmentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -2095,7 +2095,7 @@ export type CargoShipmentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   updatedAt?: boolean
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
   station?: boolean | Prisma.StationDefaultArgs<ExtArgs>
-  customer?: boolean | Prisma.CustomerDefaultArgs<ExtArgs>
+  customer?: boolean | Prisma.CargoShipment$customerArgs<ExtArgs>
 }, ExtArgs["result"]["cargoShipment"]>
 
 export type CargoShipmentSelectScalar = {
@@ -2135,19 +2135,19 @@ export type CargoShipmentOmit<ExtArgs extends runtime.Types.Extensions.InternalA
 export type CargoShipmentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
   station?: boolean | Prisma.StationDefaultArgs<ExtArgs>
-  customer?: boolean | Prisma.CustomerDefaultArgs<ExtArgs>
+  customer?: boolean | Prisma.CargoShipment$customerArgs<ExtArgs>
   events?: boolean | Prisma.CargoShipment$eventsArgs<ExtArgs>
   _count?: boolean | Prisma.CargoShipmentCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type CargoShipmentIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
   station?: boolean | Prisma.StationDefaultArgs<ExtArgs>
-  customer?: boolean | Prisma.CustomerDefaultArgs<ExtArgs>
+  customer?: boolean | Prisma.CargoShipment$customerArgs<ExtArgs>
 }
 export type CargoShipmentIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   company?: boolean | Prisma.CompanyDefaultArgs<ExtArgs>
   station?: boolean | Prisma.StationDefaultArgs<ExtArgs>
-  customer?: boolean | Prisma.CustomerDefaultArgs<ExtArgs>
+  customer?: boolean | Prisma.CargoShipment$customerArgs<ExtArgs>
 }
 
 export type $CargoShipmentPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2155,14 +2155,14 @@ export type $CargoShipmentPayload<ExtArgs extends runtime.Types.Extensions.Inter
   objects: {
     company: Prisma.$CompanyPayload<ExtArgs>
     station: Prisma.$StationPayload<ExtArgs>
-    customer: Prisma.$CustomerPayload<ExtArgs>
+    customer: Prisma.$CustomerPayload<ExtArgs> | null
     events: Prisma.$CargoStatusEventPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     companyId: string
     stationId: string
-    customerId: string
+    customerId: string | null
     awbNumber: string
     senderName: string
     senderPhone: string
@@ -2585,7 +2585,7 @@ export interface Prisma__CargoShipmentClient<T, Null = never, ExtArgs extends ru
   readonly [Symbol.toStringTag]: "PrismaPromise"
   company<T extends Prisma.CompanyDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CompanyDefaultArgs<ExtArgs>>): Prisma.Prisma__CompanyClient<runtime.Types.Result.GetResult<Prisma.$CompanyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   station<T extends Prisma.StationDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StationDefaultArgs<ExtArgs>>): Prisma.Prisma__StationClient<runtime.Types.Result.GetResult<Prisma.$StationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  customer<T extends Prisma.CustomerDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CustomerDefaultArgs<ExtArgs>>): Prisma.Prisma__CustomerClient<runtime.Types.Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  customer<T extends Prisma.CargoShipment$customerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CargoShipment$customerArgs<ExtArgs>>): Prisma.Prisma__CustomerClient<runtime.Types.Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   events<T extends Prisma.CargoShipment$eventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CargoShipment$eventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CargoStatusEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -3044,6 +3044,25 @@ export type CargoShipmentDeleteManyArgs<ExtArgs extends runtime.Types.Extensions
    * Limit how many CargoShipments to delete.
    */
   limit?: number
+}
+
+/**
+ * CargoShipment.customer
+ */
+export type CargoShipment$customerArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Customer
+   */
+  select?: Prisma.CustomerSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Customer
+   */
+  omit?: Prisma.CustomerOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CustomerInclude<ExtArgs> | null
+  where?: Prisma.CustomerWhereInput
 }
 
 /**

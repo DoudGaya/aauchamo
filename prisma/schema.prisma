@@ -1145,8 +1145,8 @@ model Customer {
   lastName             String?
   companyName          String?
   displayName          String
-  primaryPhone         String
-  normalizedPhone      String
+  primaryPhone         String?
+  normalizedPhone      String?
   primaryEmail         String?
   normalizedEmail      String?
   defaultPnr           String?
@@ -1799,7 +1799,7 @@ model CargoShipment {
   id              String      @id @default(cuid())
   companyId       String
   stationId       String
-  customerId      String
+  customerId      String?
   awbNumber       String
   senderName      String
   senderPhone     String
@@ -1829,7 +1829,7 @@ model CargoShipment {
 
   company  Company            @relation(fields: [companyId], references: [id], onDelete: Restrict)
   station  Station            @relation(fields: [stationId], references: [id], onDelete: Restrict)
-  customer Customer           @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  customer Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
   events   CargoStatusEvent[]
 
   @@unique([companyId, awbNumber])

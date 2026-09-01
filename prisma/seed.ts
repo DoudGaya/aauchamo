@@ -131,13 +131,15 @@ async function main() {
       ["AIR", "Airport", "Kano"],
       ["KAN", "Kano Central", "Kano"],
       ["LOS", "Lagos", "Lagos"],
-    ].map(([code, name, city]) =>
-      db.station.upsert({
-        where: { companyId_code: { companyId: company.id, code } },
-        create: { companyId: company.id, code, name, city, state: city, status: "ACTIVE" },
-        update: { name, city, state: city, status: "ACTIVE" },
-      }),
-    ),
+    ].map(async ([code, name, city]) => {
+      let station = await db.station.findFirst({ where: { companyId: company.id, code, name } });
+      if (station) {
+        station = await db.station.update({ where: { id: station.id }, data: { name, city, state: city, status: "ACTIVE" } });
+      } else {
+        station = await db.station.create({ data: { companyId: company.id, code, name, city, state: city, status: "ACTIVE" } });
+      }
+      return station;
+    }),
   );
 
   for (const station of stationRows) {

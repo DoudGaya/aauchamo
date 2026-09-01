@@ -469,7 +469,7 @@ export async function GET(request: Request) {
       headers = ["customerNumber", "station", "type", "displayName", "primaryPhone", "primaryEmail", "salesCount", "cargoCount"];
       csvRows = rows.map((r) => [
         r.customerNumber, r.homeStation.code, r.type, r.displayName,
-        r.primaryPhone, r.primaryEmail ?? "",
+        r.primaryPhone ?? "", r.primaryEmail ?? "",
         String(r._count.sales), String(r._count.cargoShipments),
       ]);
       filename = `customer-history-${today}.csv`;

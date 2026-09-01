@@ -14,7 +14,7 @@ const schema = z
     firstName: z.string().trim().max(80).nullable(),
     lastName: z.string().trim().max(80).nullable(),
     companyName: z.string().trim().max(160).nullable(),
-    phone: z.string().trim().min(7).max(30),
+    phone: z.string().trim().min(7).max(30).optional(),
     email: z.string().email().nullable(),
     pnr: z.string().trim().max(30).nullable(),
     nationalId: z.string().trim().min(4).max(80).nullable().optional(),
@@ -74,7 +74,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ cu
         where: { id: customerId, version: input.version, status: "ACTIVE" },
         data: {
           type: input.type, firstName: input.firstName, lastName: input.lastName, companyName: input.companyName,
-          displayName, primaryPhone: input.phone, normalizedPhone, primaryEmail: input.email?.toLowerCase() ?? null,
+          displayName, primaryPhone: input.phone || null, normalizedPhone: normalizedPhone || null, primaryEmail: input.email?.toLowerCase() ?? null,
           normalizedEmail, defaultPnr: input.pnr?.toUpperCase() ?? null, defaultDestination: input.destination,
           defaultAirline: input.airline, remarks: input.remarks,
           ...(input.nationalId !== undefined ? { nationalIdCiphertext: input.nationalId ? encryptSensitive(input.nationalId) : null } : {}),
@@ -83,7 +83,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ cu
       });
       if (!count.count) throw new ConflictError("This customer changed after you opened it. Refresh and try again.");
       await tx.customerContact.deleteMany({ where: { customerId, isPrimary: true, type: { in: ["PHONE", "EMAIL"] } } });
-      await tx.customerContact.create({ data: { customerId, type: "PHONE", value: input.phone, normalized: normalizedPhone, isPrimary: true } });
+      if (input.phone) await tx.customerContact.create({ data: { customerId, type: "PHONE", value: input.phone, normalized: normalizedPhone!, isPrimary: true } });
       if (normalizedEmail) await tx.customerContact.create({ data: { customerId, type: "EMAIL", value: input.email!, normalized: normalizedEmail, isPrimary: true } });
       if (input.nationalId !== undefined) {
         await tx.customerIdentifier.deleteMany({ where: { customerId, type: "NATIONAL_ID" } });

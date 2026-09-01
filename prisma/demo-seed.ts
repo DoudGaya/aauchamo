@@ -246,7 +246,7 @@ async function main() {
         const shipment = await tx.cargoShipment.create({
           data: {
             companyId, stationId: station.id, customerId: customer.id, awbNumber,
-            senderName: customer.displayName, senderPhone: customer.primaryPhone,
+            senderName: customer.displayName, senderPhone: customer.primaryPhone ?? "+2348000000000",
             receiverName: `Receiver ${i + 1}`, receiverPhone: "+2348020000000", receiverAddress: `${spec.destination} depot`,
             origin: spec.origin, destination: spec.destination, weightKg: spec.weight, pieces: spec.pieces,
             commodity: spec.commodity, airline: spec.airline, flightNumber: `${spec.airline.slice(0, 2).toUpperCase()}${100 + i}`,

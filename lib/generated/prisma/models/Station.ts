@@ -436,7 +436,6 @@ export type StationOrderByWithRelationInput = {
 
 export type StationWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  companyId_code?: Prisma.StationCompanyIdCodeCompoundUniqueInput
   AND?: Prisma.StationWhereInput | Prisma.StationWhereInput[]
   OR?: Prisma.StationWhereInput[]
   NOT?: Prisma.StationWhereInput | Prisma.StationWhereInput[]
@@ -492,7 +491,7 @@ export type StationWhereUniqueInput = Prisma.AtLeast<{
   cashSessions?: Prisma.CashSessionListRelationFilter
   ticketBookings?: Prisma.TicketBookingListRelationFilter
   generatedDocuments?: Prisma.GeneratedDocumentListRelationFilter
-}, "id" | "companyId_code">
+}, "id">
 
 export type StationOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -849,11 +848,6 @@ export type StationListRelationFilter = {
 
 export type StationOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
-}
-
-export type StationCompanyIdCodeCompoundUniqueInput = {
-  companyId: string
-  code: string
 }
 
 export type StationCountOrderByAggregateInput = {
