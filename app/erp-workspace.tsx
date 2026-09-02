@@ -246,6 +246,9 @@ type RoleRecord = {
   name: string;
   code: string;
   scope: string;
+  description: string | null;
+  isActive: boolean;
+  version: number;
   permissions: Array<{ permission: { key: string } }>;
   _count: { users: number };
 };
@@ -257,11 +260,11 @@ type ProductRecord = {
 };
 type PurchaseRecord = { id: string; orderNumber: string; status: string; total: string; expectedDate: string | null; createdAt: string; supplier: { name: string }; station: AllowedStation; lines: Array<{ id: string; quantityOrdered: string; quantityReceived: string; product: { name: string; trackBatches: boolean; trackExpiry: boolean } }> };
 type SaleRecord = { id: string; saleNumber: string; postedAt: string; status: string; total: string; paidTotal: string; outstandingTotal: string; customer: { displayName: string }; station: AllowedStation; businessUnit: { name: string }; allocations: Array<{ payment: { paymentMethod: { name: string } } }> };
-type CargoRecord = { id: string; awbNumber: string; senderName: string; senderPhone: string; receiverName: string; receiverPhone: string; receiverAddress: string | null; origin: string; destination: string; pieces: number; weightKg: string; commodity: string; airline: string | null; flightNumber: string | null; flightDate: string | null; handlingNotes: string | null; declaredValue: string | null; status: string; labelVersion: number; reprintCount: number; createdAt: string; customer: { id: string; displayName: string; primaryPhone: string }; station: AllowedStation };
+type CargoRecord = { id: string; awbNumber: string; senderName: string; senderPhone: string; receiverName: string; receiverPhone: string; receiverAddress: string | null; origin: string; destination: string; pieces: number; weightKg: string; commodity: string; airline: string | null; flightNumber: string | null; flightDate: string | null; handlingNotes: string | null; declaredValue: string | null; status: string; labelVersion: number; reprintCount: number; createdAt: string; customer: { id: string; displayName: string; primaryPhone: string } | null; station: AllowedStation };
 type AgentRecord = { id: string; agentNumber: string; name: string; contactName: string; phone: string; email: string | null; address: string | null; creditLimit: string; status: string; homeStation: AllowedStation; wallet: { balance: string } | null; _count: { sales: number; bookings: number } };
 type FinanceRecord = { id: string; entryNumber: string; direction: string; amount: string; description: string; status: string; createdAt: string; account: { name: string }; category: { name: string }; station: AllowedStation };
 type TicketRecord = { id: string; bookingNumber: string; pnr: string; passengerName: string; origin: string; destination: string; airline: string; travelDate: string; fare: string; sellingPrice: string; profit: string; status: string; station: AllowedStation };
-type POSBootstrap = { permissions: string[]; products: Array<{ id: string; code: string; name: string; sellingPrice: string; available: number; unit: { code: string } }>; customers: Array<{ id: string; customerNumber: string; displayName: string; primaryPhone: string }>; paymentMethods: Array<{ id: string; name: string; type: string; requiresReference: boolean; requiresTerminal: boolean }>; businessUnits: Array<{ id: string; code: string; name: string }>; agents: Array<{ id: string; name: string; agentNumber: string; wallet: { balance: string } | null }> };
+type POSBootstrap = { permissions: string[]; products: Array<{ id: string; code: string; name: string; sellingPrice: string; available: number; unit: { code: string } }>; customers: Array<{ id: string; customerNumber: string; displayName: string; primaryPhone: string | null }>; paymentMethods: Array<{ id: string; name: string; type: string; requiresReference: boolean; requiresTerminal: boolean }>; businessUnits: Array<{ id: string; code: string; name: string }>; agents: Array<{ id: string; name: string; agentNumber: string; wallet: { balance: string } | null }> };
 type InventorySetup = { categories: Array<{ id: string; code: string; name: string; isActive?: boolean }>; units: Array<{ id: string; code: string; name: string; precision?: number; isActive?: boolean }>; suppliers: Array<{ id: string; supplierNumber: string; name: string }> };
 type FinanceSetup = { accounts: Array<{ id: string; code: string; name: string }>; categories: Array<{ id: string; code: string; name: string; type: string }>; paymentMethods: Array<{ id: string; name: string; type: string }> };
 type DashboardSummary = { sales: { grossRevenue: string; refunds: string; netRevenue: string; transactions: number; outstanding: string }; inventory: { quantity: string; balanceRows: number; outOfStock: number; value?: string }; entities: { customers: number; agents: number; staff: number; stations: number }; cargo: Record<string, number>; approvals: { pending: number }; receivables: { count: number; amount: string }; financialVisible?: boolean; businessUnits?: Array<{ id: string; code: string; name: string }> };
@@ -2292,9 +2295,9 @@ function POSView({
                 value={selectedCustomerId} 
                 onChange={(event) => setCustomerId(event.target.value)}
               >
-                {data?.customers.filter(c => !customerSearch || c.displayName.toLowerCase().includes(customerSearch.toLowerCase()) || c.primaryPhone.includes(customerSearch)).map((customer) => (
+                {data?.customers.filter(c => !customerSearch || c.displayName.toLowerCase().includes(customerSearch.toLowerCase()) || c.primaryPhone?.includes(customerSearch)).map((customer) => (
                   <option key={customer.id} value={customer.id}>
-                    {customer.displayName} · {customer.primaryPhone}
+                    {customer.displayName} · {customer.primaryPhone || "No phone"}
                   </option>
                 ))}
               </select>
@@ -4765,7 +4768,7 @@ function CargoView({
                         </span>
                       </div>
                     </td>
-                    <td>{item.customer.displayName}</td>
+                    <td>{item.customer?.displayName ?? item.senderName}</td>
                     <td>
                       <strong className="route-code">
                         {item.origin} → {item.destination}
@@ -9700,6 +9703,155 @@ function UserEditModal({
   );
 }
 
+function RoleEditModal({
+  role,
+  permissions,
+  onClose,
+  onComplete,
+}: {
+  role?: RoleRecord;
+  permissions: PermissionRecord[];
+  onClose: () => void;
+  onComplete: (title: string, detail: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [code, setCode] = useState(role?.code ?? "");
+  const [name, setName] = useState(role?.name ?? "");
+  const [description, setDescription] = useState(role?.description ?? "");
+  const [scope, setScope] = useState(role?.scope ?? "STATION");
+  const [isActive, setIsActive] = useState(role?.isActive ?? true);
+  const [reason, setReason] = useState("");
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>(
+    role?.permissions.map((p) => p.permission.key) ?? []
+  );
+
+  const togglePermission = (key: string) => {
+    if (selectedPermissions.includes(key)) {
+      setSelectedPermissions(selectedPermissions.filter((k) => k !== key));
+    } else {
+      setSelectedPermissions([...selectedPermissions, key]);
+    }
+  };
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (selectedPermissions.length === 0) {
+      setError("Please select at least one permission.");
+      return;
+    }
+    setError(null);
+    setBusy(true);
+    try {
+      if (role) {
+        await workflowPost(`/api/roles/${role.id}`, {
+          version: role.version,
+          name,
+          description: description || null,
+          scope,
+          isActive,
+          permissionKeys: selectedPermissions,
+          reason: reason || "Role updated from UI",
+        }, "PATCH");
+        onComplete("Role updated", `${name} role was successfully updated.`);
+      } else {
+        await workflowPost(`/api/roles`, {
+          code,
+          name,
+          description: description || undefined,
+          scope,
+          permissionKeys: selectedPermissions,
+        }, "POST");
+        onComplete("Role created", `${name} role was successfully created.`);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Save failed.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const modules = [...new Set(permissions.map((p) => p.module))].sort();
+
+  return (
+    <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="workflow-dialog" style={{ maxWidth: "700px" }}>
+        <div className="workflow-header">
+          <div>
+            <span>Access control</span>
+            <h2>{role ? `Edit role: ${role.name}` : "Create new role"}</h2>
+            <p>{role ? "Modify role details and permissions." : "Define a new set of permissions for a specific job function."}</p>
+          </div>
+          <button onClick={onClose} aria-label="Close modal"><X size={19} /></button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="workflow-body" style={{ maxHeight: "70vh", overflowY: "auto" }}>
+            <div className="form-grid">
+              {!role && (
+                <Field label="Code"><input className="field-input" value={code} onChange={e => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ""))} required placeholder="e.g. DATA_ENTRY" /></Field>
+              )}
+              <Field label="Name"><input className="field-input" value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. Data Entry Clerk" /></Field>
+              <Field label="Scope">
+                <select className="field-input" value={scope} onChange={e => setScope(e.target.value)} required>
+                  <option value="STATION">Station (Limited to assigned stations)</option>
+                  <option value="BUSINESS_UNIT">Business Unit (Limited to BU)</option>
+                  <option value="COMPANY">Company (Global access)</option>
+                </select>
+              </Field>
+              <Field label="Description" full><input className="field-input" value={description} onChange={e => setDescription(e.target.value)} placeholder="Optional description of the role's purpose" /></Field>
+              
+              {role && (
+                <>
+                  <Field label="Active Status">
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "4px" }}>
+                      <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} />
+                      <span>Role is active and assignable</span>
+                    </div>
+                  </Field>
+                  <Field label="Reason for change" full>
+                    <input className="field-input" value={reason} onChange={e => setReason(e.target.value)} required placeholder="Reason for audit log..." />
+                  </Field>
+                </>
+              )}
+            </div>
+
+            <div style={{ marginTop: "24px" }}>
+              <h4 style={{ marginBottom: "12px", fontSize: "14px", fontWeight: "600", color: "var(--foreground)" }}>Permissions</h4>
+              <div style={{ display: "grid", gap: "20px" }}>
+                {modules.map((mod) => (
+                  <div key={mod}>
+                    <h5 style={{ fontSize: "12px", textTransform: "uppercase", color: "var(--foreground-muted)", marginBottom: "8px", borderBottom: "1px solid var(--border)", paddingBottom: "4px" }}>{mod}</h5>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                      {permissions.filter((p) => p.module === mod).map((p) => (
+                        <label key={p.id} style={{ display: "flex", alignItems: "flex-start", gap: "8px", fontSize: "13px", cursor: "pointer" }}>
+                          <input 
+                            type="checkbox" 
+                            style={{ marginTop: "2px" }}
+                            checked={selectedPermissions.includes(p.key)}
+                            onChange={() => togglePermission(p.key)}
+                          />
+                          <div>
+                            <div style={{ fontWeight: "500", color: "var(--foreground)" }}>{p.action}</div>
+                            <div style={{ color: "var(--foreground-muted)", fontSize: "12px" }}>{p.description}</div>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {error && <div className="form-note" style={{ marginTop: "16px" }}><AlertTriangle size={16} /><span>{error}</span></div>}
+          </div>
+          <ModalFooter onClose={onClose} submitLabel={busy ? "Saving…" : role ? "Update role" : "Create role"} icon={ShieldCheck} disabled={busy} />
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function AccessView({
   onToast,
   onModal,
@@ -9712,6 +9864,8 @@ function AccessView({
   const [tab, setTab] = useState("Users");
   const [query, setQuery] = useState("");
   const [editingUser, setEditingUser] = useState<UserRecord | null>(null);
+  const [editingRole, setEditingRole] = useState<RoleRecord | null>(null);
+  const [isCreatingRole, setIsCreatingRole] = useState(false);
   
   const roleApi = useApiData<RoleRecord[]>("/api/roles"); const userApi = useApiData<UserRecord[]>("/api/users?pageSize=100"); const permissionApi = useApiData<PermissionRecord[]>("/api/permissions"); const sessionApi = useApiData<SessionRecord[]>("/api/sessions?pageSize=100");
   const roles = roleApi.data ?? [];
@@ -9724,7 +9878,7 @@ function AccessView({
   const visibleRoles = roles.filter((role) => !q || `${role.name} ${role.code} ${role.scope}`.toLowerCase().includes(q));
   const permissions = (permissionApi.data ?? []).filter((item) => !q || `${item.key} ${item.module} ${item.action} ${item.description}`.toLowerCase().includes(q));
   const sessions = (sessionApi.data ?? []).filter((item) => !q || `${item.user.name ?? ""} ${item.user.username} ${item.user.email ?? ""} ${item.ipAddress ?? ""}`.toLowerCase().includes(q));
-  return <div className="content-stack"><section className="security-banner"><div><ShieldCheck size={22} /><div><strong>Server-enforced access control</strong><span>{roles.length} roles, {userApi.total} users and {permissionApi.total} granular permissions are configured.</span></div></div><button onClick={reload}><RefreshCcw size={14} /> Refresh access</button></section><Panel><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap", marginBottom: "8px" }}><TableToolbar tabs={["Users", "Roles", "Permissions", "Sessions"]} activeTab={tab} onTab={(value) => { setTab(value); setQuery(""); }} placeholder="Search users, roles, permissions or sessions" search={query} onSearch={setQuery} />{tab === "Users" && onModal && <button className="primary-button" onClick={() => onModal("invite")} style={{ height: "36px", padding: "0 16px" }}><UserPlus size={15} /><span>Add user</span></button>}</div>{error ? <EmptyState icon={AlertTriangle} title="Access configuration could not be loaded" detail={error} /> : loading ? <EmptyState icon={RefreshCcw} title="Loading access configuration" detail="Retrieving users, grants and active sessions." compact /> : tab === "Roles" ? visibleRoles.length ? <div className="role-grid">{visibleRoles.map((role, index) => <article className="role-card" key={role.id}><div><span className={classNames("role-icon", tones[index % tones.length])}><KeyRound size={17} /></span><StatusPill value={role.scope} /></div><strong>{role.name}</strong><span>{role.code}</span><div className="role-meta"><span><Users size={14} />{role._count.users} users</span><span><Fingerprint size={14} />{role.permissions.length} permissions</span></div><button>Server enforced <ShieldCheck size={13} /></button></article>)}</div> : <EmptyState icon={KeyRound} title={q ? "No matching roles" : "No roles configured"} detail={q ? "Try a different role name or code." : "Create a role and assign only the permissions needed for the job."} /> : tab === "Permissions" ? <div className="table-wrap"><table className="data-table"><thead><tr><th>Permission</th><th>Module</th><th>Action</th><th>Description</th><th>Control</th></tr></thead><tbody>{permissions.map((item) => <tr key={item.id}><td><code>{item.key}</code></td><td>{item.module}</td><td>{item.action}</td><td>{item.description}</td><td><StatusPill value={item.elevated ? "Elevated" : "Standard"} /></td></tr>)}</tbody></table></div> : tab === "Sessions" ? <div className="table-wrap"><table className="data-table"><thead><tr><th>User</th><th>IP address</th><th>User agent</th><th>Last seen</th><th>Expires</th><th>Status</th><th /></tr></thead><tbody>{sessions.map((item) => { const active = !item.revokedAt && new Date(item.expires) >= new Date(); return <tr key={item.id}><td><div className="primary-cell"><strong>{item.user.name ?? item.user.username}</strong><span>{item.user.email ?? item.user.username}</span></div></td><td>{item.ipAddress ?? "Unknown"}</td><td>{item.userAgent?.slice(0, 60) ?? "Unknown"}</td><td>{new Date(item.lastSeenAt).toLocaleString("en-NG")}</td><td>{formatDate(item.expires)}</td><td><StatusPill value={item.revokedAt ? "Revoked" : new Date(item.expires) < new Date() ? "Expired" : "Active"} /></td><td>{active ? <button className="row-button" onClick={() => revokeSession(item)}>Revoke</button> : <span className="verified-cell"><ShieldCheck size={13} />Closed</span>}</td></tr>; })}</tbody></table></div> : users.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>User</th><th>Username</th><th>Roles</th><th>Station scopes</th><th>Last login</th><th>Status</th><th /></tr></thead><tbody>{users.map((item) => <tr key={item.id}><td><div className="agent-cell staff"><span>{`${item.firstName[0]}${item.lastName[0]}`}</span><div><strong>{item.name ?? `${item.firstName} ${item.lastName}`}</strong><small>{item.email ?? "No email"}</small></div></div></td><td><code>{item.username}</code></td><td>{item.roleAssignments.map((grant) => grant.role.name).join(", ") || "—"}</td><td>{item.stationScopes.length}</td><td>{item.lastLoginAt ? new Date(item.lastLoginAt).toLocaleString("en-NG") : "Never"}</td><td><StatusPill value={item.status.replaceAll("_", " ")} /></td><td><div className="row-actions">{item.status === "ACTIVE" ? <button className="row-button" onClick={() => userAction(item, "deactivate", "Deactivate user")}>Disable</button> : <button className="row-button" onClick={() => userAction(item, "activate", "Activate user")}>Activate</button>}<button className="icon-ghost" title="Edit user access" onClick={() => setEditingUser(item)}><Settings2 size={15} /></button><button className="icon-ghost" title="Reset password" onClick={() => userAction(item, "reset-password", "Password reset")}><KeyRound size={15} /></button><button className="icon-ghost" title="Revoke all sessions" onClick={() => userAction(item, "revoke-sessions", "Revoke sessions")}><LogOut size={15} /></button></div></td></tr>)}</tbody></table></div> : <EmptyState icon={Users} title={q ? "No matching users" : "No users"} detail={q ? "Try a different name, username or email." : "Add a user to grant scoped access."} />}{editingUser && <UserEditModal user={editingUser} allowedStations={allowedStations} onClose={() => setEditingUser(null)} onComplete={(title, detail) => { setEditingUser(null); userApi.reload(); onToast({ title, detail }); }} />}<div className="permission-note"><LockKeyhole size={17} /><div><strong>Server-enforced permissions</strong><span>Menu visibility, API authorization and database query scope use the same permission policy.</span></div></div></Panel></div>;
+  return <div className="content-stack"><section className="security-banner"><div><ShieldCheck size={22} /><div><strong>Server-enforced access control</strong><span>{roles.length} roles, {userApi.total} users and {permissionApi.total} granular permissions are configured.</span></div></div><button onClick={reload}><RefreshCcw size={14} /> Refresh access</button></section><Panel><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap", marginBottom: "8px" }}><TableToolbar tabs={["Users", "Roles", "Permissions", "Sessions"]} activeTab={tab} onTab={(value) => { setTab(value); setQuery(""); }} placeholder="Search users, roles, permissions or sessions" search={query} onSearch={setQuery} />{tab === "Users" && onModal && <button className="primary-button" onClick={() => onModal("invite")} style={{ height: "36px", padding: "0 16px" }}><UserPlus size={15} /><span>Add user</span></button>}{tab === "Roles" && <button className="primary-button" onClick={() => setIsCreatingRole(true)} style={{ height: "36px", padding: "0 16px" }}><ShieldCheck size={15} /><span>Add role</span></button>}</div>{error ? <EmptyState icon={AlertTriangle} title="Access configuration could not be loaded" detail={error} /> : loading ? <EmptyState icon={RefreshCcw} title="Loading access configuration" detail="Retrieving users, grants and active sessions." compact /> : tab === "Roles" ? visibleRoles.length ? <div className="role-grid">{visibleRoles.map((role, index) => <article className="role-card" key={role.id}><div><span className={classNames("role-icon", tones[index % tones.length])}><KeyRound size={17} /></span><StatusPill value={role.scope} /></div><strong>{role.name}</strong><span>{role.code}</span><div className="role-meta"><span><Users size={14} />{role._count.users} users</span><span><Fingerprint size={14} />{role.permissions.length} permissions</span></div><div style={{ display: "flex", gap: "8px", marginTop: "12px" }}><button style={{ flex: 1 }}>Server enforced <ShieldCheck size={13} /></button><button className="icon-ghost" onClick={() => setEditingRole(role)} title="Edit role"><Settings2 size={15} /></button></div></article>)}</div> : <EmptyState icon={KeyRound} title={q ? "No matching roles" : "No roles configured"} detail={q ? "Try a different role name or code." : "Create a role and assign only the permissions needed for the job."} /> : tab === "Permissions" ? <div className="table-wrap"><table className="data-table"><thead><tr><th>Permission</th><th>Module</th><th>Action</th><th>Description</th><th>Control</th></tr></thead><tbody>{permissions.map((item) => <tr key={item.id}><td><code>{item.key}</code></td><td>{item.module}</td><td>{item.action}</td><td>{item.description}</td><td><StatusPill value={item.elevated ? "Elevated" : "Standard"} /></td></tr>)}</tbody></table></div> : tab === "Sessions" ? <div className="table-wrap"><table className="data-table"><thead><tr><th>User</th><th>IP address</th><th>User agent</th><th>Last seen</th><th>Expires</th><th>Status</th><th /></tr></thead><tbody>{sessions.map((item) => { const active = !item.revokedAt && new Date(item.expires) >= new Date(); return <tr key={item.id}><td><div className="primary-cell"><strong>{item.user.name ?? item.user.username}</strong><span>{item.user.email ?? item.user.username}</span></div></td><td>{item.ipAddress ?? "Unknown"}</td><td>{item.userAgent?.slice(0, 60) ?? "Unknown"}</td><td>{new Date(item.lastSeenAt).toLocaleString("en-NG")}</td><td>{formatDate(item.expires)}</td><td><StatusPill value={item.revokedAt ? "Revoked" : new Date(item.expires) < new Date() ? "Expired" : "Active"} /></td><td>{active ? <button className="row-button" onClick={() => revokeSession(item)}>Revoke</button> : <span className="verified-cell"><ShieldCheck size={13} />Closed</span>}</td></tr>; })}</tbody></table></div> : users.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>User</th><th>Username</th><th>Roles</th><th>Station scopes</th><th>Last login</th><th>Status</th><th /></tr></thead><tbody>{users.map((item) => <tr key={item.id}><td><div className="agent-cell staff"><span>{`${item.firstName[0]}${item.lastName[0]}`}</span><div><strong>{item.name ?? `${item.firstName} ${item.lastName}`}</strong><small>{item.email ?? "No email"}</small></div></div></td><td><code>{item.username}</code></td><td>{item.roleAssignments.map((grant) => grant.role.name).join(", ") || "—"}</td><td>{item.stationScopes.length}</td><td>{item.lastLoginAt ? new Date(item.lastLoginAt).toLocaleString("en-NG") : "Never"}</td><td><StatusPill value={item.status.replaceAll("_", " ")} /></td><td><div className="row-actions">{item.status === "ACTIVE" ? <button className="row-button" onClick={() => userAction(item, "deactivate", "Deactivate user")}>Disable</button> : <button className="row-button" onClick={() => userAction(item, "activate", "Activate user")}>Activate</button>}<button className="icon-ghost" title="Edit user access" onClick={() => setEditingUser(item)}><Settings2 size={15} /></button><button className="icon-ghost" title="Reset password" onClick={() => userAction(item, "reset-password", "Password reset")}><KeyRound size={15} /></button><button className="icon-ghost" title="Revoke all sessions" onClick={() => userAction(item, "revoke-sessions", "Revoke sessions")}><LogOut size={15} /></button></div></td></tr>)}</tbody></table></div> : <EmptyState icon={Users} title={q ? "No matching users" : "No users"} detail={q ? "Try a different name, username or email." : "Add a user to grant scoped access."} />}{editingUser && <UserEditModal user={editingUser} allowedStations={allowedStations} onClose={() => setEditingUser(null)} onComplete={(title, detail) => { setEditingUser(null); userApi.reload(); onToast({ title, detail }); }} />}{(editingRole || isCreatingRole) && <RoleEditModal role={editingRole ?? undefined} permissions={permissionApi.data ?? []} onClose={() => { setEditingRole(null); setIsCreatingRole(false); }} onComplete={(title, detail) => { setEditingRole(null); setIsCreatingRole(false); roleApi.reload(); onToast({ title, detail }); }} />}<div className="permission-note"><LockKeyhole size={17} /><div><strong>Server-enforced permissions</strong><span>Menu visibility, API authorization and database query scope use the same permission policy.</span></div></div></Panel></div>;
 }
 
 function AuditDetailPanel({ id, onClose }: { id: string; onClose: () => void }) {

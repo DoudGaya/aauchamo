@@ -40,9 +40,9 @@ const rolePermissionKeys: Record<string, string[]> = {
     "notifications.view", "approvals.view", "approvals.decide", "search.use", "tickets.view", "tickets.manage",
   ],
   SALES_OFFICER: [
-    "dashboard.view", "customers.view", "customers.manage", "customers.create", "customers.update",
+    "dashboard.view", "settings.view", "customers.view", "customers.manage", "customers.create", "customers.update",
     "customers.view_history", "inventory.view", "sales.view", "sales.create",
-    "sales.discount", "cargo.view", "agents.view", "wallet.view", "documents.view", "notifications.view",
+    "sales.discount", "cargo.view", "cargo.create", "agents.view", "wallet.view", "documents.view", "notifications.view",
     "search.use", "tickets.view", "tickets.manage",
   ],
   OPERATIONS_COORDINATOR: [
