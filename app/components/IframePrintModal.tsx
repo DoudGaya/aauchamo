@@ -1,6 +1,9 @@
-import { Printer, X } from "lucide-react";
+import { Printer, X, Loader2 } from "lucide-react";
+import { useState } from "react";
 
 export function IframePrintModal({ url, title, onClose }: { url: string; title: string; onClose: () => void }) {
+  const [loading, setLoading] = useState(true);
+
   const printIframe = () => {
     const iframe = document.getElementById("print-iframe-modal") as HTMLIFrameElement;
     if (iframe && iframe.contentWindow) {
@@ -21,9 +24,18 @@ export function IframePrintModal({ url, title, onClose }: { url: string; title: 
           <button className="icon-ghost" onClick={onClose} aria-label="Close modal"><X size={18} /></button>
         </div>
         <div style={{ flex: 1, backgroundColor: "#e5e7eb", overflow: "hidden", position: "relative" }}>
+          {loading && (
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#fff", zIndex: 10 }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", color: "#6b7280" }}>
+                <Loader2 size={32} className="spin" />
+                <span>Preparing document...</span>
+              </div>
+            </div>
+          )}
           <iframe 
             id="print-iframe-modal"
             src={url} 
+            onLoad={() => setLoading(false)}
             style={{ width: "100%", height: "100%", border: "none" }}
             title={`Print Preview - ${title}`}
           />

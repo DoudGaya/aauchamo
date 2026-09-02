@@ -4531,7 +4531,7 @@ function CargoView({
   );
 
   const table = useTableControls(visible, (item, q) =>
-    `${item.awbNumber} ${item.senderName} ${item.receiverName} ${item.origin} ${item.destination} ${item.airline ?? ""} ${item.customer.displayName}`
+    `${item.awbNumber} ${item.senderName} ${item.receiverName} ${item.origin} ${item.destination} ${item.airline ?? ""} ${item.customer?.displayName ?? ""}`
       .toLowerCase()
       .includes(q)
   );
@@ -4630,7 +4630,7 @@ function CargoView({
     ];
     const rows = table.filtered.map((item) => [
       item.awbNumber,
-      item.customer.displayName,
+      item.customer?.displayName || "",
       item.senderName,
       item.senderPhone,
       item.receiverName,
