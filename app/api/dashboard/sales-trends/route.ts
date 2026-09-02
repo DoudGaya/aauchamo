@@ -4,6 +4,8 @@ import { dashboardFilters, stationFilter } from "@/lib/server/dashboard";
 import { db } from "@/lib/server/db";
 import { Prisma } from "@/lib/generated/prisma/client";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   const requestId = requestIdFrom(request);
   try {

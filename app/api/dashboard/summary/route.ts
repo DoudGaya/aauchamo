@@ -3,6 +3,8 @@ import { apiFailure, apiSuccess, requestIdFrom } from "@/lib/server/api";
 import { dashboardFilters, stationFilter } from "@/lib/server/dashboard";
 import { db } from "@/lib/server/db";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   const requestId = requestIdFrom(request);
   try {
