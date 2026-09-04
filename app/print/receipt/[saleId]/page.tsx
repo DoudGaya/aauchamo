@@ -14,6 +14,7 @@ type SaleDetail = {
   paidTotal: string;
   outstandingTotal: string;
   postedAt: string;
+  createdAt: string;
   company: { legalName: string; displayName: string; address: string; phone: string; currencyCode: string; logoObjectKey?: string | null; logoDarkObjectKey?: string | null };
   station: { code: string; name: string };
   customer: { displayName: string; primaryPhone: string } | null;
@@ -125,8 +126,11 @@ export default function ReceiptPrintPage() {
             <span><strong>Station:</strong> {sale.station.code}</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px" }}>
-            <span><strong>Date:</strong> {new Date(sale.postedAt).toLocaleString("en-NG")}</span>
+            <span><strong>Initiated:</strong> {new Date(sale.createdAt).toLocaleString("en-NG")}</span>
             <span><strong>Status:</strong> {sale.status}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px" }}>
+            <span><strong>Posted:</strong> {new Date(sale.postedAt).toLocaleString("en-NG")}</span>
           </div>
           {sale.customer && (
             <div style={{ marginTop: "4px" }}>
