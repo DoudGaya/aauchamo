@@ -22,6 +22,7 @@ const productSchema = z.object({
   trackBatches: z.boolean().default(false),
   trackExpiry: z.boolean().default(false),
   unlimitedStock: z.boolean().default(false),
+  stationIds: z.array(z.string().cuid()).optional(),
   openingBalances: z.array(z.object({ stationId: z.string().cuid(), quantity: z.string().regex(/^\d+(\.\d{1,3})?$/) })).max(20).default([]),
 });
 
@@ -100,10 +101,15 @@ export async function POST(request: Request) {
       } });
 
       if (input.unlimitedStock) {
-        // Give it unlimited stock across all accessible stations
-        const stationsToStock = access.companyWide
+        // Give it unlimited stock across all accessible stations, filtered by input.stationIds if provided
+        let stationsToStock = access.companyWide
           ? await tx.station.findMany({ where: { companyId: access.companyId, status: "ACTIVE" }, select: { id: true } })
           : Array.from(access.stationIds).map(id => ({ id }));
+          
+        if (input.stationIds && input.stationIds.length > 0) {
+          const requested = new Set(input.stationIds);
+          stationsToStock = stationsToStock.filter(s => requested.has(s.id));
+        }
 
         if (stationsToStock.length > 0) {
           await tx.inventoryBalance.createMany({

@@ -10,7 +10,7 @@ export async function GET(request: Request) {
       db.product.findMany({ where: { companyId: access.companyId, status: "ACTIVE" }, include: { unit: true, balances: { where: { stationId, batchKey: "" } } }, orderBy: { name: "asc" }, take: 500 }),
       db.customer.findMany({ where: { companyId: access.companyId, status: "ACTIVE", ...(access.companyWide ? {} : { homeStationId: { in: [...access.stationIds] } }) }, select: { id: true, customerNumber: true, displayName: true, primaryPhone: true }, orderBy: { displayName: "asc" }, take: 500 }),
       db.paymentMethod.findMany({ where: { companyId: access.companyId, isActive: true }, orderBy: { displayOrder: "asc" } }),
-      db.stationBusinessUnit.findMany({ where: { stationId, businessUnit: { isActive: true } }, include: { businessUnit: true }, orderBy: { businessUnit: { name: "asc" } } }),
+      db.stationBusinessUnit.findMany({ where: { stationId, businessUnit: { isActive: true, ...(access.companyWide ? {} : { id: { in: [...access.businessUnitIds] } }) } }, include: { businessUnit: true }, orderBy: { businessUnit: { name: "asc" } } }),
       db.agent.findMany({ where: { companyId: access.companyId, status: "ACTIVE", ...(access.companyWide ? {} : { homeStationId: { in: [...access.stationIds] } }) }, include: { wallet: true }, orderBy: { name: "asc" } }),
     ]);
     return apiSuccess({ permissions: [...access.permissions], products: products.map((product) => ({ ...product, purchasePrice: undefined, available: product.balances.reduce((sum, row) => sum + row.quantity.toNumber(), 0) })), customers, paymentMethods, businessUnits: businessUnits.map((link) => link.businessUnit), agents }, requestId);

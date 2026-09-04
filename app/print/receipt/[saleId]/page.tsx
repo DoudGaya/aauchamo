@@ -18,8 +18,8 @@ type SaleDetail = {
   station: { code: string; name: string };
   customer: { displayName: string; primaryPhone: string } | null;
   officer: { email: string } | null;
-  items: Array<{ id: string; product: { code: string; name: string }; quantity: string; unitPrice: string; lineTotal: string }>;
-  allocations: Array<{ paymentMethod: string; amount: string }>;
+  lines: Array<{ id: string; productCode: string; productName: string; quantity: string; unitPrice: string; lineTotal: string }>;
+  allocations: Array<{ payment: { paymentMethod: { name: string } }; amount: string }>;
 };
 
 export default function ReceiptPrintPage() {
@@ -114,7 +114,7 @@ export default function ReceiptPrintPage() {
           </div>
           <h2 style={{ margin: "4px 0", fontSize: isThermal ? "14px" : "20px", color: "#800000" }}>{sale.company.displayName}</h2>
           <p style={{ margin: "2px 0", fontSize: isThermal ? "10px" : "12px", color: "#555" }}>{sale.company.legalName}</p>
-          <p style={{ margin: "2px 0", fontSize: isThermal ? "10px" : "12px" }}>{sale.company.address}</p>
+          <p style={{ margin: "2px 0", fontSize: isThermal ? "10px" : "12px" }}>{sale.station.name}</p>
           <p style={{ margin: "2px 0", fontSize: isThermal ? "10px" : "12px" }}>Tel: {sale.company.phone}</p>
         </div>
 
@@ -154,9 +154,9 @@ export default function ReceiptPrintPage() {
             </tr>
           </thead>
           <tbody>
-            {sale.items.map((item) => (
+            {sale.lines.map((item) => (
               <tr key={item.id} style={{ borderBottom: "1px undefined #eee" }}>
-                <td style={{ padding: "4px 0", wordBreak: "break-word" }}>{item.product.name}</td>
+                <td style={{ padding: "4px 0", wordBreak: "break-word" }}>{item.productName}</td>
                 <td style={{ padding: "4px 0", textAlign: "center" }}>{Number(item.quantity)}</td>
                 <td style={{ padding: "4px 0", textAlign: "right" }}>{Number(item.unitPrice).toLocaleString()}</td>
                 <td style={{ padding: "4px 0", textAlign: "right" }}>{Number(item.lineTotal).toLocaleString()}</td>
@@ -205,7 +205,7 @@ export default function ReceiptPrintPage() {
             <strong>Payment Method(s):</strong>
             {sale.allocations.map((alloc, idx) => (
               <div key={idx} style={{ display: "flex", justifyContent: "space-between" }}>
-                <span>{alloc.paymentMethod}</span>
+                <span>{alloc.payment.paymentMethod.name}</span>
                 <span>{sale.company.currencyCode} {Number(alloc.amount).toLocaleString()}</span>
               </div>
             ))}

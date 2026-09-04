@@ -255,7 +255,7 @@ type RoleRecord = {
 
 type ProductRecord = {
   id: string; code: string; barcode: string | null; name: string; sellingPrice: string; purchasePrice: string | null;
-  reorderLevel: string; status: string; category: { name: string }; unit: { code: string; name: string };
+  reorderLevel: string; minimumLevel: string; status: string; category: { id: string; name: string }; unit: { id: string; code: string; name: string };
   balances: Array<{ id: string; quantity: string; station: AllowedStation; batch: { id: string; code: string; expiresAt: string | null } | null }>;
 };
 type PurchaseRecord = { id: string; orderNumber: string; status: string; total: string; expectedDate: string | null; createdAt: string; supplier: { name: string }; station: AllowedStation; lines: Array<{ id: string; quantityOrdered: string; quantityReceived: string; product: { name: string; trackBatches: boolean; trackExpiry: boolean } }> };
@@ -1036,13 +1036,13 @@ function ModuleView({
 }) {
   switch (active) {
     case "overview":
-      return <OverviewView onNavigate={onNavigate} period={period} station={station} allowedStations={allowedStations} />;
+      return <OverviewView onNavigate={onNavigate} period={period} station={station} allowedStations={allowedStations} identity={identity} />;
     case "operations":
-      return <OperationsView onNavigate={onNavigate} />;
+      return <OperationsView onNavigate={onNavigate} identity={identity} />;
     case "approvals":
       return <ApprovalsView onToast={onToast} />;
     case "pos":
-      return <POSView key={station} allowedStations={allowedStations} selectedStation={station} onModal={onModal} onToast={onToast} />;
+      return <POSView key={station} allowedStations={allowedStations} selectedStation={station} onModal={onModal} onToast={onToast} identity={identity} />;
     case "sales":
       return <SalesView station={station} allowedStations={allowedStations} identity={identity} />;
     case "inventory":
@@ -1081,7 +1081,7 @@ function ModuleView({
     case "manual":
       return <ManualView />;
     default:
-      return <OverviewView onNavigate={onNavigate} period={period} station={station} allowedStations={allowedStations} />;
+      return <OverviewView onNavigate={onNavigate} period={period} station={station} allowedStations={allowedStations} identity={identity} />;
   }
 }
 
@@ -1121,11 +1121,13 @@ function OverviewView({
   period,
   station,
   allowedStations,
+  identity,
 }: {
   onNavigate: (id: string) => void;
   period: string;
   station: string;
   allowedStations: AllowedStation[];
+  identity: WorkspaceIdentity;
 }) {
   const [selectedBu, setSelectedBu] = useState<string>("ALL");
 
@@ -1141,17 +1143,21 @@ function OverviewView({
 
   const filterQuery = filterParams.toString() ? `?${filterParams.toString()}` : "";
 
-  const summaryApi = useApiData<DashboardSummary>(`/api/dashboard/summary${filterQuery}`);
-  const trendApi = useApiData<any[]>(`/api/dashboard/sales-trends${filterQuery}`);
-  const stationApi = useApiData<StationPerformanceRecord[]>(`/api/dashboard/station-performance${filterQuery}`);
-  const salesApi = useApiData<SaleRecord[]>(`/api/sales${filterQuery ? filterQuery + "&" : "?"}pageSize=5`);
+  const canViewDashboard = identity.permissions.includes("dashboard.view") || identity.companyWide;
+  const canViewSales = identity.permissions.includes("sales.view") || identity.companyWide;
+  const canViewAudit = identity.permissions.includes("audit.view") || identity.companyWide;
+
+  const summaryApi = useApiData<DashboardSummary>(canViewDashboard ? `/api/dashboard/summary${filterQuery}` : null);
+  const trendApi = useApiData<any[]>(canViewDashboard ? `/api/dashboard/sales-trends${filterQuery}` : null);
+  const stationApi = useApiData<StationPerformanceRecord[]>(canViewDashboard ? `/api/dashboard/station-performance${filterQuery}` : null);
+  const salesApi = useApiData<SaleRecord[]>(canViewSales ? `/api/sales${filterQuery ? filterQuery + "&" : "?"}pageSize=5` : null);
   
   const auditParams = new URLSearchParams();
   auditParams.append("pageSize", "5");
   if (targetStationId) auditParams.append("stationId", targetStationId);
   if (dates.from) auditParams.append("from", dates.from);
   if (dates.to) auditParams.append("to", dates.to);
-  const auditApi = useApiData<AuditRecord[]>(`/api/audit?${auditParams.toString()}`);
+  const auditApi = useApiData<AuditRecord[]>(canViewAudit ? `/api/audit?${auditParams.toString()}` : null);
 
   const summary = summaryApi.data;
   const businessUnits = summary?.businessUnits ?? [];
@@ -1436,8 +1442,9 @@ function AttentionItem({ icon: Icon, tone, title, detail, time }: { icon: Lucide
   );
 }
 
-function OperationsView({ onNavigate }: { onNavigate: (id: string) => void }) {
-  const summaryApi = useApiData<DashboardSummary>("/api/dashboard/summary"); const stationApi = useApiData<StationPerformanceRecord[]>("/api/dashboard/station-performance"); const summary = summaryApi.data;
+function OperationsView({ onNavigate, identity }: { onNavigate: (id: string) => void; identity: WorkspaceIdentity }) {
+  const canView = identity.permissions.includes("dashboard.view") || identity.companyWide;
+  const summaryApi = useApiData<DashboardSummary>(canView ? "/api/dashboard/summary" : null); const stationApi = useApiData<StationPerformanceRecord[]>(canView ? "/api/dashboard/station-performance" : null); const summary = summaryApi.data;
   const operations = [
     { icon: ShoppingCart, label: "Posted transactions", value: String(summary?.sales.transactions ?? 0), detail: `${formatNaira(Number(summary?.sales.grossRevenue ?? 0))} processed`, tone: "teal", progress: Math.min(100, summary?.sales.transactions ?? 0) },
     { icon: Plane, label: "Cargo in motion", value: String(summary?.cargo.IN_TRANSIT ?? 0), detail: `${summary?.cargo.LABELLED ?? 0} labelled · ${summary?.cargo.ON_HOLD ?? 0} held`, tone: "navy", progress: Math.min(100, (summary?.cargo.IN_TRANSIT ?? 0) * 5) },
@@ -2012,11 +2019,13 @@ function POSView({
   selectedStation,
   onModal,
   onToast,
+  identity,
 }: {
   allowedStations: AllowedStation[];
   selectedStation: string;
   onModal: (modal: ModalKind) => void;
   onToast: (toast: Toast) => void;
+  identity: WorkspaceIdentity;
 }) {
   const station = allowedStations.find((item) => item.name === selectedStation) ?? allowedStations[0];
   const { data, loading, error, reload } = useApiData<POSBootstrap>(station ? `/api/pos/bootstrap?stationId=${station.id}` : "/api/pos/bootstrap");
@@ -2054,11 +2063,11 @@ function POSView({
   // Sync split payments state automatically for single payments
   useEffect(() => {
     if (data?.paymentMethods[0] && paymentAllocations.length === 0) {
-      setPaymentAllocations([{ paymentMethodId: data.paymentMethods[0].id, amount: dueTotal.toFixed(2), reference: "", terminalId: "" }]);
+      setPaymentAllocations([{ paymentMethodId: data.paymentMethods[0].id, amount: dueTotal.toFixed(2), reference: identity.name, terminalId: "" }]);
     } else if (paymentAllocations.length === 1) {
       setPaymentAllocations([{ ...paymentAllocations[0], amount: dueTotal.toFixed(2) }]);
     }
-  }, [dueTotal, data, paymentAllocations.length]);
+  }, [dueTotal, data, paymentAllocations.length, identity.name]);
 
   // Keyboard/scanner shortcuts & New Sale event listener
   useEffect(() => {
@@ -2101,7 +2110,7 @@ function POSView({
 
   const addPaymentAllocation = () => {
     if (!data?.paymentMethods[0]) return;
-    setPaymentAllocations([...paymentAllocations, { paymentMethodId: data.paymentMethods[0].id, amount: "0", reference: "", terminalId: "" }]);
+    setPaymentAllocations([...paymentAllocations, { paymentMethodId: data.paymentMethods[0].id, amount: "0", reference: identity.name, terminalId: "" }]);
   };
 
   const removePaymentAllocation = (idx: number) => {
@@ -3111,11 +3120,14 @@ function SalesView({ station, allowedStations, identity }: { station: string; al
                     </td>
                     <td>
                       <div className="row-actions">
-                        {!["REFUNDED", "CANCELLED"].includes(sale.status) && (
+                        {!["REFUNDED", "CANCELLED"].includes(sale.status) && identity.permissions.includes("sales.refund") && (
                           <button className="row-button" onClick={() => refundSale(sale)}>
                             Refund
                           </button>
                         )}
+                        <button className="icon-ghost" title="Print Receipt" onClick={() => window.dispatchEvent(new CustomEvent("erp-print", { detail: { url: `/print/receipt/${sale.id}`, title: "Receipt" } }))}>
+                          <Printer size={17} />
+                        </button>
                         <button className="icon-ghost" onClick={() => setSelectedSaleId(sale.id)}>
                           <MoreHorizontal size={17} />
                         </button>
@@ -3908,7 +3920,7 @@ function InventoryView({
   const movementApi = useApiData<MovementRecord[]>("/api/inventory/movements?pageSize=100");
   const transferApi = useApiData<TransferRecord[]>("/api/inventory/transfers?pageSize=100");
   const adjustmentApi = useApiData<AdjustmentRecord[]>("/api/inventory/adjustments?pageSize=100");
-
+  const [editingProduct, setEditingProduct] = useState<ProductRecord | null>(null);
   // Transfer state hooks
   const [transferToDispatch, setTransferToDispatch] = useState<TransferRecord | null>(null);
   const [transferToReceive, setTransferToReceive] = useState<TransferRecord | null>(null);
@@ -4326,6 +4338,15 @@ function InventoryView({
                       <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end", alignItems: "center" }}>
                         <button
                           type="button"
+                          className="secondary-button"
+                          title="Edit Product"
+                          style={{ padding: "4px 8px", fontSize: "11px", height: "26px", display: "flex", alignItems: "center", gap: "4px" }}
+                          onClick={() => setEditingProduct(product)}
+                        >
+                          <PackageOpen size={13} /> Edit
+                        </button>
+                        <button
+                          type="button"
                           className="danger-button-subtle"
                           title="Delete Product"
                           style={{ padding: "4px 8px", fontSize: "11px", height: "26px", color: "#dc2626", background: "rgba(220, 38, 38, 0.1)", border: "none", borderRadius: "4px", fontWeight: "600", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
@@ -4360,6 +4381,19 @@ function InventoryView({
         )}
         <Pagination total={productTable.total} page={productTable.page} pageSize={productTable.pageSize} onPage={productTable.setPage} />
       </Panel>
+
+      {editingProduct && (
+        <EditProductModal
+          initialProduct={editingProduct}
+          onComplete={(t, d) => {
+            window.dispatchEvent(new CustomEvent("erp-toast", { detail: { title: t, message: d, type: "success" } }));
+            setEditingProduct(null);
+            productApi.reload();
+          }}
+          onClose={() => setEditingProduct(null)}
+          allowedStations={allowedStations}
+        />
+      )}
     </div>
   );
 }
@@ -4432,7 +4466,6 @@ function CargoEditModal({
       setBusy(false);
     }
   };
-
   return (
     <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="workflow-dialog" style={{ maxWidth: "600px" }}>
@@ -4444,7 +4477,6 @@ function CargoEditModal({
           </div>
           <button onClick={onClose} aria-label="Close modal"><X size={19} /></button>
         </div>
-
         <form onSubmit={submit}>
           <div className="workflow-body">
             {!isPreDispatch && (
@@ -4453,7 +4485,6 @@ function CargoEditModal({
                 <span style={{ fontSize: "12px" }}>This AWB has been dispatched. Modifying fields will increment the label version and must be approved by another supervisor.</span>
               </div>
             )}
-
             <div className="form-grid">
               <Field label="Sender name"><input name="senderName" defaultValue={shipment.senderName} required /></Field>
               <Field label="Sender phone"><input name="senderPhone" defaultValue={shipment.senderPhone} required autoComplete="tel" /></Field>
@@ -12091,7 +12122,7 @@ function ProductForm({ onComplete, onClose, allowedStations }: { onComplete: (ti
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault(); setBusy(true); setError(null); const form = new FormData(event.currentTarget);
     try {
-      const payload: any = { name: String(form.get("name")), categoryId: String(form.get("categoryId") || setup?.categories[0]?.id || ""), unitId: String(form.get("unitId")), purchasePrice: String(form.get("purchasePrice") || "0"), sellingPrice: String(form.get("sellingPrice")), minimumLevel: String(form.get("minimum") || "0"), unlimitedStock: form.get("unlimitedStock") === "on" };
+      const payload: any = { name: String(form.get("name")), categoryId: String(form.get("categoryId") || setup?.categories[0]?.id || ""), unitId: String(form.get("unitId")), purchasePrice: String(form.get("purchasePrice") || "0"), sellingPrice: String(form.get("sellingPrice")), minimumLevel: String(form.get("minimum") || "0"), unlimitedStock: form.get("unlimitedStock") === "on", stationIds: form.getAll("stationIds").map(String).filter(Boolean) };
       const response = await fetch("/api/inventory/catalogue", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
       const body = await response.json() as ApiEnvelope<{ id: string; code: string; name: string }>;
       if (!response.ok || !body.ok || !body.data) throw new Error(body.error?.message ?? "Product could not be created.");
@@ -12099,7 +12130,54 @@ function ProductForm({ onComplete, onClose, allowedStations }: { onComplete: (ti
       onComplete("Product created", `${body.data.code} · ${body.data.name} and its opening stock movement were committed.`);
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Product could not be created."); } finally { setBusy(false); }
   };
-  return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="Product name" full><input name="name" required placeholder="e.g. Binani Premium Rice 50kg" /></Field><Field label="Unit"><div style={{ display: "flex", gap: "6px" }}><select name="unitId" required defaultValue="" style={{ flex: 1 }}><option value="" disabled>Select unit</option>{setup?.units.map((item) => <option key={item.id} value={item.id}>{item.name} ({item.code})</option>)}</select><button type="button" className="secondary-button" onClick={addUnit} title="Create new unit of measure" style={{ height: "36px", padding: "0 10px", fontSize: "12px", whiteSpace: "nowrap" }}>+ New</button></div></Field><Field label="Minimum sale quantity"><input name="minimum" type="number" step="1" min="0" defaultValue="1" /></Field><Field label="Purchase price"><div className="money-input"><span>₦</span><input name="purchasePrice" type="number" step="0.01" min="0" defaultValue="0" /></div></Field><Field label="Selling price"><div className="money-input"><span>₦</span><input name="sellingPrice" type="number" step="0.01" min="0.01" required /></div></Field><Field label="Inventory settings" full><div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}><input type="checkbox" name="unlimitedStock" defaultChecked /><span>Give this product unlimited stock across all stations</span></div></Field></div>{(error || setupError) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? setupError}</span></div>}<div className="form-note"><PackageCheck size={16} /><span>Product creation will be committed atomically to the immutable movement ledger.</span></div></div><ModalFooter onClose={onClose} submitLabel={busy ? "Creating…" : loading ? "Loading setup…" : "Create product"} icon={PackagePlus} disabled={busy || loading || !setup} /></form>;
+  return <form onSubmit={submit}><div className="workflow-body"><div className="form-grid"><Field label="Product name" full><input name="name" required placeholder="e.g. Binani Premium Rice 50kg" /></Field><Field label="Unit"><div style={{ display: "flex", gap: "6px" }}><select name="unitId" required defaultValue="" style={{ flex: 1 }}><option value="" disabled>Select unit</option>{setup?.units.map((item) => <option key={item.id} value={item.id}>{item.name} ({item.code})</option>)}</select><button type="button" className="secondary-button" onClick={addUnit} title="Create new unit of measure" style={{ height: "36px", padding: "0 10px", fontSize: "12px", whiteSpace: "nowrap" }}>+ New</button></div></Field><Field label="Minimum sale quantity"><input name="minimum" type="number" step="1" min="0" defaultValue="1" /></Field><Field label="Purchase price"><div className="money-input"><span>₦</span><input name="purchasePrice" type="number" step="0.01" min="0" defaultValue="0" /></div></Field><Field label="Selling price"><div className="money-input"><span>₦</span><input name="sellingPrice" type="number" step="0.01" min="0.01" required /></div></Field><Field label="Station scope" full><Select name="stationIds" isMulti options={allowedStations.map(s => ({ value: s.id, label: s.code + ' - ' + s.name }))} placeholder="Leave empty for all accessible stations" /></Field><Field label="Inventory settings" full><div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}><input type="checkbox" name="unlimitedStock" defaultChecked /><span>Give this product unlimited stock across the selected stations</span></div></Field></div>{(error || setupError) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? setupError}</span></div>}<div className="form-note"><PackageCheck size={16} /><span>Product creation will be committed atomically to the immutable movement ledger.</span></div></div><ModalFooter onClose={onClose} submitLabel={busy ? "Creating…" : loading ? "Loading setup…" : "Create product"} icon={PackagePlus} disabled={busy || loading || !setup} /></form>;
+}
+
+function EditProductModal({ initialProduct, onComplete, onClose, allowedStations }: { initialProduct: ProductRecord; onComplete: (title: string, detail: string) => void; onClose: () => void; allowedStations: AllowedStation[] }) {
+  const { data: setup, loading, error: setupError } = useApiData<InventorySetup>("/api/inventory/setup");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault(); setBusy(true); setError(null); const form = new FormData(event.currentTarget);
+    try {
+      const payload: any = { name: String(form.get("name")), categoryId: String(form.get("categoryId") || ""), unitId: String(form.get("unitId") || ""), purchasePrice: String(form.get("purchasePrice") || "0"), sellingPrice: String(form.get("sellingPrice")), minimumLevel: String(form.get("minimum") || "0"), reason: String(form.get("reason") || "Manual update") };
+      const response = await fetch(`/api/inventory/catalogue/${initialProduct.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+      const body = await response.json() as ApiEnvelope<{ id: string; code: string; name: string }>;
+      if (!response.ok || !body.ok || !body.data) throw new Error(body.error?.message ?? "Product could not be updated.");
+      onComplete("Product updated", `${body.data.code} · ${body.data.name} was successfully updated.`);
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Product could not be updated."); } finally { setBusy(false); }
+  };
+
+  return (
+    <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="workflow-dialog" style={{ maxWidth: "600px" }}>
+        <div className="workflow-header">
+          <div>
+            <h3>Edit catalogue product</h3>
+            <span>Update product details globally</span>
+          </div>
+          <button onClick={onClose} aria-label="Close modal"><X size={19} /></button>
+        </div>
+        <form onSubmit={submit}>
+          <div className="workflow-body">
+            <div className="form-grid">
+              <Field label="Product name" full><input name="name" required defaultValue={initialProduct.name} /></Field>
+              <Field label="Category"><select name="categoryId" required defaultValue={initialProduct.category.id}><option value="" disabled>Select category</option>{setup?.categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field>
+              <Field label="Unit"><select name="unitId" required defaultValue={initialProduct.unit.id}><option value="" disabled>Select unit</option>{setup?.units.map((item) => <option key={item.id} value={item.id}>{item.name} ({item.code})</option>)}</select></Field>
+              <Field label="Minimum sale quantity"><input name="minimum" type="number" step="1" min="0" defaultValue={initialProduct.minimumLevel ?? "1"} /></Field>
+              <Field label="Purchase price"><div className="money-input"><span>₦</span><input name="purchasePrice" type="number" step="0.01" min="0" defaultValue={initialProduct.purchasePrice ?? "0"} /></div></Field>
+              <Field label="Selling price"><div className="money-input"><span>₦</span><input name="sellingPrice" type="number" step="0.01" min="0.01" required defaultValue={initialProduct.sellingPrice} /></div></Field>
+              <Field label="Reason for change" full><input name="reason" placeholder="e.g. Price adjustment" required minLength={5} /></Field>
+            </div>
+            {(error || setupError) && <div className="form-note"><AlertTriangle size={16} /><span>{error ?? setupError}</span></div>}
+            <div className="form-note"><PackageCheck size={16} /><span>Product changes will be globally reflected.</span></div>
+          </div>
+          <ModalFooter onClose={onClose} submitLabel={busy ? "Updating…" : loading ? "Loading setup…" : "Update product"} icon={PackageCheck} disabled={busy || loading || !setup} />
+        </form>
+      </div>
+    </div>
+  );
 }
 
 function CargoForm({ onComplete, onClose, allowedStations }: { onComplete: (title: string, detail: string) => void; onClose: () => void; allowedStations: AllowedStation[] }) {

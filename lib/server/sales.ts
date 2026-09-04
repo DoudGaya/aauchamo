@@ -51,7 +51,7 @@ export async function postSale(input: {
   const calculatedLines = payload.lines.map((line) => {
     const product = productMap.get(line.productId)!; const qty = quantity(line.quantity); const gross = product.sellingPrice.times(qty).toDecimalPlaces(2); const discount = new Prisma.Decimal(line.discountAmount ?? 0).toDecimalPlaces(2);
     if (discount.isNegative() || discount.gt(gross)) throw new AppError("INVALID_DISCOUNT", `Discount is invalid for ${product.name}.`, 422);
-    if (discount.isPositive() && !access.permissions.has("sales.discount")) throw new AppError("DISCOUNT_NOT_ALLOWED", "You do not have permission to apply discounts.", 403);
+    if (discount.gt(0) && !access.permissions.has("sales.discount")) throw new AppError("DISCOUNT_NOT_ALLOWED", "You do not have permission to apply discounts.", 403);
     const taxable = gross.minus(discount); const tax = taxable.times(product.taxRate).div(100).toDecimalPlaces(2); const lineTotal = taxable.plus(tax);
     subtotal = subtotal.plus(gross); discountTotal = discountTotal.plus(discount); taxTotal = taxTotal.plus(tax);
     return { product, qty, discount, tax, lineTotal };
@@ -64,7 +64,7 @@ export async function postSale(input: {
     const method = methodMap.get(payment.paymentMethodId)!;
     if (method.requiresReference && !payment.reference?.trim()) throw new AppError("PAYMENT_REFERENCE_REQUIRED", `${method.name} requires a reference.`, 422);
     if (method.requiresTerminal && !payment.terminalId?.trim()) throw new AppError("PAYMENT_TERMINAL_REQUIRED", `${method.name} requires a terminal ID.`, 422);
-    if (!new Prisma.Decimal(payment.amount).isPositive()) throw new AppError("INVALID_PAYMENT_AMOUNT", "Payment amounts must be greater than zero.", 422);
+    if (!new Prisma.Decimal(payment.amount).gt(0)) throw new AppError("INVALID_PAYMENT_AMOUNT", "Payment amounts must be greater than zero.", 422);
   }
 
   const saleNumber = await allocateSequence(tx, { companyId: access.companyId, stationId: payload.stationId, businessUnitId: payload.businessUnitId, documentType: "SALE", prefix: "AUG", includeDate: true, padding: 6 });
