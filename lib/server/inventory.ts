@@ -14,6 +14,7 @@ type StockMutation = {
   referenceType: string;
   referenceId: string;
   occurredById: string;
+  occurredAt?: Date;
   unitCost?: Prisma.Decimal | string | number | null;
   reason?: string;
   allowNegative?: boolean;
@@ -73,6 +74,7 @@ export async function applyStockMovement(tx: Prisma.TransactionClient, input: St
       referenceType: input.referenceType,
       referenceId: input.referenceId,
       occurredById: input.occurredById,
+      occurredAt: input.occurredAt,
       reason: input.reason,
     },
   });

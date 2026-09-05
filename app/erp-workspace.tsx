@@ -2037,6 +2037,7 @@ function POSView({
   const [agentId, setAgentId] = useState("");
   const [busy, setBusy] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [customDate, setCustomDate] = useState("");
 
   // Split payments state hooks
   const [paymentAllocations, setPaymentAllocations] = useState<Array<{ paymentMethodId: string; amount: string; reference: string; terminalId: string }>>([]);
@@ -2195,6 +2196,7 @@ function POSView({
             reference: p.reference?.trim() || undefined,
             terminalId: p.terminalId?.trim() || undefined,
           })),
+          postedAt: customDate ? new Date(customDate).toISOString() : undefined,
         }),
       });
 
@@ -2204,6 +2206,7 @@ function POSView({
       setCart([]);
       setDiscounts({});
       setPaymentAllocations([]);
+      setCustomDate("");
       reload();
       window.dispatchEvent(new Event("erp-global-mutate"));
       onToast({
@@ -2326,6 +2329,14 @@ function POSView({
                 <option key={unit.id} value={unit.id}>{unit.name}</option>
               ))}
             </select>
+          </Field>
+          <Field label="Custom date (optional)">
+            <input 
+              type="datetime-local" 
+              className="field-input" 
+              value={customDate} 
+              onChange={(e) => setCustomDate(e.target.value)} 
+            />
           </Field>
         </div>
 

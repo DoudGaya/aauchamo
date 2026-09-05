@@ -19,6 +19,7 @@ export type PostSaleInput = {
   posSessionId?: string;
   lines: Array<{ productId: string; quantity: string; discountAmount?: string }>;
   payments: Array<{ paymentMethodId: string; amount: string; reference?: string; terminalId?: string }>;
+  postedAt?: string;
 };
 
 export async function postSale(input: {
@@ -44,6 +45,8 @@ export async function postSale(input: {
   if (closedPeriod) throw new AppError("FINANCIAL_PERIOD_CLOSED", "The current financial period is closed.", 409);
   if (products.length !== new Set(payload.lines.map((line) => line.productId)).size) throw new AppError("INVALID_PRODUCT", "One or more products are unavailable.", 422);
   if (methods.length !== new Set(payload.payments.map((payment) => payment.paymentMethodId)).size) throw new AppError("INVALID_PAYMENT_METHOD", "One or more payment methods are unavailable.", 422);
+
+  const saleDate = payload.postedAt ? new Date(payload.postedAt) : new Date();
 
   const productMap = new Map(products.map((product) => [product.id, product]));
   const methodMap = new Map(methods.map((method) => [method.id, method]));
@@ -74,17 +77,18 @@ export async function postSale(input: {
     customerId: payload.customerId, agentId: payload.agentId, posSessionId: payload.posSessionId,
     saleNumber, status: outstanding.isZero() ? "PAID" : paidTotal.isZero() ? "POSTED" : "PARTIALLY_PAID",
     subtotal, taxTotal, discountTotal, total, paidTotal, outstandingTotal: outstanding, officerId: access.userId,
+    postedAt: saleDate, createdAt: saleDate,
     lines: { create: calculatedLines.map(({ product, qty, discount, tax, lineTotal }) => ({ productId: product.id, productCode: product.code, productName: product.name, unitCode: product.unit.code, quantity: qty, unitPrice: product.sellingPrice, costPrice: product.purchasePrice, taxRate: product.taxRate, taxAmount: tax, discountAmount: discount, lineTotal })) },
   }, include: { lines: true } });
 
-  for (const line of calculatedLines) await applyStockMovement(tx, { companyId: access.companyId, stationId: payload.stationId, productId: line.product.id, movementType: "SALE", quantityDelta: line.qty.negated(), unitCost: line.product.purchasePrice, referenceType: "Sale", referenceId: sale.id, occurredById: access.userId, reason: saleNumber });
+  for (const line of calculatedLines) await applyStockMovement(tx, { companyId: access.companyId, stationId: payload.stationId, productId: line.product.id, movementType: "SALE", quantityDelta: line.qty.negated(), unitCost: line.product.purchasePrice, referenceType: "Sale", referenceId: sale.id, occurredById: access.userId, occurredAt: saleDate, reason: saleNumber });
 
   const salesCategory = await tx.financialCategory.findFirst({ where: { companyId: access.companyId, code: "SALES", isActive: true } });
   if (payload.payments.length && !salesCategory) throw new AppError("FINANCE_NOT_CONFIGURED", "Sales income category is not configured.", 500);
   for (const paymentInput of payload.payments) {
     const method = methodMap.get(paymentInput.paymentMethodId)!;
     const paymentNumber = await allocateSequence(tx, { companyId: access.companyId, stationId: payload.stationId, documentType: "PAYMENT", prefix: "PAY", includeDate: true, padding: 6 });
-    const payment = await tx.payment.create({ data: { companyId: access.companyId, stationId: payload.stationId, customerId: payload.customerId, paymentMethodId: method.id, paymentNumber, amount: paymentInput.amount, reference: paymentInput.reference, terminalId: paymentInput.terminalId, receivedById: access.userId, allocations: { create: { saleId: sale.id, amount: paymentInput.amount } } } });
+    const payment = await tx.payment.create({ data: { companyId: access.companyId, stationId: payload.stationId, customerId: payload.customerId, paymentMethodId: method.id, paymentNumber, amount: paymentInput.amount, reference: paymentInput.reference, terminalId: paymentInput.terminalId, receivedById: access.userId, createdAt: saleDate, allocations: { create: { saleId: sale.id, amount: paymentInput.amount } } } });
     if (method.type === "WALLET") {
       if (!payload.agentId) throw new AppError("AGENT_REQUIRED", "An agent is required for wallet payment.", 422);
       const wallet = await tx.walletAccount.findFirst({ where: { agent: { id: payload.agentId, companyId: access.companyId, status: "ACTIVE" } }, include: { agent: true } });
@@ -92,7 +96,7 @@ export async function postSale(input: {
       const nextBalance = wallet.balance.minus(amount);
       const updated = await tx.walletAccount.updateMany({ where: { id: wallet.id, version: wallet.version }, data: { balance: nextBalance, version: { increment: 1 } } }); if (updated.count !== 1) throw new AppError("WALLET_CONFLICT", "Wallet changed while posting. Retry safely.", 409);
       const entryNumber = await allocateSequence(tx, { companyId: access.companyId, stationId: payload.stationId, documentType: "WALLET_ENTRY", prefix: "WLT", includeDate: true, padding: 6 });
-      await tx.walletEntry.create({ data: { companyId: access.companyId, stationId: payload.stationId, walletAccountId: wallet.id, paymentMethodId: method.id, entryNumber, type: "SALE_DEBIT", amount: amount.negated(), balanceAfter: nextBalance, referenceType: "Sale", referenceId: sale.id, postedById: access.userId } });
+      await tx.walletEntry.create({ data: { companyId: access.companyId, stationId: payload.stationId, walletAccountId: wallet.id, paymentMethodId: method.id, entryNumber, type: "SALE_DEBIT", amount: amount.negated(), balanceAfter: nextBalance, referenceType: "Sale", referenceId: sale.id, postedById: access.userId, createdAt: saleDate } });
 
       if (wallet.agent && wallet.agent.creditLimit && nextBalance.lt(wallet.agent.creditLimit)) {
         await dispatchNotification(tx, {
@@ -111,7 +115,7 @@ export async function postSale(input: {
     const account = await tx.financialAccount.findFirst({ where: { companyId: access.companyId, paymentMethodId: method.id, isActive: true } });
     if (!account) throw new AppError("FINANCE_NOT_CONFIGURED", `No financial account is configured for ${method.name}.`, 500);
     const entryNumber = await allocateSequence(tx, { companyId: access.companyId, stationId: payload.stationId, businessUnitId: payload.businessUnitId, documentType: "CASHBOOK", prefix: "CB", includeDate: true, padding: 6 });
-    await tx.cashbookEntry.create({ data: { companyId: access.companyId, stationId: payload.stationId, businessUnitId: payload.businessUnitId, accountId: account.id, categoryId: salesCategory!.id, paymentMethodId: method.id, entryNumber, direction: "CREDIT", amount: payment.amount, description: `Sale ${saleNumber}`, sourceType: "Payment", sourceId: payment.id, externalReference: payment.reference, status: "POSTED", postedById: access.userId, postedAt: new Date() } });
+    await tx.cashbookEntry.create({ data: { companyId: access.companyId, stationId: payload.stationId, businessUnitId: payload.businessUnitId, accountId: account.id, categoryId: salesCategory!.id, paymentMethodId: method.id, entryNumber, direction: "CREDIT", amount: payment.amount, description: `Sale ${saleNumber}`, sourceType: "Payment", sourceId: payment.id, externalReference: payment.reference, status: "POSTED", postedById: access.userId, postedAt: saleDate } });
   }
   if (outstanding.isPositive()) await tx.outstandingPayment.create({ data: { saleId: sale.id, original: outstanding, outstanding } });
   await enqueueOutbox(tx, { companyId: access.companyId, aggregateType: "Sale", aggregateId: sale.id, eventType: "sale.posted", payload: { saleNumber, stationId: payload.stationId, customerId: payload.customerId, total: total.toString() } });

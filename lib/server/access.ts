@@ -18,6 +18,7 @@ export type AccessContext = {
   operatingStationIds: Set<string>;
   businessUnitIds: Set<string>;
   companyWide: boolean;
+  isSuperAdmin: boolean;
 };
 
 export async function requireAccess(): Promise<AccessContext> {
@@ -64,26 +65,33 @@ export async function requireAccess(): Promise<AccessContext> {
   }
 
   const activeAssignments = user.roleAssignments.filter((assignment) => assignment.role.isActive);
-  const permissions = new Set(
+  const isSuperAdmin = activeAssignments.some((assignment) => assignment.role.code === "SUPER_ADMIN" || assignment.role.name === "Superadmin");
+  let permissions = new Set(
     activeAssignments.flatMap((assignment) =>
       assignment.role.permissions.map((grant) => grant.permission.key),
     ),
   );
-  const companyWide = activeAssignments.some(
+  if (isSuperAdmin) {
+    const allPerms = await db.permission.findMany({ select: { key: true } });
+    permissions = new Set(allPerms.map((p) => p.key));
+  }
+
+  const companyWide = isSuperAdmin || activeAssignments.some(
     (assignment) => assignment.role.scope === "COMPANY" && !assignment.stationId,
   );
   const roleStationIds = activeAssignments.flatMap((assignment) =>
     assignment.stationId ? [assignment.stationId] : [],
   );
-  const stationIds = new Set([
+  // For super admins, empty out the explicitly assigned station scopes so they fallback to global access
+  const stationIds = isSuperAdmin ? new Set<string>() : new Set([
     ...roleStationIds,
     ...user.stationScopes.filter((scope) => scope.canView).map((scope) => scope.stationId),
   ]);
-  const operatingStationIds = new Set([
+  const operatingStationIds = isSuperAdmin ? new Set<string>() : new Set([
     ...roleStationIds,
     ...user.stationScopes.filter((scope) => scope.canOperate).map((scope) => scope.stationId),
   ]);
-  const businessUnitIds = new Set([
+  const businessUnitIds = isSuperAdmin ? new Set<string>() : new Set([
     ...activeAssignments.flatMap((assignment) =>
       assignment.businessUnitId ? [assignment.businessUnitId] : [],
     ),
@@ -105,6 +113,7 @@ export async function requireAccess(): Promise<AccessContext> {
     operatingStationIds,
     businessUnitIds,
     companyWide,
+    isSuperAdmin,
   };
 }
 

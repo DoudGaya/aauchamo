@@ -9,6 +9,7 @@ const saleSchema = z.object({
   stationId: z.string().cuid(), businessUnitId: z.string().cuid(), customerId: z.string().cuid(), agentId: z.string().cuid().optional(), posSessionId: z.string().cuid().optional(),
   lines: z.array(z.object({ productId: z.string().cuid(), quantity: z.string().regex(/^\d+(\.\d{1,3})?$/), discountAmount: z.string().regex(/^\d+(\.\d{1,2})?$/).optional() })).min(1).max(100),
   payments: z.array(z.object({ paymentMethodId: z.string().cuid(), amount: z.string().regex(/^\d+(\.\d{1,2})?$/), reference: z.string().trim().max(120).optional(), terminalId: z.string().trim().max(80).optional() })).max(10),
+  postedAt: z.string().datetime().optional(),
 });
 
 export async function GET(request: Request) {
