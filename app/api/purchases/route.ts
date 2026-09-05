@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   try {
     const access = requirePermission(await requireAccess(), "purchases.view");
     const url = new URL(request.url); const { page, pageSize, skip, take } = parsePagination(url.searchParams); const stationId = url.searchParams.get("stationId") ?? undefined; if (stationId) requireStation(access, stationId);
-    const where = { companyId: access.companyId, ...(stationId ? { stationId } : access.companyWide ? {} : { stationId: { in: [...access.stationIds] } }) };
+    const where = { companyId: access.companyId, ...(stationId ? { stationId } : access.companyWide && !access.stationIds.size ? {} : { stationId: { in: [...access.stationIds] } }) };
     const [items, total] = await Promise.all([db.purchaseOrder.findMany({ where, include: { supplier: true, station: { select: { id: true, code: true, name: true } }, lines: { include: { product: { select: { id: true, code: true, name: true, trackBatches: true, trackExpiry: true } } } } }, orderBy: { createdAt: "desc" }, skip, take }), db.purchaseOrder.count({ where })]);
     return apiSuccess(items, requestId, { page, pageSize, total });
   } catch (error) { return apiFailure(error, requestId); }

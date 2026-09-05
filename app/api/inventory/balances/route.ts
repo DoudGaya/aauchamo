@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     const stationId = url.searchParams.get("stationId") ?? undefined;
     if (stationId) requireStation(access, stationId);
     const lowStock = url.searchParams.get("lowStock") === "true";
-    const where = stationId ? { stationId } : access.companyWide ? {} : { stationId: { in: [...access.stationIds] } };
+    const where = stationId ? { stationId } : access.companyWide && !access.stationIds.size ? {} : { stationId: { in: [...access.stationIds] } };
     const [rows, total] = await Promise.all([
       db.inventoryBalance.findMany({ where, include: { station: { select: { id: true, code: true, name: true } }, product: { include: { category: true, unit: true } }, batch: true }, orderBy: { updatedAt: "desc" }, skip, take }),
       db.inventoryBalance.count({ where }),

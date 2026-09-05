@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 
     const baseWhere = {
       companyId: access.companyId,
-      ...(stationId ? { stationId } : access.companyWide ? {} : { stationId: { in: [...access.stationIds] } }),
+      ...(stationId ? { stationId } : access.companyWide && !access.stationIds.size ? {} : { stationId: { in: [...access.stationIds] } }),
       ...(businessUnitId ? { businessUnitId } : {}),
       ...(officerId ? { officerId } : {}),
       ...(customerId ? { customerId } : {}),

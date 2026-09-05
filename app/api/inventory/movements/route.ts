@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     const stationId = url.searchParams.get("stationId") ?? undefined;
     const productId = url.searchParams.get("productId") ?? undefined;
     if (stationId) requireStation(access, stationId);
-    const where = { companyId: access.companyId, ...(stationId ? { stationId } : access.companyWide ? {} : { stationId: { in: [...access.stationIds] } }), ...(productId ? { productId } : {}) };
+    const where = { companyId: access.companyId, ...(stationId ? { stationId } : access.companyWide && !access.stationIds.size ? {} : { stationId: { in: [...access.stationIds] } }), ...(productId ? { productId } : {}) };
     const [items, total] = await Promise.all([
       db.stockMovement.findMany({ where, include: { product: { select: { id: true, code: true, name: true } }, station: { select: { id: true, code: true, name: true } }, batch: true }, orderBy: { occurredAt: "desc" }, skip, take }),
       db.stockMovement.count({ where }),

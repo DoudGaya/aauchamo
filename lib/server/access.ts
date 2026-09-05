@@ -114,8 +114,8 @@ export function requirePermission(context: AccessContext, permission: Permission
 }
 
 export function requireStation(context: AccessContext, stationId: string, operate = false) {
-  if (context.companyWide) return context;
   const scope = operate ? context.operatingStationIds : context.stationIds;
+  if (context.companyWide && !scope.size) return context;
   if (!scope.has(stationId)) throw new ForbiddenError("This station is outside your assigned scope.");
   return context;
 }
@@ -125,7 +125,7 @@ export function stationWhere(context: AccessContext, requestedStationId?: string
     requireStation(context, requestedStationId);
     return { stationId: requestedStationId };
   }
-  return context.companyWide ? {} : { stationId: { in: [...context.stationIds] } };
+  return context.companyWide && !context.stationIds.size ? {} : { stationId: { in: [...context.stationIds] } };
 }
 
 export function maskSensitive<T extends Record<string, unknown>>(

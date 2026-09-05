@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     const stations = await db.station.findMany({
       where: {
         companyId: access.companyId,
-        ...(access.companyWide ? {} : { id: { in: [...access.stationIds] } }),
+        ...(access.companyWide && !access.stationIds.size ? {} : { id: { in: [...access.stationIds] } }),
       },
       include: {
         businessUnits: { include: { businessUnit: { select: { id: true, code: true, name: true } } } },

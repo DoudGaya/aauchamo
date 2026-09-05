@@ -48,7 +48,7 @@ export async function GET(request: Request) {
           unit: { select: { id: true, code: true, name: true, precision: true } },
           defaultSupplier: { select: { id: true, supplierNumber: true, name: true } },
           balances: {
-            where: stationId ? { stationId } : access.companyWide ? {} : { stationId: { in: [...access.stationIds] } },
+            where: stationId ? { stationId } : access.companyWide && !access.stationIds.size ? {} : { stationId: { in: [...access.stationIds] } },
             include: { station: { select: { id: true, code: true, name: true } }, batch: { select: { id: true, code: true, expiresAt: true } } },
           },
         },

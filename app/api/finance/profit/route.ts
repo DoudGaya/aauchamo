@@ -29,7 +29,7 @@ export async function GET(request: Request) {
     const salesWhere = {
       companyId: access.companyId,
       status: { in: ["POSTED", "PARTIALLY_PAID", "PAID"] as SaleStatus[] },
-      ...(stationId ? { stationId } : access.companyWide ? {} : { stationId: { in: [...access.stationIds] } }),
+      ...(stationId ? { stationId } : access.companyWide && !access.stationIds.size ? {} : { stationId: { in: [...access.stationIds] } }),
       ...(businessUnitId ? { businessUnitId } : {}),
       ...(startDate || endDate
         ? {
@@ -45,7 +45,7 @@ export async function GET(request: Request) {
     const cbWhere = {
       companyId: access.companyId,
       status: { in: ["POSTED", "RECONCILED"] as PostingStatus[] },
-      ...(stationId ? { stationId } : access.companyWide ? {} : { stationId: { in: [...access.stationIds] } }),
+      ...(stationId ? { stationId } : access.companyWide && !access.stationIds.size ? {} : { stationId: { in: [...access.stationIds] } }),
       ...(businessUnitId ? { businessUnitId } : {}),
       ...(startDate || endDate
         ? {

@@ -18,7 +18,7 @@ export default async function Home() {
     where: {
       companyId: access.companyId,
       status: "ACTIVE",
-      ...(access.companyWide ? {} : { id: { in: [...access.stationIds] } }),
+      ...(access.companyWide && !access.stationIds.size ? {} : { id: { in: [...access.stationIds] } }),
     },
     select: { id: true, code: true, name: true },
     orderBy: { name: "asc" },
@@ -36,7 +36,7 @@ export default async function Home() {
         email: access.email ?? access.username,
         role: access.roleNames.join(" · ") || "Authorized user",
         permissions: [...access.permissions],
-        companyWide: access.companyWide,
+        companyWide: access.companyWide && access.stationIds.size === 0,
       }}
       brand={{
         logoUrl: company.logoObjectKey,

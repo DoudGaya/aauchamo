@@ -24,7 +24,7 @@ export async function GET(request: Request) {
       station: {
         companyId: access.companyId,
       },
-      ...(stationId ? { stationId } : access.companyWide ? {} : { stationId: { in: [...access.stationIds] } }),
+      ...(stationId ? { stationId } : access.companyWide && !access.stationIds.size ? {} : { stationId: { in: [...access.stationIds] } }),
     };
 
     const [items, total] = await Promise.all([

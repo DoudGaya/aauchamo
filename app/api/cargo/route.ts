@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   const requestId = requestIdFrom(request);
   try {
     const access = requirePermission(await requireAccess(), "cargo.view"); const url = new URL(request.url); const { page, pageSize, skip, take } = parsePagination(url.searchParams); const stationId = url.searchParams.get("stationId") ?? undefined; const search = url.searchParams.get("search")?.trim(); if (stationId) requireStation(access, stationId);
-    const where = { companyId: access.companyId, ...(stationId ? { stationId } : access.companyWide ? {} : { stationId: { in: [...access.stationIds] } }), ...(search ? { OR: [{ awbNumber: { contains: search, mode: "insensitive" as const } }, { senderName: { contains: search, mode: "insensitive" as const } }, { receiverName: { contains: search, mode: "insensitive" as const } }] } : {}) };
+    const where = { companyId: access.companyId, ...(stationId ? { stationId } : access.companyWide && !access.stationIds.size ? {} : { stationId: { in: [...access.stationIds] } }), ...(search ? { OR: [{ awbNumber: { contains: search, mode: "insensitive" as const } }, { senderName: { contains: search, mode: "insensitive" as const } }, { receiverName: { contains: search, mode: "insensitive" as const } }] } : {}) };
     const [items, total] = await Promise.all([db.cargoShipment.findMany({ where, include: { customer: { select: { id: true, customerNumber: true, displayName: true } }, station: { select: { id: true, code: true, name: true } }, events: { orderBy: { occurredAt: "desc" }, take: 1 } }, orderBy: { createdAt: "desc" }, skip, take }), db.cargoShipment.count({ where })]);
     return apiSuccess(items, requestId, { page, pageSize, total });
   } catch (error) { return apiFailure(error, requestId); }
