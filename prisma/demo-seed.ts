@@ -86,6 +86,7 @@ async function main() {
     operatingStationIds: new Set(stations.map((s) => s.id)),
     businessUnitIds: new Set(businessUnits.map((b) => b.id)),
     companyWide: true,
+    isSuperAdmin: true,
   };
 
   const transfer = method("TRANSFER");

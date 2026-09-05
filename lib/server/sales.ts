@@ -88,7 +88,7 @@ export async function postSale(input: {
   for (const paymentInput of payload.payments) {
     const method = methodMap.get(paymentInput.paymentMethodId)!;
     const paymentNumber = await allocateSequence(tx, { companyId: access.companyId, stationId: payload.stationId, documentType: "PAYMENT", prefix: "PAY", includeDate: true, padding: 6 });
-    const payment = await tx.payment.create({ data: { companyId: access.companyId, stationId: payload.stationId, customerId: payload.customerId, paymentMethodId: method.id, paymentNumber, amount: paymentInput.amount, reference: paymentInput.reference, terminalId: paymentInput.terminalId, receivedById: access.userId, createdAt: saleDate, allocations: { create: { saleId: sale.id, amount: paymentInput.amount } } } });
+    const payment = await tx.payment.create({ data: { companyId: access.companyId, stationId: payload.stationId, customerId: payload.customerId, paymentMethodId: method.id, paymentNumber, amount: paymentInput.amount, reference: paymentInput.reference, terminalId: paymentInput.terminalId, receivedById: access.userId, receivedAt: saleDate, allocations: { create: { saleId: sale.id, amount: paymentInput.amount } } } });
     if (method.type === "WALLET") {
       if (!payload.agentId) throw new AppError("AGENT_REQUIRED", "An agent is required for wallet payment.", 422);
       const wallet = await tx.walletAccount.findFirst({ where: { agent: { id: payload.agentId, companyId: access.companyId, status: "ACTIVE" } }, include: { agent: true } });
@@ -96,7 +96,7 @@ export async function postSale(input: {
       const nextBalance = wallet.balance.minus(amount);
       const updated = await tx.walletAccount.updateMany({ where: { id: wallet.id, version: wallet.version }, data: { balance: nextBalance, version: { increment: 1 } } }); if (updated.count !== 1) throw new AppError("WALLET_CONFLICT", "Wallet changed while posting. Retry safely.", 409);
       const entryNumber = await allocateSequence(tx, { companyId: access.companyId, stationId: payload.stationId, documentType: "WALLET_ENTRY", prefix: "WLT", includeDate: true, padding: 6 });
-      await tx.walletEntry.create({ data: { companyId: access.companyId, stationId: payload.stationId, walletAccountId: wallet.id, paymentMethodId: method.id, entryNumber, type: "SALE_DEBIT", amount: amount.negated(), balanceAfter: nextBalance, referenceType: "Sale", referenceId: sale.id, postedById: access.userId, createdAt: saleDate } });
+      await tx.walletEntry.create({ data: { companyId: access.companyId, stationId: payload.stationId, walletAccountId: wallet.id, paymentMethodId: method.id, entryNumber, type: "SALE_DEBIT", amount: amount.negated(), balanceAfter: nextBalance, referenceType: "Sale", referenceId: sale.id, postedById: access.userId, postedAt: saleDate } });
 
       if (wallet.agent && wallet.agent.creditLimit && nextBalance.lt(wallet.agent.creditLimit)) {
         await dispatchNotification(tx, {
