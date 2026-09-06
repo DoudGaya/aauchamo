@@ -45,9 +45,11 @@ export async function GET(request: Request) {
     const stationId = url.searchParams.get("stationId") ?? undefined;
     if (stationId) requireStation(access, stationId);
     const normalizedSearchPhone = search ? normalizePhone(search) : undefined;
+    const canViewAll = access.isSuperAdmin || access.permissions.has("customers.view_all");
     const where = {
       companyId: access.companyId,
       status: "ACTIVE" as const,
+      ...(!canViewAll ? { createdById: access.userId } : {}),
       ...(stationId
         ? { homeStationId: stationId }
         : access.companyWide

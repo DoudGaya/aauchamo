@@ -22,6 +22,7 @@ export const PERMISSIONS = [
   ["staff.manage_documents", "staff", "manage_documents", "Manage staff documents", true],
   ["staff.view_sensitive", "staff", "view_sensitive", "View salary, ID, and next-of-kin fields", true],
   ["customers.view", "customers", "view", "View customer records", false],
+  ["customers.view_all", "customers", "view_all", "View all customers across the company", true],
   ["customers.manage", "customers", "manage", "Create and update customers", false],
   ["customers.create", "customers", "create", "Create customers", false],
   ["customers.update", "customers", "update", "Update customers", false],

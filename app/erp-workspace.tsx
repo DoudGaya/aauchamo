@@ -2089,11 +2089,17 @@ function POSView({
       searchInput?.focus();
     };
 
+    const handleNewCustomer = (e: Event) => {
+      setCustomerId((e as CustomEvent).detail);
+    };
+
     window.addEventListener("keydown", handleKey);
     window.addEventListener("erp-pos-new-sale", handleNewSale);
+    window.addEventListener("erp-customer-created", handleNewCustomer);
     return () => {
       window.removeEventListener("keydown", handleKey);
       window.removeEventListener("erp-pos-new-sale", handleNewSale);
+      window.removeEventListener("erp-customer-created", handleNewCustomer);
     };
   }, []);
 
@@ -12608,7 +12614,7 @@ function CustomerForm({ onComplete, onClose, allowedStations }: { onComplete: (t
     const data = new FormData(event.currentTarget);
     const optional = (name: string) => String(data.get(name) ?? "").trim() || undefined;
     try {
-      const customerData = await workflowPost<{ customerNumber: string; displayName: string }>("/api/customers", {
+      const customerData = await workflowPost<{ id: string; customerNumber: string; displayName: string }>("/api/customers", {
         type,
         firstName: type === "INDIVIDUAL" ? optional("firstName") : undefined,
         lastName: type === "INDIVIDUAL" ? optional("lastName") : undefined,
@@ -12624,6 +12630,7 @@ function CustomerForm({ onComplete, onClose, allowedStations }: { onComplete: (t
         allowDuplicate: true,
       });
       window.dispatchEvent(new Event("erp-global-mutate"));
+      window.dispatchEvent(new CustomEvent("erp-customer-created", { detail: customerData.id }));
       onComplete("Customer registered", `${customerData.displayName} (${customerData.customerNumber}) is ready for sales, cargo and booking workflows.`);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "The customer could not be registered.");
