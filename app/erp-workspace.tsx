@@ -1049,7 +1049,7 @@ function ModuleView({
     case "purchases":
       return <InventoryView purchases={active === "purchases"} onModal={onModal} allowedStations={allowedStations} identity={identity} />;
     case "cargo":
-      return <CargoView onModal={onModal} onToast={onToast} allowedStations={allowedStations} />;
+      return <CargoView onModal={onModal} onToast={onToast} allowedStations={allowedStations} identity={identity} />;
     case "agents":
       return <AgentsView onModal={onModal} allowedStations={allowedStations} onToast={onToast} />;
     case "customers":
@@ -2897,6 +2897,20 @@ function SalesView({ station, allowedStations, identity }: { station: string; al
     trendApi.reload();
   };
 
+  const deleteSale = async (sale: SaleRecord) => {
+    if (!window.confirm(`CAUTION: This will permanently delete the sale ${sale.saleNumber} and all its lines, allocations, and refunds. Are you sure?`)) return;
+    try {
+      const response = await fetch(`/api/sales/${sale.id}`, { method: "DELETE" });
+      const body = await response.json();
+      if (!response.ok || !body.ok) throw new Error(body.error?.message || "Failed to delete sale.");
+      listApi.reload();
+      summaryApi.reload();
+      trendApi.reload();
+    } catch (err: any) {
+      alert(err.message || "Failed to delete sale.");
+    }
+  };
+
   return (
     <div className="content-stack">
       {/* Search and Filters Strip */}
@@ -3140,6 +3154,11 @@ function SalesView({ station, allowedStations, identity }: { station: string; al
                         {!["REFUNDED", "CANCELLED"].includes(sale.status) && identity.permissions.includes("sales.refund") && (
                           <button className="row-button" onClick={() => refundSale(sale)}>
                             Refund
+                          </button>
+                        )}
+                        {identity.permissions.includes("sales.delete") && (
+                          <button className="row-button danger" style={{ color: "#ef4444" }} onClick={() => deleteSale(sale)}>
+                            Delete
                           </button>
                         )}
                         <button className="icon-ghost" title="Print Receipt" onClick={() => window.dispatchEvent(new CustomEvent("erp-print", { detail: { url: `/print/receipt/${sale.id}`, title: "Receipt" } }))}>
@@ -4555,10 +4574,12 @@ function CargoView({
   onModal,
   onToast,
   allowedStations,
+  identity,
 }: {
   onModal: (modal: ModalKind) => void;
   onToast: (toast: Toast) => void;
   allowedStations: AllowedStation[];
+  identity: WorkspaceIdentity;
 }) {
   const [tab, setTab] = useState("All cargo");
   const { data, total, loading, error, reload } = useApiData<CargoRecord[]>("/api/cargo?pageSize=100");
@@ -4652,6 +4673,18 @@ function CargoView({
       window.open(url, "_blank", "noopener,noreferrer");
     }
     setPrintOptionsItem(null);
+  };
+
+  const deleteCargo = async (item: CargoRecord) => {
+    if (!window.confirm(`CAUTION: This will permanently delete the cargo shipment ${item.awbNumber}. Are you sure?`)) return;
+    try {
+      const response = await fetch(`/api/cargo/${item.id}`, { method: "DELETE" });
+      const body = await response.json();
+      if (!response.ok || !body.ok) throw new Error(body.error?.message || "Failed to delete cargo.");
+      reload();
+    } catch (err: any) {
+      alert(err.message || "Failed to delete cargo.");
+    }
   };
 
   const exportManifest = () => {
@@ -4838,6 +4871,11 @@ function CargoView({
                         {nextStatus[item.status] && (
                           <button type="button" className="row-button" onClick={() => advance(item)}>
                             {advanceLabel[item.status]}
+                          </button>
+                        )}
+                        {identity.permissions.includes("cargo.delete") && (
+                          <button type="button" className="row-button danger" style={{ color: "#ef4444" }} onClick={() => deleteCargo(item)}>
+                            Delete
                           </button>
                         )}
                         <button
@@ -5853,6 +5891,9 @@ function CustomerDetailModal({
   const [mergeReason, setMergeReason] = useState("");
   const [confirmMerge, setConfirmMerge] = useState(false);
 
+  // Delete state
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
   const detail = detailApi.data;
   const history = historyApi.data;
 
@@ -5931,6 +5972,29 @@ function CustomerDetailModal({
     }
   };
 
+  const handleDelete = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!confirmDelete) {
+      alert("Please confirm deletion.");
+      return;
+    }
+    if (!window.confirm("CAUTION: This will permanently delete the customer and all related records. Are you absolutely sure?")) {
+      return;
+    }
+    setError(null);
+    setBusy(true);
+    try {
+      const response = await fetch(`/api/customers/${customer.id}`, { method: "DELETE" });
+      const body = await response.json();
+      if (!response.ok || !body.ok) throw new Error(body.error?.message ?? "Delete failed.");
+      onComplete("Customer deleted", "Customer record permanently deleted.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete customer.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const displayName = detail?.displayName || customer.displayName;
   const otherCustomers = (allCustomersApi.data ?? []).filter((c) => c.id !== customer.id);
 
@@ -5970,6 +6034,7 @@ function CustomerDetailModal({
             <button className={classNames("tab-btn", tab === "Profile" && "tab-active")} onClick={() => setTab("Profile")}>Profile & Edit</button>
             <button className={classNames("tab-btn", tab === "History" && "tab-active")} onClick={() => setTab("History")}>Transaction History</button>
             <button className={classNames("tab-btn", tab === "Merge" && "tab-active")} onClick={() => setTab("Merge")}>Duplicate Merge</button>
+            <button className={classNames("tab-btn", tab === "Delete" && "tab-active")} onClick={() => setTab("Delete")}>Delete</button>
           </div>
         </div>
 
@@ -6185,6 +6250,49 @@ function CustomerDetailModal({
                 <button type="submit" className="primary-button" style={{ background: "#ef4444", color: "white" }} disabled={busy || !targetCustomerId || mergeReason.length < 10}>
                   <Trash2 size={16} />
                   {busy ? "Merging..." : "Confirm & Execute Merge"}
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
+
+        {tab === "Delete" && (
+          <form onSubmit={handleDelete}>
+            <div className="workflow-body">
+              <div style={{ background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.2)", padding: "16px", borderRadius: "8px", marginBottom: "20px", display: "flex", gap: "12px" }}>
+                <AlertTriangle style={{ color: "#ef4444", flexShrink: 0 }} size={20} />
+                <div style={{ fontSize: "13px", color: "var(--text-primary)" }}>
+                  <strong style={{ display: "block", marginBottom: "4px" }}>Danger Zone: Permanently Delete Record</strong>
+                  This action cannot be undone. Deleting this customer will CASCADE and permanently delete all their associated data including POS invoices, cargo records, and ticket bookings.
+                </div>
+              </div>
+
+              <div className="form-grid">
+                <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: "10px", marginTop: "10px" }}>
+                  <input
+                    type="checkbox"
+                    id="confirm-delete-check"
+                    checked={confirmDelete}
+                    onChange={(e) => setConfirmDelete(e.target.checked)}
+                    required
+                    style={{ width: "18px", height: "18px" }}
+                  />
+                  <label htmlFor="confirm-delete-check" style={{ fontSize: "13px", fontWeight: "600", cursor: "pointer", color: "var(--text-primary)" }}>
+                    I authorize the permanent deletion of this customer and understand this action is irreversible.
+                  </label>
+                </div>
+              </div>
+
+              {error && <div className="form-note"><AlertTriangle size={16} /><span>{error}</span></div>}
+            </div>
+            
+            <div className="workflow-footer">
+              <span><ShieldCheck size={14} /> Admin authorization required</span>
+              <div>
+                <button type="button" className="secondary-button" onClick={onClose}>Cancel</button>
+                <button type="submit" className="primary-button" style={{ background: "#ef4444", color: "white" }} disabled={busy}>
+                  <Trash2 size={16} />
+                  {busy ? "Deleting..." : "Confirm & Execute Delete"}
                 </button>
               </div>
             </div>

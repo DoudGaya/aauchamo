@@ -152,3 +152,20 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sh
     return apiFailure(error, requestId);
   }
 }
+
+export async function DELETE(request: Request, { params }: { params: Promise<{ shipmentId: string }> }) {
+  const requestId = requestIdFrom(request);
+  try {
+    const access = requirePermission(await requireAccess(), "cargo.delete");
+    const { shipmentId } = await params;
+    const shipment = await db.cargoShipment.findFirst({ where: { id: shipmentId, companyId: access.companyId } });
+    if (!shipment) throw new NotFoundError("Cargo shipment not found.");
+    await db.$transaction(async (tx) => {
+      await tx.cargoShipment.delete({ where: { id: shipmentId } });
+      await writeAudit(tx, { companyId: access.companyId, actorId: access.userId, stationId: shipment.stationId, action: "cargo.deleted", entityType: "CargoShipment", entityId: shipmentId, requestId, reason: "Admin hard delete", before: shipment, after: null });
+    });
+    return apiSuccess({ deleted: true }, requestId);
+  } catch (error) {
+    return apiFailure(error, requestId);
+  }
+}

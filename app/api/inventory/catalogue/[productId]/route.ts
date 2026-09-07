@@ -94,27 +94,24 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pr
 export async function DELETE(request: Request, { params }: { params: Promise<{ productId: string }> }) {
   const requestId = requestIdFrom(request);
   try {
-    const access = requirePermission(await requireAccess(), "inventory.create_product");
+    const access = requirePermission(await requireAccess(), "inventory.delete_product");
     const { productId } = await params;
 
     const current = await db.product.findFirst({ where: { id: productId, companyId: access.companyId } });
     if (!current) throw new NotFoundError("Product not found.");
 
     await db.$transaction(async (tx) => {
-      await tx.product.update({
-        where: { id: productId },
-        data: { status: "DISABLED", updatedById: access.userId },
-      });
+      await tx.product.delete({ where: { id: productId } });
 
       await writeAudit(tx, {
         companyId: access.companyId,
         actorId: access.userId,
-        action: "product.deleted",
+        action: "product.hard_deleted",
         entityType: "Product",
         entityId: productId,
         requestId,
         before: current,
-        after: { status: "DISABLED" },
+        after: null,
       });
     }, { isolationLevel: "Serializable", timeout: 30_000, maxWait: 15_000 });
 

@@ -100,3 +100,20 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ cu
     return apiFailure(error, requestId);
   }
 }
+
+export async function DELETE(request: Request, { params }: { params: Promise<{ customerId: string }> }) {
+  const requestId = requestIdFrom(request);
+  try {
+    const access = requirePermission(await requireAccess(), "customers.delete");
+    const { customerId } = await params;
+    const customer = await db.customer.findFirst({ where: { id: customerId, companyId: access.companyId } });
+    if (!customer) throw new NotFoundError("Customer not found.");
+    await db.$transaction(async (tx) => {
+      await tx.customer.delete({ where: { id: customerId } });
+      await writeAudit(tx, { companyId: access.companyId, actorId: access.userId, stationId: customer.homeStationId, action: "customer.deleted", entityType: "Customer", entityId: customerId, requestId, reason: "Admin hard delete", before: { ...customer, nationalIdCiphertext: "[REDACTED]" }, after: null });
+    });
+    return apiSuccess({ deleted: true }, requestId);
+  } catch (error) {
+    return apiFailure(error, requestId);
+  }
+}

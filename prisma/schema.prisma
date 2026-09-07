@@ -268,12 +268,12 @@ enum DocumentStatus {
 }
 
 model Company {
-  id            String   @id @default(cuid())
-  code          String   @unique
-  legalName     String
-  displayName   String
-  email         String?
-  phone         String?
+  id                String   @id @default(cuid())
+  code              String   @unique
+  legalName         String
+  displayName       String
+  email             String?
+  phone             String?
   address           String?
   logoObjectKey     String?
   logoDarkObjectKey String?
@@ -282,11 +282,11 @@ model Company {
   locale            String   @default("en-NG")
   taxRate           Decimal  @default(0) @db.Decimal(7, 4)
   isActive          Boolean  @default(true)
-  version       Int      @default(1)
-  createdById   String?
-  updatedById   String?
-  createdAt     DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt     DateTime @updatedAt @db.Timestamptz(3)
+  version           Int      @default(1)
+  createdById       String?
+  updatedById       String?
+  createdAt         DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime @updatedAt @db.Timestamptz(3)
 
   businessUnits        BusinessUnit[]
   stations             Station[]
@@ -1052,22 +1052,22 @@ model Staff {
 }
 
 model StaffAttendance {
-  id               String    @id @default(cuid())
-  companyId        String
-  staffId          String
-  date             DateTime  @db.Date
-  clockInAt        DateTime  @db.Timestamptz(3)
-  clockOutAt       DateTime? @db.Timestamptz(3)
-  clockInLatitude  Float?
-  clockInLongitude Float?
-  clockOutLatitude Float?
+  id                String    @id @default(cuid())
+  companyId         String
+  staffId           String
+  date              DateTime  @db.Date
+  clockInAt         DateTime  @db.Timestamptz(3)
+  clockOutAt        DateTime? @db.Timestamptz(3)
+  clockInLatitude   Float?
+  clockInLongitude  Float?
+  clockOutLatitude  Float?
   clockOutLongitude Float?
-  clockInIp        String?
-  clockOutIp       String?
-  status           String    @default("PRESENT")
-  notes            String?   @db.Text
-  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
-  updatedAt        DateTime  @updatedAt @db.Timestamptz(3)
+  clockInIp         String?
+  clockOutIp        String?
+  status            String    @default("PRESENT")
+  notes             String?   @db.Text
+  createdAt         DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(3)
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
   staff   Staff   @relation(fields: [staffId], references: [id], onDelete: Cascade)
@@ -1379,7 +1379,7 @@ model InventoryBalance {
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
   station Station @relation(fields: [stationId], references: [id], onDelete: Restrict)
-  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   batch   Batch?  @relation(fields: [batchId], references: [id], onDelete: Restrict)
 
   @@unique([stationId, productId, batchKey])
@@ -1406,7 +1406,7 @@ model StockMovement {
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
   station Station @relation(fields: [stationId], references: [id], onDelete: Restrict)
-  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   batch   Batch?  @relation(fields: [batchId], references: [id], onDelete: Restrict)
 
   @@index([stationId, productId, occurredAt])
@@ -1458,7 +1458,7 @@ model PurchaseOrderLine {
   lineTotal        Decimal @db.Decimal(18, 2)
 
   purchaseOrder PurchaseOrder      @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
-  product       Product            @relation(fields: [productId], references: [id], onDelete: Restrict)
+  product       Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
   receiptLines  GoodsReceiptLine[]
 
   @@unique([purchaseOrderId, productId])
@@ -1500,7 +1500,7 @@ model GoodsReceiptLine {
 
   goodsReceipt      GoodsReceipt      @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
   purchaseOrderLine PurchaseOrderLine @relation(fields: [purchaseOrderLineId], references: [id], onDelete: Restrict)
-  product           Product           @relation(fields: [productId], references: [id], onDelete: Restrict)
+  product           Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([goodsReceiptId])
   @@map("goods_receipt_lines")
@@ -1544,7 +1544,7 @@ model StockTransferLine {
   quantityReceived   Decimal @default(0) @db.Decimal(18, 3)
 
   stockTransfer StockTransfer @relation(fields: [stockTransferId], references: [id], onDelete: Cascade)
-  product       Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  product       Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([stockTransferId])
   @@map("stock_transfer_lines")
@@ -1583,7 +1583,7 @@ model InventoryAdjustmentLine {
   quantityDelta         Decimal @db.Decimal(18, 3)
 
   adjustment InventoryAdjustment @relation(fields: [inventoryAdjustmentId], references: [id], onDelete: Cascade)
-  product    Product             @relation(fields: [productId], references: [id], onDelete: Restrict)
+  product    Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([inventoryAdjustmentId])
   @@map("inventory_adjustment_lines")
@@ -1636,7 +1636,7 @@ model Sale {
   company      Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
   station      Station             @relation(fields: [stationId], references: [id], onDelete: Restrict)
   businessUnit BusinessUnit        @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
-  customer     Customer            @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  customer     Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
   agent        Agent?              @relation(fields: [agentId], references: [id], onDelete: Restrict)
   posSession   POSSession?         @relation(fields: [posSessionId], references: [id], onDelete: Restrict)
   reversedSale Sale?               @relation("SaleReversal", fields: [reversedSaleId], references: [id], onDelete: Restrict)
@@ -1668,8 +1668,8 @@ model SaleLine {
   lineTotal        Decimal @db.Decimal(18, 2)
   quantityRefunded Decimal @default(0) @db.Decimal(18, 3)
 
-  sale        Sale         @relation(fields: [saleId], references: [id], onDelete: Restrict)
-  product     Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+  sale        Sale         @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product     Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
   refundLines RefundLine[]
 
   @@index([saleId])
@@ -1693,7 +1693,7 @@ model Payment {
 
   company       Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
   station       Station             @relation(fields: [stationId], references: [id], onDelete: Restrict)
-  customer      Customer?           @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  customer      Customer?           @relation(fields: [customerId], references: [id], onDelete: Cascade)
   paymentMethod PaymentMethod       @relation(fields: [paymentMethodId], references: [id], onDelete: Restrict)
   allocations   PaymentAllocation[]
 
@@ -1711,7 +1711,7 @@ model PaymentAllocation {
   createdAt DateTime @default(now()) @db.Timestamptz(3)
 
   payment Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
-  sale    Sale    @relation(fields: [saleId], references: [id], onDelete: Restrict)
+  sale    Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
 
   @@unique([paymentId, saleId])
   @@index([saleId])
@@ -1727,7 +1727,7 @@ model OutstandingPayment {
   settledAt   DateTime? @db.Timestamptz(3)
   updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
 
-  sale Sale @relation(fields: [saleId], references: [id], onDelete: Restrict)
+  sale Sale @relation(fields: [saleId], references: [id], onDelete: Cascade)
 
   @@index([outstanding, dueAt])
   @@map("outstanding_payments")
@@ -1753,8 +1753,8 @@ model Refund {
 
   company       Company       @relation(fields: [companyId], references: [id], onDelete: Restrict)
   station       Station       @relation(fields: [stationId], references: [id], onDelete: Restrict)
-  sale          Sale          @relation(fields: [saleId], references: [id], onDelete: Restrict)
-  customer      Customer      @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  sale          Sale          @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  customer      Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
   paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id], onDelete: Restrict)
   lines         RefundLine[]
 
@@ -1773,7 +1773,7 @@ model RefundLine {
 
   refund   Refund   @relation(fields: [refundId], references: [id], onDelete: Restrict)
   saleLine SaleLine @relation(fields: [saleLineId], references: [id], onDelete: Restrict)
-  product  Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([refundId, saleLineId])
   @@map("refund_lines")
