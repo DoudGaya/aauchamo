@@ -43,6 +43,7 @@ export const PERMISSIONS = [
   ["purchases.view", "purchases", "view", "View suppliers and purchases", false],
   ["purchases.manage", "purchases", "manage", "Create and approve purchase orders", true],
   ["sales.view", "sales", "view", "View sales", false],
+  ["sales.update", "sales", "update", "Update sales records", true],
   ["sales.create", "sales", "create", "Post POS sales", false],
   ["sales.discount", "sales", "discount", "Apply controlled discounts", true],
   ["sales.cancel", "sales", "cancel", "Cancel or reverse a sale", true],

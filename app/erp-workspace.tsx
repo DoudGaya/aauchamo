@@ -46,6 +46,7 @@ import {
   MoreHorizontal,
   PackageCheck,
   PackageOpen,
+  Pencil,
   PackagePlus,
   PanelLeftClose,
   PanelLeftOpen,
@@ -2793,6 +2794,130 @@ function SaleDetailModal({ saleId, onClose, canViewProfit }: { saleId: string; o
   );
 }
 
+function SaleEditModal({ saleId, onClose, onComplete }: { saleId: string; onClose: () => void; onComplete: () => void }) {
+  const { data: sale, loading, error } = useApiData<any>(`/api/sales/${saleId}`);
+  const customersApi = useApiData<Array<{ id: string; customerNumber: string; displayName: string; primaryPhone: string }>>("/api/customers?pageSize=100");
+  const agentsApi = useApiData<Array<{ id: string; agentNumber: string; name: string }>>("/api/agents?pageSize=100");
+
+  const [customerId, setCustomerId] = useState("");
+  const [agentId, setAgentId] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!sale) return;
+    setCustomerId(sale.customerId ?? sale.customer?.id ?? "");
+    setAgentId(sale.agentId ?? null);
+  }, [sale]);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+    setBusy(true);
+    try {
+      const body: Record<string, string | null> = {};
+      if (customerId && customerId !== (sale.customerId ?? sale.customer?.id)) body.customerId = customerId;
+      if (agentId !== (sale.agentId ?? null)) body.agentId = agentId;
+      if (Object.keys(body).length === 0) {
+        setFormError("No changes detected.");
+        setBusy(false);
+        return;
+      }
+      await workflowPost(`/api/sales/${saleId}`, body, "PATCH");
+      onComplete();
+      onClose();
+    } catch (err: any) {
+      setFormError(err.message || "Failed to update sale.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+        <div className="workflow-dialog" style={{ maxWidth: "560px" }}>
+          <EmptyState icon={RefreshCcw} title="Loading sale" detail="Retrieving sale details for editing." compact />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !sale) {
+    return (
+      <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+        <div className="workflow-dialog" style={{ maxWidth: "560px" }}>
+          <EmptyState icon={AlertTriangle} title="Could not load sale" detail={error || "Sale not found."} compact />
+        </div>
+      </div>
+    );
+  }
+
+  const customers = customersApi.data ?? [];
+  const agents = agentsApi.data ?? [];
+
+  return (
+    <div className="modal-layer" role="dialog" aria-modal="true" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="workflow-dialog" style={{ maxWidth: "560px" }}>
+        <div className="workflow-header">
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>Edit Sale</span>
+            <h2 style={{ fontSize: "18px", fontWeight: "bold", margin: "2px 0 0 0" }}>{sale.saleNumber}</h2>
+          </div>
+          <button onClick={onClose} aria-label="Close modal">
+            <X size={19} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="workflow-body" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ background: "var(--panel-bg, #fafafa)", padding: "12px 16px", borderRadius: "8px", fontSize: "12px", color: "var(--text-muted)" }}>
+              <strong style={{ color: "var(--text-color)" }}>Station:</strong> {sale.station?.name} &nbsp;|&nbsp;
+              <strong style={{ color: "var(--text-color)" }}>Amount:</strong> {Number(sale.total).toLocaleString("en-NG", { style: "currency", currency: "NGN" })} &nbsp;|&nbsp;
+              <strong style={{ color: "var(--text-color)" }}>Status:</strong> {sale.status?.replaceAll?.("_", " ") ?? sale.status}
+            </div>
+
+            <Field label="Customer">
+              <select value={customerId} onChange={(e) => setCustomerId(e.target.value)} required>
+                <option value="">Select a customer</option>
+                {customers.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.displayName} ({c.customerNumber})
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label="Agent (optional)">
+              <select value={agentId ?? ""} onChange={(e) => setAgentId(e.target.value || null)}>
+                <option value="">No agent</option>
+                {agents.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name} ({a.agentNumber})
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            {formError && (
+              <div style={{ background: "#fff5f5", border: "1px solid #ffd8d8", padding: "10px 14px", borderRadius: "6px", color: "#c9302c", fontSize: "13px" }}>
+                {formError}
+              </div>
+            )}
+          </div>
+
+          <div className="workflow-footer">
+            <button type="button" className="secondary-button" onClick={onClose} disabled={busy}>Cancel</button>
+            <button type="submit" className="primary-button" disabled={busy}>
+              {busy ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function SalesView({ station, allowedStations, identity }: { station: string; allowedStations: AllowedStation[]; identity: WorkspaceIdentity }) {
   const [tab, setTab] = useState("All sales");
   const stationId = allowedStations.find((item) => item.name === station)?.id;
@@ -2809,6 +2934,7 @@ function SalesView({ station, allowedStations, identity }: { station: string; al
   const [interval, setInterval] = useState("daily");
   const [compareActive, setCompareActive] = useState(false);
   const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
+  const [editingSaleId, setEditingSaleId] = useState<string | null>(null);
 
   const canViewProfit = identity.permissions.includes("sales.view_profit");
 
@@ -3151,6 +3277,11 @@ function SalesView({ station, allowedStations, identity }: { station: string; al
                     </td>
                     <td>
                       <div className="row-actions">
+                        {identity.permissions.includes("sales.update") && (
+                          <button className="row-button" onClick={() => setEditingSaleId(sale.id)} title="Edit sale">
+                            <Pencil size={14} /> Edit
+                          </button>
+                        )}
                         {!["REFUNDED", "CANCELLED"].includes(sale.status) && identity.permissions.includes("sales.refund") && (
                           <button className="row-button" onClick={() => refundSale(sale)}>
                             Refund
@@ -3194,6 +3325,18 @@ function SalesView({ station, allowedStations, identity }: { station: string; al
           saleId={selectedSaleId}
           onClose={() => setSelectedSaleId(null)}
           canViewProfit={canViewProfit}
+        />
+      )}
+
+      {/* Edit Sale Modal */}
+      {editingSaleId && (
+        <SaleEditModal
+          saleId={editingSaleId}
+          onClose={() => setEditingSaleId(null)}
+          onComplete={() => {
+            listApi.reload();
+            summaryApi.reload();
+          }}
         />
       )}
     </div>

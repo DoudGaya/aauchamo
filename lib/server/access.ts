@@ -3,7 +3,7 @@ import "server-only";
 import { auth } from "@/auth";
 import { ForbiddenError, UnauthorizedError } from "@/lib/server/api";
 import { db } from "@/lib/server/db";
-import type { PermissionKey } from "@/lib/server/permissions";
+import { PERMISSIONS, type PermissionKey } from "@/lib/server/permissions";
 
 export type AccessContext = {
   userId: string;
@@ -18,7 +18,7 @@ export type AccessContext = {
   operatingStationIds: Set<string>;
   businessUnitIds: Set<string>;
   companyWide: boolean;
-  isSuperAdmin: boolean;
+  isSuperAdmin?: boolean;
 };
 
 export async function requireAccess(): Promise<AccessContext> {
@@ -65,15 +65,23 @@ export async function requireAccess(): Promise<AccessContext> {
   }
 
   const activeAssignments = user.roleAssignments.filter((assignment) => assignment.role.isActive);
-  const isSuperAdmin = activeAssignments.some((assignment) => assignment.role.code === "SUPER_ADMIN" || assignment.role.name === "Superadmin");
+  const isSuperAdmin = activeAssignments.some(
+    (assignment) =>
+      assignment.role.code === "SUPER_ADMIN" ||
+      assignment.role.code === "SUPERADMIN" ||
+      assignment.role.name === "Superadmin" ||
+      assignment.role.name === "Super Admin" ||
+      assignment.role.name === "System Administrator" ||
+      assignment.role.name?.toLowerCase().includes("super"),
+  );
   let permissions = new Set(
     activeAssignments.flatMap((assignment) =>
       assignment.role.permissions.map((grant) => grant.permission.key),
     ),
   );
   if (isSuperAdmin) {
-    const allPerms = await db.permission.findMany({ select: { key: true } });
-    permissions = new Set(allPerms.map((p) => p.key));
+    // Super admins always have all permissions by default
+    permissions = new Set(PERMISSIONS.map(([key]) => key));
   }
 
   const companyWide = isSuperAdmin || activeAssignments.some(
@@ -118,6 +126,7 @@ export async function requireAccess(): Promise<AccessContext> {
 }
 
 export function requirePermission(context: AccessContext, permission: PermissionKey) {
+  if (context.isSuperAdmin) return context;
   if (!context.permissions.has(permission)) throw new ForbiddenError();
   return context;
 }
