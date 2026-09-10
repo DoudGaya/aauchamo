@@ -90,13 +90,11 @@ beforeAll(async () => {
     update: { paymentMethodId, isActive: true },
   });
 
-  // Clean up any stale POS sessions from previous test runs
-  await db.saleLine.deleteMany({ where: { sale: { companyId } } });
-  await db.paymentAllocation.deleteMany({ where: { payment: { companyId } } });
-  await db.payment.deleteMany({ where: { companyId } });
-  await db.outstandingPayment.deleteMany({ where: { sale: { companyId } } });
-  await db.sale.deleteMany({ where: { companyId } });
-  await db.pOSSession.deleteMany({ where: { stationId } });
+  // Close any open POS sessions for test station to allow fresh session testing
+  await db.pOSSession.updateMany({
+    where: { stationId, status: "OPEN" },
+    data: { status: "CLOSED", closedAt: new Date() },
+  });
 });
 
 function mockAccessContext(permissions: string[] = ["sales.create", "sales.view", "sales.discount"]) {

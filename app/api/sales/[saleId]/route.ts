@@ -27,10 +27,41 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ s
     const { saleId } = await params;
     const sale = await db.sale.findFirst({ where: { id: saleId, companyId: access.companyId } });
     if (!sale) throw new NotFoundError("Sale not found.");
+    requireStation(access, sale.stationId, true);
+
     await db.$transaction(async (tx) => {
+      // Clean up child relations to satisfy foreign key constraints
+      await tx.refundLine.deleteMany({
+        where: {
+          OR: [
+            { refund: { saleId } },
+            { saleLine: { saleId } },
+          ],
+        },
+      });
+      await tx.refund.deleteMany({ where: { saleId } });
+      await tx.paymentAllocation.deleteMany({ where: { saleId } });
+      await tx.outstandingPayment.deleteMany({ where: { saleId } });
+      await tx.saleLine.deleteMany({ where: { saleId } });
+      await tx.sale.updateMany({
+        where: { reversedSaleId: saleId },
+        data: { reversedSaleId: null },
+      });
+
       await tx.sale.delete({ where: { id: saleId } });
-      await writeAudit(tx, { companyId: access.companyId, actorId: access.userId, stationId: sale.stationId, action: "sale.deleted", entityType: "Sale", entityId: saleId, requestId, reason: "Admin hard delete", before: sale, after: null });
-    });
+      await writeAudit(tx, {
+        companyId: access.companyId,
+        actorId: access.userId,
+        stationId: sale.stationId,
+        action: "sale.deleted",
+        entityType: "Sale",
+        entityId: saleId,
+        requestId,
+        reason: "Admin hard delete",
+        before: sale,
+        after: null,
+      });
+    }, { maxWait: 10_000, timeout: 30_000 });
     return apiSuccess({ deleted: true }, requestId);
   } catch (error) {
     return apiFailure(error, requestId);

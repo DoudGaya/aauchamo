@@ -35,12 +35,17 @@ import { PERMISSIONS } from "@/lib/server/permissions";
 const databaseUrl =
   process.env.DIRECT_DATABASE_URL ??
   process.env.DATABASE_URL ??
-  "postgresql://aau_chamo:aau_chamo@127.0.0.1:5432/aau_chamo";
+const adapter = new PrismaPg({
+  connectionString: databaseUrl,
+  connectionTimeoutMillis: 30_000,
+  idleTimeoutMillis: 30_000,
+  max: 10,
+});
 
-const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl }) });
+const db = new PrismaClient({ adapter });
 
 const money = (value: number) => value.toFixed(2);
-const TX = { isolationLevel: "Serializable" as const, maxWait: 10_000, timeout: 25_000 };
+const TX = { maxWait: 10_000, timeout: 30_000 };
 
 async function main() {
   const company = await db.company.findFirst({ where: { code: "AAU-CHAMO" } });
