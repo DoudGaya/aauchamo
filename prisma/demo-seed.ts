@@ -35,6 +35,8 @@ import { PERMISSIONS } from "@/lib/server/permissions";
 const databaseUrl =
   process.env.DIRECT_DATABASE_URL ??
   process.env.DATABASE_URL ??
+  "postgresql://aau_chamo:aau_chamo@127.0.0.1:5432/aau_chamo";
+
 const adapter = new PrismaPg({
   connectionString: databaseUrl,
   connectionTimeoutMillis: 30_000,
