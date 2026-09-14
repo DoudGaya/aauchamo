@@ -1045,7 +1045,7 @@ function ModuleView({
     case "pos":
       return <POSView key={station} allowedStations={allowedStations} selectedStation={station} onModal={onModal} onToast={onToast} identity={identity} />;
     case "sales":
-      return <SalesView station={station} allowedStations={allowedStations} identity={identity} />;
+      return <SalesView station={station} allowedStations={allowedStations} identity={identity} period={period} />;
     case "inventory":
     case "purchases":
       return <InventoryView purchases={active === "purchases"} onModal={onModal} allowedStations={allowedStations} identity={identity} />;
@@ -2918,34 +2918,42 @@ function SaleEditModal({ saleId, onClose, onComplete }: { saleId: string; onClos
   );
 }
 
-function SalesView({ station, allowedStations, identity }: { station: string; allowedStations: AllowedStation[]; identity: WorkspaceIdentity }) {
+function SalesView({ station, allowedStations, identity, period }: { station: string; allowedStations: AllowedStation[]; identity: WorkspaceIdentity; period: string }) {
   const [tab, setTab] = useState("All sales");
   const stationId = allowedStations.find((item) => item.name === station)?.id;
   const settingsApi = useApiData<any>("/api/settings");
 
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const initialDates = getPeriodDates(period ?? "This week");
+  const [startDate, setStartDate] = useState(initialDates.from);
+  const [endDate, setEndDate] = useState(initialDates.to);
   const [compareStartDate, setCompareStartDate] = useState("");
   const [compareEndDate, setCompareEndDate] = useState("");
   const [airline, setAirline] = useState("");
-  const [officerId, setOfficerId] = useState("");
-  const [customerId, setCustomerId] = useState("");
+  const [officerSearch, setOfficerSearch] = useState("");
+  const [customerSearch, setCustomerSearch] = useState("");
   const [businessUnitId, setBusinessUnitId] = useState("");
   const [interval, setInterval] = useState("daily");
   const [compareActive, setCompareActive] = useState(false);
   const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
   const [editingSaleId, setEditingSaleId] = useState<string | null>(null);
+  const [listPage, setListPage] = useState(1);
+  const LIST_PAGE_SIZE = 25;
+
+  // Sync date range when the global period picker changes
+  useEffect(() => {
+    const dates = getPeriodDates(period);
+    setStartDate(dates.from);
+    setEndDate(dates.to);
+  }, [period]);
 
   const canViewProfit = identity.permissions.includes("sales.view_profit");
 
   const buApi = useApiData<{ businessUnits: Array<{ id: string; name: string }> }>("/api/stations/setup");
 
-  // Query Params
+  // Shared filter params (used by summary + trend)
   const filterParams = new URLSearchParams();
   if (stationId) filterParams.set("stationId", stationId);
   if (businessUnitId) filterParams.set("businessUnitId", businessUnitId);
-  if (officerId) filterParams.set("officerId", officerId);
-  if (customerId) filterParams.set("customerId", customerId);
   if (airline) filterParams.set("airline", airline);
   if (startDate) filterParams.set("startDate", startDate);
   if (endDate) filterParams.set("endDate", endDate);
@@ -2953,30 +2961,59 @@ function SalesView({ station, allowedStations, identity }: { station: string; al
   if (compareActive && compareEndDate) filterParams.set("compareEndDate", compareEndDate);
   filterParams.set("interval", interval);
 
+  // List params — server-side pagination, no chart-only params
+  const listParams = new URLSearchParams();
+  if (stationId) listParams.set("stationId", stationId);
+  if (businessUnitId) listParams.set("businessUnitId", businessUnitId);
+  if (airline) listParams.set("airline", airline);
+  if (startDate) listParams.set("startDate", startDate);
+  if (endDate) listParams.set("endDate", endDate);
+  const statusParam =
+    tab === "Completed"
+      ? "PAID,POSTED"
+      : tab === "Pending"
+      ? "PARTIALLY_PAID,HELD"
+      : tab === "Refunded"
+      ? "REFUNDED,PARTIALLY_REFUNDED"
+      : undefined;
+  if (statusParam) listParams.set("status", statusParam);
+  listParams.set("page", String(listPage));
+  listParams.set("pageSize", String(LIST_PAGE_SIZE));
+
   const summaryUrl = `/api/sales/summary?${filterParams.toString()}`;
   const trendUrl = `/api/sales/trend?${filterParams.toString()}`;
-  const listUrl = `/api/sales?pageSize=100&${filterParams.toString()}`;
+  const listUrl = `/api/sales?${listParams.toString()}`;
 
   const summaryApi = useApiData<any>(summaryUrl);
   const trendApi = useApiData<any>(trendUrl);
   const listApi = useApiData<SaleRecord[]>(listUrl);
 
   const sales = listApi.data ?? [];
-  const tabFiltered = sales.filter((sale) =>
-    tab === "Completed"
-      ? ["PAID", "POSTED"].includes(sale.status)
-      : tab === "Pending"
-      ? sale.status === "PARTIALLY_PAID"
-      : tab === "Refunded"
-      ? sale.status.includes("REFUND")
-      : true
+
+  // Client-side officer/customer text match (names, not IDs)
+  const officerQ = officerSearch.toLowerCase().trim();
+  const customerQ = customerSearch.toLowerCase().trim();
+
+  // Officer/customer name filter applied client-side on the current page
+  const tabFiltered = sales.filter((sale) => {
+    const officerOk = !officerQ || (sale as any).officerName?.toLowerCase().includes(officerQ);
+    const customerOk = !customerQ || (sale.customer?.displayName ?? "").toLowerCase().includes(customerQ);
+    return officerOk && customerOk;
+  });
+
+  const table = useTableControls(
+    tabFiltered,
+    (sale, q) =>
+      `${sale.saleNumber} ${sale.customer?.displayName ?? ""} ${sale.station?.name ?? ""} ${sale.businessUnit?.name ?? ""} ${sale.status} ${(sale.allocations ?? []).map((a: any) => a.payment?.paymentMethod?.name ?? "").join(" ")}`
+        .toLowerCase()
+        .includes(q),
+    LIST_PAGE_SIZE
   );
 
-  const table = useTableControls(tabFiltered, (sale, q) =>
-    `${sale.saleNumber} ${sale.customer.displayName} ${sale.station.name} ${sale.businessUnit.name} ${sale.status}`
-      .toLowerCase()
-      .includes(q)
-  );
+  // Reset to page 1 whenever any server-side filter changes
+  useEffect(() => {
+    setListPage(1);
+  }, [startDate, endDate, stationId, businessUnitId, airline, tab]);
 
   const chartData = (trendApi.data?.trend ?? []).map((t: any) => ({
     date: t.bucket,
@@ -3066,17 +3103,17 @@ function SalesView({ station, allowedStations, identity }: { station: string; al
           <Field label="Sales Officer">
             <input
               type="text"
-              placeholder="Search officer name/ID"
-              value={officerId}
-              onChange={(e) => setOfficerId(e.target.value)}
+              placeholder="Search officer name"
+              value={officerSearch}
+              onChange={(e) => setOfficerSearch(e.target.value)}
             />
           </Field>
           <Field label="Customer">
             <input
               type="text"
-              placeholder="Search customer name/ID"
-              value={customerId}
-              onChange={(e) => setCustomerId(e.target.value)}
+              placeholder="Search customer name"
+              value={customerSearch}
+              onChange={(e) => setCustomerSearch(e.target.value)}
             />
           </Field>
           <Field label="Start Date">
@@ -3127,7 +3164,7 @@ function SalesView({ station, allowedStations, identity }: { station: string; al
           detail={
             compareActive
               ? `vs ${formatNaira(summaryApi.data?.compareSummary?.grossSales || 0)}`
-              : `${sales.length} loaded sales`
+              : `${listApi.total || 0} total sales`
           }
           icon={TrendingUp}
           tone="success"
@@ -3149,7 +3186,7 @@ function SalesView({ station, allowedStations, identity }: { station: string; al
           detail={
             compareActive
               ? `vs ${formatNaira(summaryApi.data?.compareSummary?.outstandingTotal || 0)}`
-              : `${sales.filter((sale) => Number(sale.outstandingTotal) > 0).length} invoices`
+              : "Uncollected balance"
           }
           icon={Clock3}
           tone="danger"
@@ -3169,7 +3206,7 @@ function SalesView({ station, allowedStations, identity }: { station: string; al
         ) : (
           <SummaryItem
             label="Avg. transaction"
-            value={formatNaira(sales.length ? (summaryApi.data?.summary?.grossSales || 0) / sales.length : 0)}
+            value={formatNaira(listApi.total ? (summaryApi.data?.summary?.grossSales || 0) / listApi.total : 0)}
             detail={`${listApi.total || 0} total records`}
             icon={Banknote}
             tone="info"
@@ -3202,6 +3239,7 @@ function SalesView({ station, allowedStations, identity }: { station: string; al
           activeTab={tab}
           onTab={(value) => {
             setTab(value);
+            setListPage(1);
             table.resetPage();
           }}
           placeholder="Search transaction, customer or station"
@@ -3316,7 +3354,12 @@ function SalesView({ station, allowedStations, identity }: { station: string; al
             }
           />
         )}
-        <Pagination total={table.total} page={table.page} pageSize={table.pageSize} onPage={table.setPage} />
+        <Pagination
+          total={listApi.total}
+          page={listPage}
+          pageSize={LIST_PAGE_SIZE}
+          onPage={(p) => setListPage(p)}
+        />
       </Panel>
 
       {/* Drill-down Detail Modal */}
