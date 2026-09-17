@@ -1,0 +1,129 @@
+2026-09-17T14:40:46.528Z [INFO]: # Build environment configured with Standard build compute type: 8GiB Memory, 4vCPUs, 128GB Disk Space
+2026-09-17T14:40:47.067Z [INFO]: # Cloning repository: git@github.com:DoudGaya/aauchamo.git
+2026-09-17T14:40:48.087Z [INFO]: 
+2026-09-17T14:40:48.087Z [INFO]: Cloning into 'aauchamo'...
+2026-09-17T14:40:48.088Z [INFO]: # Switching to commit: adf1e5736397da1a0c088fea2ae4e1d246e9abac
+2026-09-17T14:40:48.152Z [INFO]: Note: switching to 'adf1e5736397da1a0c088fea2ae4e1d246e9abac'.
+                                 You are in 'detached HEAD' state. You can look around, make experimental
+                                 changes and commit them, and you can discard any commits you make in this
+                                 state without impacting any branches by switching back to a branch.
+                                 If you want to create a new branch to retain commits you create, you may
+                                 do so (now or later) by using -c with the switch command. Example:
+                                 git switch -c <new-branch-name>
+                                 Or undo this operation with:
+                                 git switch -
+                                 Turn off this advice by setting config variable advice.detachedHead to false
+                                 HEAD is now at adf1e57 fix amplify
+2026-09-17T14:40:48.202Z [INFO]: Successfully cleaned up Git credentials
+2026-09-17T14:40:48.202Z [INFO]: # Checking for Git submodules at: /codebuild/output/src1950350758/src/aauchamo/.gitmodules
+2026-09-17T14:40:48.210Z [INFO]: # Retrieving environment cache...
+2026-09-17T14:40:48.257Z [WARNING]: ! Unable to write cache: {"code":"ERR_BAD_REQUEST","message":"Request failed with status code 404"})}
+2026-09-17T14:40:48.258Z [INFO]: ---- Setting Up SSM Secrets ----
+2026-09-17T14:40:48.258Z [INFO]: SSM params {"Path":"/amplify/d3tdldl5p9pa4i/master/","WithDecryption":true}
+2026-09-17T14:40:48.305Z [WARNING]: !Failed to set up process.env.secrets
+2026-09-17T14:40:48.962Z [INFO]: # No package override configuration found.
+2026-09-17T14:40:48.966Z [INFO]: # Retrieving cache...
+2026-09-17T14:40:48.996Z [INFO]: # Retrieved cache
+2026-09-17T14:40:54.140Z [INFO]: ## Starting Backend Build
+                                 ## Checking for associated backend environment...
+                                 ## No backend environment association found, continuing...
+                                 ## Completed Backend Build
+2026-09-17T14:40:54.144Z [INFO]: {"backendDuration": 0}
+                                 ## Starting Frontend Build
+                                 # Starting phase: preBuild
+                                 # Executing command: npm i -g pnpm
+2026-09-17T14:41:16.912Z [INFO]: added 2 packages in 17s
+2026-09-17T14:41:16.920Z [INFO]: # Executing command: pnpm config set store-dir .pnpm-store
+2026-09-17T14:41:17.022Z [INFO]: # Executing command: pnpm install --frozen-lockfile
+2026-09-17T14:41:17.169Z [INFO]: ? Verifying lockfile against supply-chain policies (1038 entries)...
+2026-09-17T14:41:17.274Z [INFO]: Packages are hard linked from the content-addressable store to the virtual store.
+                                 Content-addressable store is at: /codebuild/output/src1950350758/src/aauchamo/.pnpm-store/v11
+                                 Virtual store is at:             node_modules/.pnpm
+2026-09-17T14:41:17.282Z [INFO]: Downloading @rolldown/binding-linux-x64-gnu@1.2.1: 0.00 B/7.93 MB
+2026-09-17T14:41:18.268Z [INFO]: Downloading @prisma/studio-core@0.33.0: 0.00 B/10.12 MB
+2026-09-17T14:41:18.320Z [INFO]: Downloading electron-winstaller@5.4.0: 0.00 B/9.14 MB
+2026-09-17T14:41:18.378Z [INFO]: Downloading @prisma/client@7.9.1: 0.00 B/28.01 MB
+2026-09-17T14:41:18.576Z [INFO]: Downloading @img/sharp-libvips-linuxmusl-x64@1.2.4: 0.00 B/7.65 MB
+2026-09-17T14:41:19.356Z [INFO]: Downloading @electric-sql/pglite@0.4.3: 0.00 B/8.29 MB
+2026-09-17T14:41:19.651Z [INFO]: Downloading @next/swc-linux-x64-gnu@16.2.12: 0.00 B/45.30 MB
+2026-09-17T14:41:20.757Z [INFO]: Downloading @next/swc-linux-x64-gnu@16.2.12: 1.69 MB/45.30 MB
+2026-09-17T14:41:20.911Z [INFO]: Downloading @prisma/dev@0.24.17: 0.00 B/9.16 MB
+2026-09-17T14:41:20.937Z [INFO]: Downloading prisma@7.9.1: 0.00 B/14.72 MB
+2026-09-17T14:41:21.937Z [INFO]: Progress: resolved 913, reused 0, downloaded 743, added 736
+2026-09-17T14:41:22.030Z [INFO]: Downloading next@16.2.12: 0.00 B/34.52 MB
+2026-09-17T14:41:22.063Z [INFO]: Downloading @img/sharp-libvips-linux-x64@1.2.4: 0.00 B/7.53 MB
+2026-09-17T14:41:22.742Z [INFO]: ✓ Lockfile passes supply-chain policies (1038 entries in 5.6s)
+                                 Lockfile is up to date, resolution step is skipped
+2026-09-17T14:41:23.752Z [INFO]: Downloading @prisma/dev@0.24.17: 9.16 MB/9.16 MB, done
+2026-09-17T14:41:24.778Z [INFO]: Downloading @next/swc-linux-x64-gnu@16.2.12: 31.88 MB/45.30 MB
+2026-09-17T14:41:25.782Z [INFO]: Downloading next@16.2.12: 17.87 MB/34.52 MB
+2026-09-17T14:41:26.933Z [INFO]: Downloading next@16.2.12: 31.41 MB/34.52 MB
+2026-09-17T14:41:28.326Z [INFO]: Progress: resolved 913, reused 0, downloaded 912, added 909
+2026-09-17T14:41:28.356Z [INFO]: Packages: +913
+                                 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2026-09-17T14:41:28.771Z [INFO]: Progress: resolved 913, reused 0, downloaded 912, added 913, done
+2026-09-17T14:41:28.961Z [INFO]: . postinstall$ prisma generate
+2026-09-17T14:41:30.500Z [INFO]: . postinstall: Loaded Prisma config from prisma.config.ts.
+                                 . postinstall:
+2026-09-17T14:41:31.174Z [INFO]: . postinstall: Prisma schema loaded from prisma/schema.prisma.
+2026-09-17T14:41:32.728Z [INFO]: . postinstall:
+                                 . postinstall: ✔ Generated Prisma Client (7.9.1) to ./lib/generated/prisma in 905ms
+                                 . postinstall:
+2026-09-17T14:41:32.750Z [INFO]: . postinstall: Done
+2026-09-17T14:41:32.752Z [INFO]: dependencies:
+                                 + @prisma/adapter-pg 7.9.1
+                                 + @prisma/client 7.9.1
+                                 + @serwist/next 9.5.12
+                                 + @serwist/precaching 9.5.12
+                                 + bcryptjs 3.0.3
+                                 + bwip-js 4.11.2
+                                 + idb-keyval 6.3.0
+                                 + jspdf 4.2.1
+                                 + jspdf-autotable 5.0.8
+                                 + lucide-react 1.28.0
+                                 + next 16.2.12
+                                 + next-auth 5.0.0-beta.32
+                                 + nodemailer 8.0.11
+                                 + pg 8.22.0
+                                 + qrcode 1.5.4
+                                 + react 19.2.4
+                                 + react-dom 19.2.4
+                                 + react-select 5.10.2
+                                 + recharts 3.10.1
+                                 + server-only 0.0.1
+                                 + serwist 9.5.12
+                                 + zod 4.4.3
+                                 devDependencies:
+                                 + @aws-sdk/client-s3 3.1116.0
+                                 + @tailwindcss/postcss 4.3.3
+                                 + @types/node 20.19.43
+                                 + @types/nodemailer 8.0.1
+                                 + @types/pg 8.20.3
+                                 + @types/qrcode 1.5.6
+                                 + @types/react 19.2.18
+                                 + @types/react-dom 19.2.4
+                                 + @vitest/coverage-v8 4.1.10
+                                 + concurrently 10.0.5
+                                 + dotenv 17.4.2
+                                 + electron 43.4.1
+                                 + electron-builder 26.15.3
+                                 + eslint 9.39.5
+                                 + eslint-config-next 16.2.12
+                                 + prisma 7.9.1
+                                 + tailwindcss 4.3.3
+                                 + tsx 4.23.4
+                                 + typescript 5.9.3
+                                 + vitest 4.1.10
+2026-09-17T14:41:32.804Z [WARNING]: Error: ERR_PNPM_IGNORED_BUILDS
+2026-09-17T14:41:32.804Z [WARNING]: × installing dependencies
+                                    ╰─▶ Ignored build scripts: @prisma/engines@7.9.1, core-js@3.50.0, electron-
+                                    winstaller@5.4.0, esbuild@0.28.1, prisma@7.9.1, sharp@0.34.5, unrs-
+                                    resolver@1.12.2
+                                    help: Run "pnpm approve-builds" to pick which dependencies should be allowed
+                                    to run scripts.
+2026-09-17T14:41:32.826Z [ERROR]: !!! Build failed
+2026-09-17T14:41:32.827Z [INFO]: Please read more about Amplify Hosting's support for SSR frameworks to find if your build failure is related to an unsupported feature: https://docs.aws.amazon.com/amplify/latest/userguide/amplify-ssr-framework-support.html. You may also find this troubleshooting guide useful: https://docs.aws.amazon.com/amplify/latest/userguide/troubleshooting-ssr-deployment.html
+2026-09-17T14:41:32.827Z [ERROR]: !!! Error: Command failed with exit code 1
+2026-09-17T14:41:32.827Z [INFO]: # Starting environment caching...
+2026-09-17T14:41:32.827Z [INFO]: # Environment caching completed
+
