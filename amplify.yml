@@ -3,7 +3,7 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm i -g pnpm
+        - npm i -g pnpm@9
         - pnpm config set store-dir .pnpm-store
         - pnpm config set ignore-scripts false
         - pnpm install --frozen-lockfile
