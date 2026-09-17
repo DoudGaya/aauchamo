@@ -21,6 +21,9 @@ export async function GET(request: Request) {
     const stationId = url.searchParams.get("stationId") ?? undefined;
     if (stationId) requireStation(access, stationId);
     const businessUnitId = url.searchParams.get("businessUnitId") ?? undefined;
+    if (businessUnitId && !access.isSuperAdmin && access.businessUnitIds.size > 0 && !access.businessUnitIds.has(businessUnitId)) {
+      throw new ForbiddenError("This business unit is outside your assigned scope.");
+    }
     const officerId = url.searchParams.get("officerId") ?? undefined;
     const customerId = url.searchParams.get("customerId") ?? undefined;
     const airline = url.searchParams.get("airline") ?? undefined;
@@ -31,7 +34,7 @@ export async function GET(request: Request) {
     const where: any = {
       companyId: access.companyId,
       ...(stationId ? { stationId } : access.companyWide && !access.stationIds.size ? {} : { stationId: { in: [...access.stationIds] } }),
-      ...(businessUnitId ? { businessUnitId } : {}),
+      ...(businessUnitId ? { businessUnitId } : (!access.isSuperAdmin && access.businessUnitIds.size > 0) ? { businessUnitId: { in: [...access.businessUnitIds] } } : {}),
       ...(officerId ? { officerId } : {}),
       ...(customerId ? { customerId } : {}),
       ...(airline ? { customer: { defaultAirline: airline } } : {}),

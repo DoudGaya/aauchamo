@@ -6,7 +6,7 @@ frontend:
         - npm i -g pnpm@9
         - pnpm config set store-dir .pnpm-store
         - pnpm config set ignore-scripts false
-        - pnpm install --frozen-lockfile
+        - NODE_ENV=development pnpm install --frozen-lockfile
         - pnpm run db:generate
     build:
       commands:
