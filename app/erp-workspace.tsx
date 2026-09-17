@@ -2950,6 +2950,7 @@ function SalesView({ station, allowedStations, identity, period }: { station: st
   const canViewProfit = identity.permissions.includes("sales.view_profit");
 
   const buApi = useApiData<{ businessUnits: Array<{ id: string; name: string }> }>("/api/stations/setup");
+  const productApi = useApiData<ProductRecord[]>("/api/inventory/catalogue?pageSize=1000");
 
   // Shared filter params (used by summary + trend)
   const filterParams = new URLSearchParams();
@@ -3120,12 +3121,14 @@ function SalesView({ station, allowedStations, identity, period }: { station: st
             />
           </Field>
           <Field label="Product">
-            <input
-              type="text"
-              placeholder="Search product name"
-              value={productSearch}
-              onChange={(e) => setProductSearch(e.target.value)}
-            />
+            <select value={productSearch} onChange={(e) => setProductSearch(e.target.value)}>
+              <option value="">All products</option>
+              {productApi.data?.map((p) => (
+                <option key={p.id} value={p.name.toLowerCase()}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
           </Field>
           <Field label="Start Date">
             <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
