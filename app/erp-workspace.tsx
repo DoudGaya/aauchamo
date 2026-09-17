@@ -2931,6 +2931,7 @@ function SalesView({ station, allowedStations, identity, period }: { station: st
   const [airline, setAirline] = useState("");
   const [officerSearch, setOfficerSearch] = useState("");
   const [customerSearch, setCustomerSearch] = useState("");
+  const [productSearch, setProductSearch] = useState("");
   const [businessUnitId, setBusinessUnitId] = useState("");
   const [interval, setInterval] = useState("daily");
   const [compareActive, setCompareActive] = useState(false);
@@ -2990,15 +2991,17 @@ function SalesView({ station, allowedStations, identity, period }: { station: st
 
   const sales = listApi.data ?? [];
 
-  // Client-side officer/customer text match (names, not IDs)
+  // Client-side officer/customer/product text match (names, not IDs)
   const officerQ = officerSearch.toLowerCase().trim();
   const customerQ = customerSearch.toLowerCase().trim();
+  const productQ = productSearch.toLowerCase().trim();
 
-  // Officer/customer name filter applied client-side on the current page
+  // Name filter applied client-side on the current page
   const tabFiltered = sales.filter((sale) => {
     const officerOk = !officerQ || (sale as any).officerName?.toLowerCase().includes(officerQ);
     const customerOk = !customerQ || (sale.customer?.displayName ?? "").toLowerCase().includes(customerQ);
-    return officerOk && customerOk;
+    const productOk = !productQ || (sale as any).lines?.some((line: any) => line.productName?.toLowerCase().includes(productQ));
+    return officerOk && customerOk && productOk;
   });
 
   const table = useTableControls(
@@ -3114,6 +3117,14 @@ function SalesView({ station, allowedStations, identity, period }: { station: st
               placeholder="Search customer name"
               value={customerSearch}
               onChange={(e) => setCustomerSearch(e.target.value)}
+            />
+          </Field>
+          <Field label="Product">
+            <input
+              type="text"
+              placeholder="Search product name"
+              value={productSearch}
+              onChange={(e) => setProductSearch(e.target.value)}
             />
           </Field>
           <Field label="Start Date">
