@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { requireAccess, requirePermission, requireStation } from "@/lib/server/access";
-import { AppError, apiFailure, apiSuccess, parseJson, parsePagination, requestIdFrom } from "@/lib/server/api";
+import { AppError, ForbiddenError, apiFailure, apiSuccess, parseJson, parsePagination, requestIdFrom } from "@/lib/server/api";
 import { db } from "@/lib/server/db";
 import { postSale } from "@/lib/server/sales";
 
