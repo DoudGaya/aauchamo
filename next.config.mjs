@@ -10,6 +10,7 @@ const withSerwist = withSerwistInit({
 const nextConfig = {
   allowedDevOrigins: ["192.168.100.14"],
   turbopack: {},
+  output: "standalone",
 };
 
 export default withSerwist(nextConfig);

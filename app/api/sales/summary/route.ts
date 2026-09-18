@@ -1,4 +1,4 @@
-import { requireAccess, requirePermission, requireStation } from "@/lib/server/access";
+import { businessUnitWhere, getSalesHistoryLimitDate, requireAccess, requirePermission, requireStation, stationWhere } from "@/lib/server/access";
 import { apiFailure, apiSuccess, requestIdFrom } from "@/lib/server/api";
 import { db } from "@/lib/server/db";
 
@@ -75,18 +75,25 @@ export async function GET(request: Request) {
     // Build base filter
     const baseWhere = {
       companyId: access.companyId,
-      ...(stationId ? { stationId } : access.companyWide && !access.stationIds.size ? {} : { stationId: { in: [...access.stationIds] } }),
-      ...(businessUnitId ? { businessUnitId } : {}),
+      ...stationWhere(access, stationId),
+      ...businessUnitWhere(access, businessUnitId),
       ...(officerId ? { officerId } : {}),
       ...(customerId ? { customerId } : {}),
       ...(airline ? { customer: { defaultAirline: airline } } : {}),
     };
 
+    const limitDate = getSalesHistoryLimitDate(access);
+
     // 1. Fetch main period sales
     const mainWhere: any = { ...baseWhere };
-    if (startDate || endDate) {
+    if (startDate || endDate || limitDate) {
       mainWhere.postedAt = {};
-      if (startDate) mainWhere.postedAt.gte = new Date(startDate);
+      if (startDate) {
+        const parsedStart = new Date(startDate);
+        mainWhere.postedAt.gte = limitDate && parsedStart < limitDate ? limitDate : parsedStart;
+      } else if (limitDate) {
+        mainWhere.postedAt.gte = limitDate;
+      }
       if (endDate) {
         const end = new Date(endDate);
         end.setHours(23, 59, 59, 999);
@@ -125,10 +132,15 @@ export async function GET(request: Request) {
 
     // 2. Fetch comparative period sales if requested
     let compareSummary = null;
-    if (compareStartDate || compareEndDate) {
+    if (compareStartDate || compareEndDate || limitDate) {
       const compareWhere: any = { ...baseWhere };
       compareWhere.postedAt = {};
-      if (compareStartDate) compareWhere.postedAt.gte = new Date(compareStartDate);
+      if (compareStartDate) {
+        const parsedStart = new Date(compareStartDate);
+        compareWhere.postedAt.gte = limitDate && parsedStart < limitDate ? limitDate : parsedStart;
+      } else if (limitDate) {
+        compareWhere.postedAt.gte = limitDate;
+      }
       if (compareEndDate) {
         const end = new Date(compareEndDate);
         end.setHours(23, 59, 59, 999);

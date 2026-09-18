@@ -146,6 +146,31 @@ export function stationWhere(context: AccessContext, requestedStationId?: string
   return context.companyWide && !context.stationIds.size ? {} : { stationId: { in: [...context.stationIds] } };
 }
 
+export function businessUnitWhere(context: AccessContext, requestedBusinessUnitId?: string) {
+  if (requestedBusinessUnitId) {
+    if (!context.isSuperAdmin && context.businessUnitIds.size > 0 && !context.businessUnitIds.has(requestedBusinessUnitId)) {
+      throw new ForbiddenError("This business unit is outside your assigned scope.");
+    }
+    return { businessUnitId: requestedBusinessUnitId };
+  }
+  return (!context.isSuperAdmin && context.businessUnitIds.size > 0) ? { businessUnitId: { in: [...context.businessUnitIds] } } : {};
+}
+
+export function getSalesHistoryLimitDate(context: AccessContext): Date | undefined {
+  if (context.isSuperAdmin) return undefined;
+  
+  if (context.permissions.has("sales.history.1d")) {
+    return new Date(Date.now() - 24 * 60 * 60 * 1000);
+  }
+  if (context.permissions.has("sales.history.7d")) {
+    return new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  }
+  if (context.permissions.has("sales.history.30d")) {
+    return new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  }
+  return undefined;
+}
+
 export function maskSensitive<T extends Record<string, unknown>>(
   value: T,
   fields: Array<keyof T>,

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { requireAccess, requirePermission, requireStation } from "@/lib/server/access";
+import { businessUnitWhere, getSalesHistoryLimitDate, requireAccess, requirePermission, requireStation, stationWhere } from "@/lib/server/access";
 import { AppError, ForbiddenError, apiFailure, apiSuccess, parseJson, parsePagination, requestIdFrom } from "@/lib/server/api";
 import { db } from "@/lib/server/db";
 import { postSale } from "@/lib/server/sales";
@@ -21,9 +21,6 @@ export async function GET(request: Request) {
     const stationId = url.searchParams.get("stationId") ?? undefined;
     if (stationId) requireStation(access, stationId);
     const businessUnitId = url.searchParams.get("businessUnitId") ?? undefined;
-    if (businessUnitId && !access.isSuperAdmin && access.businessUnitIds.size > 0 && !access.businessUnitIds.has(businessUnitId)) {
-      throw new ForbiddenError("This business unit is outside your assigned scope.");
-    }
     const officerId = url.searchParams.get("officerId") ?? undefined;
     const customerId = url.searchParams.get("customerId") ?? undefined;
     const airline = url.searchParams.get("airline") ?? undefined;
@@ -33,8 +30,8 @@ export async function GET(request: Request) {
 
     const where: any = {
       companyId: access.companyId,
-      ...(stationId ? { stationId } : access.companyWide && !access.stationIds.size ? {} : { stationId: { in: [...access.stationIds] } }),
-      ...(businessUnitId ? { businessUnitId } : (!access.isSuperAdmin && access.businessUnitIds.size > 0) ? { businessUnitId: { in: [...access.businessUnitIds] } } : {}),
+      ...stationWhere(access, stationId),
+      ...businessUnitWhere(access, businessUnitId),
       ...(officerId ? { officerId } : {}),
       ...(customerId ? { customerId } : {}),
       ...(airline ? { customer: { defaultAirline: airline } } : {}),
@@ -49,9 +46,16 @@ export async function GET(request: Request) {
       }
     }
 
-    if (startDate || endDate) {
+    const limitDate = getSalesHistoryLimitDate(access);
+
+    if (startDate || endDate || limitDate) {
       where.postedAt = {};
-      if (startDate) where.postedAt.gte = new Date(startDate);
+      if (startDate) {
+        const parsedStart = new Date(startDate);
+        where.postedAt.gte = limitDate && parsedStart < limitDate ? limitDate : parsedStart;
+      } else if (limitDate) {
+        where.postedAt.gte = limitDate;
+      }
       if (endDate) {
         const end = new Date(endDate);
         end.setHours(23, 59, 59, 999);
