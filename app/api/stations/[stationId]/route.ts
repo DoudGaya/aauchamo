@@ -112,11 +112,15 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ s
     if (!before) throw new NotFoundError("Station not found.");
     
     await db.$transaction(async (tx) => {
-      // Clean up linked data to allow deletion
-      await tx.stationBusinessUnit.deleteMany({ where: { stationId } });
-      await tx.stationManagerAssignment.deleteMany({ where: { stationId } });
-      
-      await tx.station.delete({ where: { id: stationId } });
+      const updated = await tx.station.update({
+        where: { id: stationId },
+        data: {
+          status: "DISABLED",
+          disabledAt: new Date(),
+          disabledReason: "User initiated soft delete via configuration",
+          updatedById: access.userId,
+        }
+      });
       
       await writeAudit(tx, {
         companyId: access.companyId,
@@ -125,9 +129,9 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ s
         entityType: "Station",
         entityId: stationId,
         requestId,
-        reason: "User initiated hard delete via configuration",
+        reason: "User initiated soft delete via configuration",
         before,
-        after: null,
+        after: updated,
       });
     });
     return apiSuccess({ deleted: true }, requestId);

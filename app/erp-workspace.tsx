@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useOfflineSync } from "@/lib/client/offline-sync";
 import Select from "react-select";
+import CreatableSelect from "react-select/creatable";
 
 import {
   Activity,
@@ -8073,6 +8074,27 @@ function StaffDetailModal({
 }) {
   const detailApi = useApiData<any>(`/api/staff/${staff.id}`);
   const hrSetupApi = useApiData<HrSetup>("/api/hr/catalogue");
+
+  const handleCreateCatalogue = async (kind: "department" | "position", name: string) => {
+    try {
+      const res = await fetch("/api/hr/catalogue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind,
+          name,
+          code: name.toUpperCase().replace(/[^A-Z0-9-]/g, '').substring(0, 30) || (kind === "department" ? "DEPT" : "POS")
+        })
+      });
+      if (!res.ok) throw new Error("Failed to create");
+      const json = await res.json();
+      await hrSetupApi.reload();
+      if (kind === "department") setDepartmentId(json.data.id);
+      if (kind === "position") setPositionId(json.data.id);
+    } catch (err) {
+      alert(`Error creating ${kind}`);
+    }
+  };
   const settingsApi = useApiData<any>("/api/settings");
   
   const [busy, setBusy] = useState(false);
@@ -8804,21 +8826,29 @@ function StaffDetailModal({
               <Field label="National ID"><input className="field-input" value={nationalId} onChange={e => setNationalId(e.target.value)} /></Field>
               
               <Field label="Department">
-                <select className="field-input" value={departmentId} onChange={e => setDepartmentId(e.target.value)} required>
-                  <option value="" disabled>Select department</option>
-                  {(hrSetupApi.data?.departments ?? []).map((item) => (
-                    <option key={item.id} value={item.id}>{item.name}</option>
-                  ))}
-                </select>
+                <CreatableSelect
+                  name="departmentId"
+                  options={hrSetupApi.data?.departments.map(d => ({ value: d.id, label: d.name }))}
+                  value={departmentId ? { value: departmentId, label: hrSetupApi.data?.departments.find(d => d.id === departmentId)?.name || departmentId } : null}
+                  onChange={(val: any) => setDepartmentId(val?.value || "")}
+                  onCreateOption={(name) => handleCreateCatalogue("department", name)}
+                  placeholder="Select or create department"
+                  styles={{ control: (base) => ({ ...base, minHeight: '38px', borderRadius: '6px' }) }}
+                  isDisabled={hrSetupApi.loading}
+                />
               </Field>
 
               <Field label="Position">
-                <select className="field-input" value={positionId} onChange={e => setPositionId(e.target.value)} required>
-                  <option value="" disabled>Select position</option>
-                  {(hrSetupApi.data?.positions ?? []).map((item) => (
-                    <option key={item.id} value={item.id}>{item.name}</option>
-                  ))}
-                </select>
+                <CreatableSelect
+                  name="positionId"
+                  options={hrSetupApi.data?.positions.map(p => ({ value: p.id, label: p.name }))}
+                  value={positionId ? { value: positionId, label: hrSetupApi.data?.positions.find(p => p.id === positionId)?.name || positionId } : null}
+                  onChange={(val: any) => setPositionId(val?.value || "")}
+                  onCreateOption={(name) => handleCreateCatalogue("position", name)}
+                  placeholder="Select or create position"
+                  styles={{ control: (base) => ({ ...base, minHeight: '38px', borderRadius: '6px' }) }}
+                  isDisabled={hrSetupApi.loading}
+                />
               </Field>
 
               <Field label="Employment type">
@@ -12552,6 +12582,29 @@ function StaffForm({
   const [error, setError] = useState<string | null>(null);
   const [passportPhoto, setPassportPhoto] = useState("");
   
+  const [departmentId, setDepartmentId] = useState("");
+  const [positionId, setPositionId] = useState("");
+
+  const handleCreateCatalogue = async (kind: "department" | "position", name: string) => {
+    try {
+      const res = await fetch("/api/hr/catalogue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind,
+          name,
+          code: name.toUpperCase().replace(/[^A-Z0-9-]/g, '').substring(0, 30) || (kind === "department" ? "DEPT" : "POS")
+        })
+      });
+      if (!res.ok) throw new Error("Failed to create");
+      const json = await res.json();
+      await api.reload();
+      if (kind === "department") setDepartmentId(json.data.id);
+      if (kind === "position") setPositionId(json.data.id);
+    } catch (err) {
+      alert(`Error creating ${kind}`);
+    }
+  };
   // Next of kin
   const [nokName, setNokName] = useState("");
   const [nokRelationship, setNokRelationship] = useState("");
@@ -12596,8 +12649,8 @@ function StaffForm({
         salary: String(form.get("salary") || "") || undefined,
         employmentDate: String(form.get("employmentDate")),
         employmentType: String(form.get("employmentType")),
-        departmentId: String(form.get("departmentId")),
-        positionId: String(form.get("positionId")),
+        departmentId: departmentId || String(form.get("departmentId")),
+        positionId: positionId || String(form.get("positionId")),
         homeStationId: String(form.get("homeStationId")),
         passportPhoto: passportPhoto || undefined,
         nextOfKin,
@@ -12668,21 +12721,28 @@ function StaffForm({
           </Field>
 
           <Field label="Department">
-            <select name="departmentId" required className="field-input" defaultValue="">
-              <option value="" disabled>Select department</option>
-              {api.data?.departments.map((item) => (
-                <option key={item.id} value={item.id}>{item.name}</option>
-              ))}
-            </select>
+            <CreatableSelect
+              name="departmentId"
+              options={api.data?.departments.map(d => ({ value: d.id, label: d.name }))}
+              value={departmentId ? { value: departmentId, label: api.data?.departments.find(d => d.id === departmentId)?.name || departmentId } : null}
+              onChange={(val: any) => setDepartmentId(val?.value || "")}
+              onCreateOption={(name) => handleCreateCatalogue("department", name)}
+              placeholder="Select or create department"
+              styles={{ control: (base) => ({ ...base, minHeight: '38px', borderRadius: '6px' }) }}
+              isDisabled={api.loading}
+            />
           </Field>
-
           <Field label="Position">
-            <select name="positionId" required className="field-input" defaultValue="">
-              <option value="" disabled>Select position</option>
-              {api.data?.positions.map((item) => (
-                <option key={item.id} value={item.id}>{item.name}</option>
-              ))}
-            </select>
+            <CreatableSelect
+              name="positionId"
+              options={api.data?.positions.map(p => ({ value: p.id, label: p.name }))}
+              value={positionId ? { value: positionId, label: api.data?.positions.find(p => p.id === positionId)?.name || positionId } : null}
+              onChange={(val: any) => setPositionId(val?.value || "")}
+              onCreateOption={(name) => handleCreateCatalogue("position", name)}
+              placeholder="Select or create position"
+              styles={{ control: (base) => ({ ...base, minHeight: '38px', borderRadius: '6px' }) }}
+              isDisabled={api.loading}
+            />
           </Field>
 
           <Field label="Salary">

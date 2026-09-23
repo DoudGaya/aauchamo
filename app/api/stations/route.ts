@@ -25,6 +25,10 @@ export async function GET(request: Request) {
     const stations = await db.station.findMany({
       where: {
         companyId: access.companyId,
+        OR: [
+          { disabledReason: null },
+          { disabledReason: { not: "User initiated soft delete via configuration" } }
+        ],
         ...(access.companyWide && !access.stationIds.size ? {} : { id: { in: [...access.stationIds] } }),
       },
       include: {
@@ -37,7 +41,13 @@ export async function GET(request: Request) {
       },
       orderBy: { name: "asc" },
     });
-    const res = apiSuccess(stations, requestId);
+
+    const mappedStations = stations.map(s => ({
+      ...s,
+      isActive: s.status === "ACTIVE",
+    }));
+
+    const res = apiSuccess(mappedStations, requestId);
     res.headers.set("Cache-Control", "private, max-age=10, must-revalidate");
     return res;
   } catch (error) {
