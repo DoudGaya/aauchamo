@@ -34,6 +34,7 @@ import {
   FileCheck2,
   FileDown,
   FileSearch,
+  Filter,
   Fingerprint,
   Gauge,
   History,
@@ -80,6 +81,7 @@ import React from "react";
 import { signOut } from "next-auth/react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { SalesTrendChart } from "./components/SalesTrendChart";
+import { CargoTrendChart } from "./components/CargoTrendChart";
 import { PrinterSettingsSection } from "./components/PrinterSettingsSection";
 import { IframePrintModal } from "./components/IframePrintModal";
 import { ManualView } from "./components/ManualView";
@@ -1051,7 +1053,7 @@ function ModuleView({
     case "purchases":
       return <InventoryView purchases={active === "purchases"} onModal={onModal} allowedStations={allowedStations} identity={identity} />;
     case "cargo":
-      return <CargoView onModal={onModal} onToast={onToast} allowedStations={allowedStations} identity={identity} />;
+      return <CargoView station={station} period={period} onModal={onModal} onToast={onToast} allowedStations={allowedStations} identity={identity} />;
     case "agents":
       return <AgentsView onModal={onModal} allowedStations={allowedStations} onToast={onToast} />;
     case "customers":
@@ -4772,39 +4774,121 @@ function CargoEditModal({
 }
 
 function CargoView({
+  station,
+  period = "This week",
   onModal,
   onToast,
   allowedStations,
   identity,
 }: {
+  station?: string;
+  period?: string;
   onModal: (modal: ModalKind) => void;
   onToast: (toast: Toast) => void;
   allowedStations: AllowedStation[];
   identity: WorkspaceIdentity;
 }) {
   const [tab, setTab] = useState("All cargo");
-  const { data, total, loading, error, reload } = useApiData<CargoRecord[]>("/api/cargo?pageSize=100");
-  const settingsApi = useApiData<any>("/api/settings");
+  const initialStationId = allowedStations.find((item) => item.name === station)?.id ?? "";
+  const [selectedStationId, setSelectedStationId] = useState(initialStationId);
+
+  const initialDates = getPeriodDates(period ?? "This week");
+  const [startDate, setStartDate] = useState(initialDates.from);
+  const [endDate, setEndDate] = useState(initialDates.to);
+  const [compareStartDate, setCompareStartDate] = useState("");
+  const [compareEndDate, setCompareEndDate] = useState("");
+  const [compareActive, setCompareActive] = useState(false);
+
+  const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState("");
+  const [airline, setAirline] = useState("");
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [interval, setInterval] = useState("daily");
+  const [activeBreakdownTab, setActiveBreakdownTab] = useState<"routes" | "airlines" | "status" | "shippers">("routes");
+
   const [editingShipment, setEditingShipment] = useState<CargoRecord | null>(null);
+  const [listPage, setListPage] = useState(1);
+  const LIST_PAGE_SIZE = 25;
 
-  const cargo = data ?? [];
-  const visible = cargo.filter((item) =>
+  // Sync date range when the global period picker changes
+  useEffect(() => {
+    const dates = getPeriodDates(period ?? "This week");
+    setStartDate(dates.from);
+    setEndDate(dates.to);
+  }, [period]);
+
+  const settingsApi = useApiData<any>("/api/settings");
+
+  // Shared filter params for summary & trend
+  const filterParams = new URLSearchParams();
+  if (selectedStationId) filterParams.set("stationId", selectedStationId);
+  if (origin) filterParams.set("origin", origin);
+  if (destination) filterParams.set("destination", destination);
+  if (airline) filterParams.set("airline", airline);
+  if (customerSearch) filterParams.set("search", customerSearch);
+  if (startDate) filterParams.set("startDate", startDate);
+  if (endDate) filterParams.set("endDate", endDate);
+  if (compareActive && compareStartDate) filterParams.set("compareStartDate", compareStartDate);
+  if (compareActive && compareEndDate) filterParams.set("compareEndDate", compareEndDate);
+  filterParams.set("interval", interval);
+
+  // Server-side list params
+  const listParams = new URLSearchParams();
+  if (selectedStationId) listParams.set("stationId", selectedStationId);
+  if (origin) listParams.set("origin", origin);
+  if (destination) listParams.set("destination", destination);
+  if (airline) listParams.set("airline", airline);
+  if (startDate) listParams.set("startDate", startDate);
+  if (endDate) listParams.set("endDate", endDate);
+  if (customerSearch) listParams.set("search", customerSearch);
+  const statusParam =
     tab === "Processing"
-      ? ["DRAFT", "PROCESSING", "LABELLED"].includes(item.status)
+      ? "DRAFT,PROCESSING,LABELLED"
       : tab === "In transit"
-      ? ["DISPATCHED", "IN_TRANSIT", "ARRIVED"].includes(item.status)
+      ? "DISPATCHED,IN_TRANSIT,ARRIVED"
       : tab === "Delivered"
-      ? item.status === "DELIVERED"
+      ? "DELIVERED"
       : tab === "On hold"
-      ? item.status === "ON_HOLD"
-      : true
-  );
+      ? "ON_HOLD"
+      : undefined;
+  if (statusParam) listParams.set("status", statusParam);
+  listParams.set("page", String(listPage));
+  listParams.set("pageSize", String(LIST_PAGE_SIZE));
 
-  const table = useTableControls(visible, (item, q) =>
-    `${item.awbNumber} ${item.senderName} ${item.receiverName} ${item.origin} ${item.destination} ${item.airline ?? ""} ${item.customer?.displayName ?? ""}`
-      .toLowerCase()
-      .includes(q)
-  );
+  const summaryUrl = `/api/cargo/summary?${filterParams.toString()}`;
+  const trendUrl = `/api/cargo/trend?${filterParams.toString()}`;
+  const listUrl = `/api/cargo?${listParams.toString()}`;
+
+  const summaryApi = useApiData<any>(summaryUrl);
+  const trendApi = useApiData<any>(trendUrl);
+  const listApi = useApiData<CargoRecord[]>(listUrl);
+
+  const cargo = listApi.data ?? [];
+
+  // Reset page to 1 when filters change
+  useEffect(() => {
+    setListPage(1);
+  }, [startDate, endDate, selectedStationId, origin, destination, airline, customerSearch, tab]);
+
+  const reloadAll = () => {
+    listApi.reload();
+    summaryApi.reload();
+    trendApi.reload();
+  };
+
+  const chartData = (trendApi.data?.trend ?? []).map((t: any) => ({
+    date: t.bucket,
+    shipments: t.shipments,
+    weightKg: t.weightKg,
+    pieces: t.pieces,
+  }));
+
+  const compareChartData = (trendApi.data?.compareTrend ?? []).map((t: any) => ({
+    date: t.bucket,
+    shipments: t.shipments,
+    weightKg: t.weightKg,
+    pieces: t.pieces,
+  }));
 
   const nextStatus: Record<string, string> = {
     DRAFT: "LABELLED",
@@ -4831,7 +4915,7 @@ function CargoView({
     if (!notes?.trim()) return;
     try {
       await workflowPost(`/api/cargo/${item.id}/status`, { status: next, notes });
-      reload();
+      reloadAll();
       onToast({ title: "Cargo updated", detail: `${item.awbNumber} moved to ${next.replaceAll("_", " ").toLowerCase()}.` });
     } catch (error_) {
       onToast({
@@ -4860,7 +4944,7 @@ function CargoView({
       }
       try {
         await workflowPost(`/api/cargo/${item.id}/reprint`, { format: printFormat === "AUTO" ? "A4" : printFormat, reason: reprintReason });
-        reload();
+        reloadAll();
         onToast({ title: "Label reprinted", detail: `An audited reprint of ${item.awbNumber} was recorded.` });
       } catch (error_) {
         onToast({ title: "Reprint failed", detail: error_ instanceof Error ? error_.message : "The label could not be reprinted." });
@@ -4882,164 +4966,522 @@ function CargoView({
       const response = await fetch(`/api/cargo/${item.id}`, { method: "DELETE" });
       const body = await response.json();
       if (!response.ok || !body.ok) throw new Error(body.error?.message || "Failed to delete cargo.");
-      reload();
+      reloadAll();
+      onToast({ title: "Cargo deleted", detail: `${item.awbNumber} was removed.` });
     } catch (err: any) {
       alert(err.message || "Failed to delete cargo.");
     }
   };
 
-  const exportManifest = () => {
-    const headers = [
-      "AWB Number",
-      "Customer",
-      "Sender Name",
-      "Sender Phone",
-      "Receiver Name",
-      "Receiver Phone",
-      "Receiver Address",
-      "Origin",
-      "Destination",
-      "Weight (kg)",
-      "Pieces",
-      "Commodity",
-      "Airline",
-      "Flight Number",
-      "Flight Date",
-      "Status",
-      "Label Version",
-      "Reprint Count",
-      "Created At",
-    ];
-    const rows = table.filtered.map((item) => [
-      item.awbNumber,
-      item.customer?.displayName || "",
-      item.senderName,
-      item.senderPhone,
-      item.receiverName,
-      item.receiverPhone,
-      item.receiverAddress || "",
-      item.origin,
-      item.destination,
-      item.weightKg,
-      item.pieces,
-      item.commodity,
-      item.airline || "",
-      item.flightNumber || "",
-      item.flightDate ? new Date(item.flightDate).toLocaleDateString("en-NG") : "",
-      item.status,
-      `v${item.labelVersion}`,
-      item.reprintCount,
-      new Date(item.createdAt).toLocaleDateString("en-NG"),
-    ]);
+  const exportManifestCsv = () => {
+    const exportUrl = new URL("/api/cargo/export", window.location.origin);
+    if (selectedStationId) exportUrl.searchParams.set("stationId", selectedStationId);
+    if (origin) exportUrl.searchParams.set("origin", origin);
+    if (destination) exportUrl.searchParams.set("destination", destination);
+    if (airline) exportUrl.searchParams.set("airline", airline);
+    if (customerSearch) exportUrl.searchParams.set("search", customerSearch);
+    if (startDate) exportUrl.searchParams.set("startDate", startDate);
+    if (endDate) exportUrl.searchParams.set("endDate", endDate);
+    if (statusParam) exportUrl.searchParams.set("status", statusParam);
 
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((e) => e.map((val) => `"${String(val).replace(/"/g, '""')}"`).join(","))].join(
-        "\n"
-      );
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `cargo_manifest_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    window.open(exportUrl.toString(), "_blank", "noopener,noreferrer");
+    onToast({
+      title: "Cargo export started",
+      detail: `Downloading filtered manifest for ${period || "selected period"}.`,
+    });
   };
+
+  const exportManifestPdf = () => {
+    const rows = cargo.map((c) => [
+      c.awbNumber,
+      c.customer?.displayName ?? c.senderName,
+      `${c.origin} → ${c.destination}`,
+      `${c.pieces} pcs / ${c.weightKg} kg`,
+      c.commodity || "General",
+      c.airline ? `${c.airline} ${c.flightNumber ?? ""}`.trim() : "—",
+      c.status.replaceAll("_", " "),
+    ]);
+    exportTableToPDF({
+      title: `Cargo & AWB Manifest - ${tab}`,
+      columns: ["AWB Number", "Shipper", "Route", "Shipment", "Commodity", "Flight", "Status"],
+      rows,
+      companyProfile: {
+        displayName: "AAU Chamo Operations Suite",
+        address: settingsApi.data?.company?.address || "Airport Operations Center",
+        phone: settingsApi.data?.company?.phone || "+2349168340588",
+      },
+      filename: `aau-chamo-cargo-manifest-${Date.now()}`,
+    });
+  };
+
+  const cargoLocations: Array<{ code: string; name: string }> = settingsApi.data?.cargoLocations ?? [
+    { code: "KAN", name: "Kano (Mallam Aminu Kano Intl)" },
+    { code: "ABV", name: "Abuja (Nnamdi Azikiwe Intl)" },
+    { code: "LOS", name: "Lagos (Murtala Muhammed Intl)" },
+    { code: "PHC", name: "Port Harcourt Intl" },
+    { code: "KAD", name: "Kaduna Airport" },
+    { code: "ILR", name: "Ilorin Airport" },
+    { code: "SKO", name: "Sokoto (Sadiq Abubakar III Intl)" },
+    { code: "MIU", name: "Maiduguri Intl" },
+  ];
+
+  const summary = summaryApi.data?.summary;
+  const compareSummary = summaryApi.data?.compareSummary;
 
   return (
     <div className="content-stack">
+      {/* Search and Filters Strip */}
+      <Panel>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+          <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
+            <Filter size={15} /> Cargo & AWB Search Filters
+          </h3>
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            <button
+              type="button"
+              className="text-action"
+              onClick={() => {
+                setSelectedStationId("");
+                setOrigin("");
+                setDestination("");
+                setAirline("");
+                setCustomerSearch("");
+                setCompareActive(false);
+                setListPage(1);
+              }}
+              style={{ fontSize: "12px", background: "none", border: "none", cursor: "pointer", color: "var(--brand-primary, #3b82f6)" }}
+            >
+              Reset filters
+            </button>
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={reloadAll}
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "12px", height: "30px", padding: "0 10px" }}
+            >
+              <RefreshCcw size={13} /> Refresh
+            </button>
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: "14px" }}>
+          <Field label="Station">
+            <select value={selectedStationId} onChange={(e) => setSelectedStationId(e.target.value)}>
+              <option value="">All stations</option>
+              {allowedStations.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.code} — {s.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Origin">
+            <select value={origin} onChange={(e) => setOrigin(e.target.value)}>
+              <option value="">All origins</option>
+              {cargoLocations.map((loc) => (
+                <option key={loc.code} value={loc.code}>
+                  {loc.code} ({loc.name})
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Destination">
+            <select value={destination} onChange={(e) => setDestination(e.target.value)}>
+              <option value="">All destinations</option>
+              {cargoLocations.map((loc) => (
+                <option key={loc.code} value={loc.code}>
+                  {loc.code} ({loc.name})
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Carrier / Airline">
+            <input
+              type="text"
+              placeholder="e.g. Binani Air, Air Peace"
+              value={airline}
+              onChange={(e) => setAirline(e.target.value)}
+            />
+          </Field>
+
+          <Field label="Shipper / Receiver / Keyword">
+            <input
+              type="text"
+              placeholder="Search shipper or receiver"
+              value={customerSearch}
+              onChange={(e) => setCustomerSearch(e.target.value)}
+            />
+          </Field>
+
+          <Field label="Start Date">
+            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+          </Field>
+
+          <Field label="End Date">
+            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          </Field>
+        </div>
+
+        <div style={{ display: "flex", gap: "24px", alignItems: "center", marginTop: "16px", borderTop: "1px solid var(--border-color, #eee)", paddingTop: "14px", flexWrap: "wrap" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "13px" }}>
+            <input
+              type="checkbox"
+              checked={compareActive}
+              onChange={(e) => setCompareActive(e.target.checked)}
+            />
+            <strong>Enable comparative period</strong>
+          </label>
+
+          <Field label="Trend Interval" style={{ margin: 0 }}>
+            <select value={interval} onChange={(e) => setInterval(e.target.value)} style={{ padding: "4px 8px" }}>
+              <option value="hourly">Hourly</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </Field>
+        </div>
+
+        {compareActive && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", marginTop: "14px", background: "var(--panel-bg, #fafafa)", padding: "14px", borderRadius: "8px", border: "1px solid var(--border-color, #eee)" }}>
+            <Field label="Compare Start Date">
+              <input type="date" value={compareStartDate} onChange={(e) => setCompareStartDate(e.target.value)} />
+            </Field>
+            <Field label="Compare End Date">
+              <input type="date" value={compareEndDate} onChange={(e) => setCompareEndDate(e.target.value)} />
+            </Field>
+          </div>
+        )}
+      </Panel>
+
+      {/* Summary Cards strip */}
       <section className="summary-strip">
         <SummaryItem
-          label="Cargo records"
-          value={total.toString()}
-          detail={`${cargo.reduce((sum, item) => sum + Number(item.weightKg), 0).toLocaleString()} kg loaded`}
+          label="Total Cargo AWBs"
+          value={(summary?.totalShipments ?? listApi.total ?? 0).toString()}
+          detail={
+            compareActive
+              ? `vs ${compareSummary?.totalShipments ?? 0} prev period`
+              : `${(summary?.totalPieces ?? 0).toLocaleString()} total pieces`
+          }
           icon={Plane}
           tone="info"
         />
         <SummaryItem
-          label="In transit"
-          value={cargo.filter((item) => ["DISPATCHED", "IN_TRANSIT", "ARRIVED"].includes(item.status)).length.toString()}
-          detail={`${cargo.reduce((sum, item) => sum + item.pieces, 0)} pieces loaded`}
-          icon={ArrowUpRight}
+          label="Total Tonnage"
+          value={`${(summary?.totalWeightKg ?? 0).toLocaleString()} kg`}
+          detail={
+            compareActive
+              ? `vs ${(compareSummary?.totalWeightKg ?? 0).toLocaleString()} kg prev`
+              : `Avg ${summary?.avgWeightKg ?? 0} kg / shipment`
+          }
+          icon={BadgeCheck}
           tone="success"
         />
         <SummaryItem
-          label="Processing"
-          value={cargo.filter((item) => ["DRAFT", "PROCESSING", "LABELLED"].includes(item.status)).length.toString()}
-          detail="Pre-dispatch"
-          icon={Clock3}
+          label="In Transit Pipeline"
+          value={(summary?.inTransitCount ?? 0).toString()}
+          detail={`${summary?.processingCount ?? 0} pre-dispatch processing`}
+          icon={ArrowUpRight}
           tone="warning"
         />
         <SummaryItem
-          label="On hold"
-          value={cargo.filter((item) => item.status === "ON_HOLD").length.toString()}
-          detail="Action required"
+          label="Delivered & SLA"
+          value={(summary?.deliveredCount ?? 0).toString()}
+          detail={`${summary?.deliverySuccessRate ?? 100}% fulfillment rate`}
+          icon={CheckCircle2}
+          tone="success"
+        />
+        <SummaryItem
+          label="Declared Value"
+          value={formatNaira(summary?.totalDeclaredValue ?? 0)}
+          detail={
+            compareActive
+              ? `vs ${formatNaira(compareSummary?.totalDeclaredValue ?? 0)} prev`
+              : "Insured cargo goods"
+          }
+          icon={Banknote}
+          tone="info"
+        />
+        <SummaryItem
+          label="On Hold & Alerts"
+          value={(summary?.onHoldCount ?? 0).toString()}
+          detail={`${summary?.cancelledCount ?? 0} cancelled`}
           icon={AlertTriangle}
-          tone="danger"
+          tone={(summary?.onHoldCount ?? 0) > 0 ? "danger" : "neutral"}
         />
       </section>
+
+      {/* Visual Analytics */}
+      <div style={{ display: "grid", gridTemplateColumns: compareActive ? "1fr 1fr" : "1fr", gap: "20px" }}>
+        <Panel>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+            <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
+              <TrendingUp size={16} /> Cargo Volume & Tonnage Trend
+            </h3>
+            <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+              {chartData.length} timeline points ({interval})
+            </span>
+          </div>
+          <CargoTrendChart data={chartData} />
+        </Panel>
+
+        {compareActive && (
+          <Panel>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+              <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
+                <TrendingUp size={16} /> Comparative Period Trend
+              </h3>
+              <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                {compareChartData.length} timeline points
+              </span>
+            </div>
+            <CargoTrendChart data={compareChartData} />
+          </Panel>
+        )}
+      </div>
+
+      {/* Multi-Dimensional Logistics Breakdowns */}
+      <Panel>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "600" }}>Logistics Performance Breakdown</h3>
+            <p style={{ margin: "2px 0 0", fontSize: "12px", color: "var(--text-muted)" }}>
+              Multi-dimensional analysis by flight routes, airline carriers, lifecycle status, and commercial shippers
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: "6px" }}>
+            {(["routes", "airlines", "status", "shippers"] as const).map((bTab) => (
+              <button
+                key={bTab}
+                type="button"
+                className={`filter-chip${activeBreakdownTab === bTab ? " active" : ""}`}
+                onClick={() => setActiveBreakdownTab(bTab)}
+                style={{ textTransform: "capitalize" }}
+              >
+                {bTab === "routes" ? "Top Routes" : bTab === "airlines" ? "Airlines" : bTab === "status" ? "Pipeline Status" : "Top Shippers"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {activeBreakdownTab === "routes" && (
+          <div className="table-wrap">
+            <table className="data-table" style={{ fontSize: "12px" }}>
+              <thead>
+                <tr>
+                  <th>Route</th>
+                  <th>Origin</th>
+                  <th>Destination</th>
+                  <th>AWB Count</th>
+                  <th>Tonnage</th>
+                  <th>Pieces</th>
+                  <th>Avg. Weight / AWB</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(summaryApi.data?.byRoute ?? []).length === 0 ? (
+                  <tr>
+                    <td colSpan={7} style={{ textAlign: "center", padding: "20px", color: "var(--text-muted)" }}>
+                      No route volume recorded for this period.
+                    </td>
+                  </tr>
+                ) : (
+                  (summaryApi.data?.byRoute ?? []).map((rt: any) => (
+                    <tr key={rt.route}>
+                      <td><strong className="route-code">{rt.route}</strong></td>
+                      <td>{rt.origin}</td>
+                      <td>{rt.destination}</td>
+                      <td><strong>{rt.count}</strong></td>
+                      <td><span style={{ color: "#0ea5e9", fontWeight: "600" }}>{rt.totalWeightKg.toLocaleString()} kg</span></td>
+                      <td>{rt.totalPieces}</td>
+                      <td>{(rt.count > 0 ? (rt.totalWeightKg / rt.count).toFixed(2) : "0")} kg</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {activeBreakdownTab === "airlines" && (
+          <div className="table-wrap">
+            <table className="data-table" style={{ fontSize: "12px" }}>
+              <thead>
+                <tr>
+                  <th>Airline Carrier</th>
+                  <th>Shipments (AWB)</th>
+                  <th>Tonnage (kg)</th>
+                  <th>Total Pieces</th>
+                  <th>Volume Share</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(summaryApi.data?.byAirline ?? []).length === 0 ? (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: "center", padding: "20px", color: "var(--text-muted)" }}>
+                      No airline carrier data for this period.
+                    </td>
+                  </tr>
+                ) : (
+                  (summaryApi.data?.byAirline ?? []).map((al: any) => {
+                    const totalWeight = summary?.totalWeightKg ?? 1;
+                    const pct = totalWeight > 0 ? Math.round((al.totalWeightKg / totalWeight) * 100) : 0;
+                    return (
+                      <tr key={al.airline}>
+                        <td><strong>{al.airline}</strong></td>
+                        <td>{al.count}</td>
+                        <td><span style={{ color: "#0ea5e9", fontWeight: "600" }}>{al.totalWeightKg.toLocaleString()} kg</span></td>
+                        <td>{al.totalPieces}</td>
+                        <td>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ width: "80px", height: "6px", background: "var(--surface-3, #e2e8f0)", borderRadius: "3px", overflow: "hidden" }}>
+                              <div style={{ width: `${pct}%`, height: "100%", background: "#8b5cf6", borderRadius: "3px" }} />
+                            </div>
+                            <span style={{ fontSize: "11px", fontWeight: "600" }}>{pct}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {activeBreakdownTab === "status" && (
+          <div className="table-wrap">
+            <table className="data-table" style={{ fontSize: "12px" }}>
+              <thead>
+                <tr>
+                  <th>Lifecycle Status</th>
+                  <th>Shipment Count</th>
+                  <th>Total Weight</th>
+                  <th>Total Pieces</th>
+                  <th>Pipeline Share</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(summaryApi.data?.byStatus ?? []).length === 0 ? (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: "center", padding: "20px", color: "var(--text-muted)" }}>
+                      No cargo records in this filter scope.
+                    </td>
+                  </tr>
+                ) : (
+                  (summaryApi.data?.byStatus ?? []).map((st: any) => {
+                    const totalCount = summary?.totalShipments ?? 1;
+                    const pct = totalCount > 0 ? Math.round((st.count / totalCount) * 100) : 0;
+                    return (
+                      <tr key={st.status}>
+                        <td><StatusPill value={st.status.replaceAll("_", " ")} /></td>
+                        <td><strong>{st.count}</strong></td>
+                        <td>{st.totalWeightKg.toLocaleString()} kg</td>
+                        <td>{st.totalPieces}</td>
+                        <td>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ width: "80px", height: "6px", background: "var(--surface-3, #e2e8f0)", borderRadius: "3px", overflow: "hidden" }}>
+                              <div style={{ width: `${pct}%`, height: "100%", background: "#0ea5e9", borderRadius: "3px" }} />
+                            </div>
+                            <span style={{ fontSize: "11px", fontWeight: "600" }}>{pct}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {activeBreakdownTab === "shippers" && (
+          <div className="table-wrap">
+            <table className="data-table" style={{ fontSize: "12px" }}>
+              <thead>
+                <tr>
+                  <th>Shipper / Customer</th>
+                  <th>Shipment Frequency</th>
+                  <th>Total Tonnage</th>
+                  <th>Total Pieces</th>
+                  <th>Declared Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(summaryApi.data?.byCustomer ?? []).length === 0 ? (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: "center", padding: "20px", color: "var(--text-muted)" }}>
+                      No commercial customer bookings recorded.
+                    </td>
+                  </tr>
+                ) : (
+                  (summaryApi.data?.byCustomer ?? []).map((cust: any) => (
+                    <tr key={cust.id}>
+                      <td><strong>{cust.name}</strong></td>
+                      <td>{cust.count} AWBs</td>
+                      <td><span style={{ color: "#0ea5e9", fontWeight: "600" }}>{cust.totalWeightKg.toLocaleString()} kg</span></td>
+                      <td>{cust.totalPieces}</td>
+                      <td>{formatNaira(cust.totalDeclaredValue)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Panel>
+
+      {/* Main Cargo Data Table */}
       <Panel>
         <TableToolbar
           tabs={["All cargo", "Processing", "In transit", "Delivered", "On hold"]}
           activeTab={tab}
           onTab={(value) => {
             setTab(value);
-            table.resetPage();
+            setListPage(1);
           }}
           exportable
-          onExport={exportManifest}
-          onExportPdf={() => {
-            const rows = table.filtered.map((c) => [
-              c.awbNumber,
-              `${c.origin} > ${c.destination}`,
-              c.pieces,
-              `${c.weightKg} kg`,
-              c.airline || "—",
-              c.flightNumber || "—",
-              c.status
-            ]);
-            exportTableToPDF({
-              title: `Cargo Manifest - ${tab}`,
-              columns: ["AWB", "Route", "Pieces", "Weight", "Airline", "Flight", "Status"],
-              rows,
-              companyProfile: {
-                displayName: "AAU Chamo",
-                address: settingsApi.data?.company?.address || "Address not configured",
-                phone: settingsApi.data?.company?.phone || "+2349168340588"
-              },
-              filename: `aau-chamo-manifest-${Date.now()}`
-            });
+          onExport={exportManifestCsv}
+          onExportPdf={exportManifestPdf}
+          placeholder="Search by AWB, sender, receiver, commodity or flight"
+          search={customerSearch}
+          onSearch={(q) => {
+            setCustomerSearch(q);
+            setListPage(1);
           }}
-          placeholder="Search AWB, sender, receiver or route"
-          search={table.search}
-          onSearch={table.setSearch}
         />
-        {error ? (
-          <EmptyState icon={AlertTriangle} title="Cargo could not be loaded" detail={error} />
-        ) : loading ? (
+
+        {listApi.error ? (
+          <EmptyState icon={AlertTriangle} title="Cargo could not be loaded" detail={listApi.error} />
+        ) : listApi.loading ? (
           <EmptyState
             icon={RefreshCcw}
             title="Loading cargo records"
-            detail="Retrieving AWB records and status history."
+            detail="Retrieving AWB records and status history with active filters."
             compact
           />
-        ) : table.filtered.length ? (
+        ) : cargo.length ? (
           <div className="table-wrap">
             <table className="data-table">
               <thead>
                 <tr>
                   <th>AWB / cargo no.</th>
-                  <th>Customer</th>
+                  <th>Customer / Shipper</th>
                   <th>Route</th>
                   <th>Shipment</th>
-                  <th>Airline</th>
+                  <th>Flight / Carrier</th>
                   <th>Label status</th>
                   <th>Created</th>
                   <th />
                 </tr>
               </thead>
               <tbody>
-                {table.pageRows.map((item) => (
+                {cargo.map((item) => (
                   <tr key={item.id}>
                     <td>
                       <div className="primary-cell">
@@ -5050,16 +5492,39 @@ function CargoView({
                         </span>
                       </div>
                     </td>
-                    <td>{item.customer?.displayName ?? item.senderName}</td>
+                    <td>
+                      <div>
+                        <strong>{item.customer?.displayName ?? item.senderName}</strong>
+                        {item.receiverName && (
+                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                            To: {item.receiverName}
+                          </div>
+                        )}
+                      </div>
+                    </td>
                     <td>
                       <strong className="route-code">
                         {item.origin} → {item.destination}
                       </strong>
                     </td>
                     <td>
-                      {item.pieces} pcs · {item.weightKg} kg
+                      <div>
+                        <span>{item.pieces} pcs · {item.weightKg} kg</span>
+                        <div style={{ fontSize: "11px", color: "var(--text-muted)", maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {item.commodity}
+                        </div>
+                      </div>
                     </td>
-                    <td>{item.airline ?? "—"}</td>
+                    <td>
+                      <div>
+                        <span>{item.airline ?? "—"}</span>
+                        {item.flightNumber && (
+                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                            Flt {item.flightNumber}
+                          </div>
+                        )}
+                      </div>
+                    </td>
                     <td>
                       <StatusPill value={item.status.replaceAll("_", " ")} />
                     </td>
@@ -5105,10 +5570,11 @@ function CargoView({
         ) : (
           <EmptyState
             icon={Plane}
-            title="No cargo records"
-            detail="Create an AWB to generate the first scanner-compatible cargo label."
+            title="No cargo records found"
+            detail="No shipments match the selected filters and date range. Try clearing or expanding your search."
           />
         )}
+
         <div className="table-callout">
           <div>
             <PackageCheck size={18} />
@@ -5121,11 +5587,12 @@ function CargoView({
           </em>
           <button onClick={() => onModal("cargo")}>Create AWB</button>
         </div>
+
         <Pagination
-          total={table.total}
-          page={table.page}
-          pageSize={table.pageSize}
-          onPage={table.setPage}
+          total={listApi.total ?? 0}
+          page={listPage}
+          pageSize={LIST_PAGE_SIZE}
+          onPage={setListPage}
         />
       </Panel>
 
@@ -5136,7 +5603,7 @@ function CargoView({
           onClose={() => setEditingShipment(null)}
           onComplete={(title, detail) => {
             setEditingShipment(null);
-            reload();
+            reloadAll();
             onToast({ title, detail });
           }}
         />
@@ -9598,7 +10065,7 @@ function ReportsView({
           <div>
             <span>Reporting & Analytics</span>
             <strong>{period} · Permission-scoped</strong>
-            <small>17 reports available. Data is audited and refreshed in real time.</small>
+            <small>{reportCatalogue.length} reports available. Data is audited and refreshed in real time.</small>
           </div>
         </div>
         <div className="report-hero-stats">

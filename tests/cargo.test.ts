@@ -9,7 +9,10 @@ vi.mock("@/auth", () => ({
 }));
 
 import { db } from "@/lib/server/db";
-import { POST as createCargo } from "@/app/api/cargo/route";
+import { POST as createCargo, GET as listCargo } from "@/app/api/cargo/route";
+import { GET as getCargoSummary } from "@/app/api/cargo/summary/route";
+import { GET as getCargoTrend } from "@/app/api/cargo/trend/route";
+import { GET as exportCargo } from "@/app/api/cargo/export/route";
 import { PATCH as updateCargo } from "@/app/api/cargo/[shipmentId]/route";
 import { POST as changeStatus } from "@/app/api/cargo/[shipmentId]/status/route";
 import { POST as decideApproval } from "@/app/api/approvals/[approvalId]/decision/route";
@@ -25,7 +28,7 @@ describe("Cargo & AWB Labeling Integration Tests (Module 8)", () => {
 
   function mockAccessContext(
     actorId: string,
-    permissions: string[] = ["cargo.create", "cargo.update_draft", "cargo.change_status", "cargo.edit_label"]
+    permissions: string[] = ["cargo.create", "cargo.view", "cargo.update_draft", "cargo.change_status", "cargo.edit_label"]
   ) {
     return {
       userId: actorId,
@@ -285,5 +288,92 @@ describe("Cargo & AWB Labeling Integration Tests (Module 8)", () => {
     // Verify document was bumped to v3
     const finalDoc = await db.generatedDocument.findUniqueOrThrow({ where: { id: doc!.id } });
     expect(finalDoc.version).toBe(3);
+  });
+
+  it("should return filtered cargo listings with summary aggregates", async () => {
+    vi.spyOn(accessModule, "requireAccess").mockResolvedValue(mockAccessContext(userId) as any);
+    vi.spyOn(accessModule, "requirePermission").mockImplementation((ctx) => ctx as any);
+
+    // Create a test cargo shipment
+    const createReq = new Request("http://localhost/api/cargo", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        stationId,
+        customerId,
+        senderName: "Report Sender",
+        senderPhone: "+2348033334444",
+        receiverName: "Report Receiver",
+        receiverPhone: "+2348055556666",
+        origin: "KAN",
+        destination: "ABV",
+        weightKg: "25.500",
+        pieces: 3,
+        commodity: "Electronics & Solar Kits",
+        airline: "Binani Air",
+        declaredValue: "150000.00",
+        isFragile: true,
+      }),
+    });
+    const createRes = await createCargo(createReq);
+    expect(createRes.status).toBe(200);
+    const createdEnv = await createRes.json();
+    createdShipmentIds.push(createdEnv.data.id);
+
+    // Query list with search
+    const listReq = new Request("http://localhost/api/cargo?search=Report+Sender&origin=KAN");
+    const listRes = await listCargo(listReq);
+    expect(listRes.status).toBe(200);
+    const listBody = await listRes.json();
+    expect(listBody.ok).toBe(true);
+    expect(listBody.data.length).toBeGreaterThanOrEqual(1);
+    expect(listBody.meta.summary).toBeDefined();
+    expect(listBody.meta.summary.totalWeightKg).toBeGreaterThanOrEqual(25.5);
+    expect(listBody.meta.summary.totalPieces).toBeGreaterThanOrEqual(3);
+  });
+
+  it("should return cargo summary with multidimensional breakdowns and comparative periods", async () => {
+    vi.spyOn(accessModule, "requireAccess").mockResolvedValue(mockAccessContext(userId) as any);
+    vi.spyOn(accessModule, "requirePermission").mockImplementation((ctx) => ctx as any);
+
+    const summaryReq = new Request("http://localhost/api/cargo/summary?origin=KAN&compareStartDate=2020-01-01&compareEndDate=2020-01-31");
+    const summaryRes = await getCargoSummary(summaryReq);
+    expect(summaryRes.status).toBe(200);
+    const summaryBody = await summaryRes.json();
+    expect(summaryBody.ok).toBe(true);
+    expect(summaryBody.data.summary).toBeDefined();
+    expect(summaryBody.data.summary.totalShipments).toBeTypeOf("number");
+    expect(summaryBody.data.summary.totalWeightKg).toBeTypeOf("number");
+    expect(summaryBody.data.byStation).toBeInstanceOf(Array);
+    expect(summaryBody.data.byRoute).toBeInstanceOf(Array);
+    expect(summaryBody.data.byAirline).toBeInstanceOf(Array);
+    expect(summaryBody.data.byStatus).toBeInstanceOf(Array);
+    expect(summaryBody.data.byCustomer).toBeInstanceOf(Array);
+    expect(summaryBody.data.compareSummary).toBeDefined();
+  });
+
+  it("should return cargo trend data across time intervals", async () => {
+    vi.spyOn(accessModule, "requireAccess").mockResolvedValue(mockAccessContext(userId) as any);
+    vi.spyOn(accessModule, "requirePermission").mockImplementation((ctx) => ctx as any);
+
+    const trendReq = new Request("http://localhost/api/cargo/trend?interval=daily");
+    const trendRes = await getCargoTrend(trendReq);
+    expect(trendRes.status).toBe(200);
+    const trendBody = await trendRes.json();
+    expect(trendBody.ok).toBe(true);
+    expect(trendBody.data.trend).toBeInstanceOf(Array);
+  });
+
+  it("should export filtered cargo shipments as CSV", async () => {
+    vi.spyOn(accessModule, "requireAccess").mockResolvedValue(mockAccessContext(userId) as any);
+    vi.spyOn(accessModule, "requirePermission").mockImplementation((ctx) => ctx as any);
+
+    const exportReq = new Request("http://localhost/api/cargo/export?origin=KAN");
+    const exportRes = await exportCargo(exportReq);
+    expect(exportRes.status).toBe(200);
+    expect(exportRes.headers.get("content-type")).toContain("text/csv");
+    const text = await exportRes.text();
+    expect(text).toContain("AWB Number");
+    expect(text).toContain("Weight (kg)");
   });
 });

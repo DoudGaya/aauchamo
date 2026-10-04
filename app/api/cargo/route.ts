@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { requireAccess, requirePermission, requireStation } from "@/lib/server/access";
+import { requireAccess, requirePermission, requireStation, stationWhere } from "@/lib/server/access";
 import { AppError, apiFailure, apiSuccess, parseJson, parsePagination, requestIdFrom } from "@/lib/server/api";
 import { writeAudit } from "@/lib/server/audit";
 import { db } from "@/lib/server/db";
@@ -11,10 +11,95 @@ const cargoSchema = z.object({ stationId: z.string().cuid(), customerId: z.strin
 export async function GET(request: Request) {
   const requestId = requestIdFrom(request);
   try {
-    const access = requirePermission(await requireAccess(), "cargo.view"); const url = new URL(request.url); const { page, pageSize, skip, take } = parsePagination(url.searchParams); const stationId = url.searchParams.get("stationId") ?? undefined; const search = url.searchParams.get("search")?.trim(); if (stationId) requireStation(access, stationId);
-    const where = { companyId: access.companyId, ...(stationId ? { stationId } : access.companyWide && !access.stationIds.size ? {} : { stationId: { in: [...access.stationIds] } }), ...(search ? { OR: [{ awbNumber: { contains: search, mode: "insensitive" as const } }, { senderName: { contains: search, mode: "insensitive" as const } }, { receiverName: { contains: search, mode: "insensitive" as const } }] } : {}) };
-    const [items, total] = await Promise.all([db.cargoShipment.findMany({ where, include: { customer: { select: { id: true, customerNumber: true, displayName: true } }, station: { select: { id: true, code: true, name: true } }, events: { orderBy: { occurredAt: "desc" }, take: 1 } }, orderBy: { createdAt: "desc" }, skip, take }), db.cargoShipment.count({ where })]);
-    return apiSuccess(items, requestId, { page, pageSize, total });
+    const access = requirePermission(await requireAccess(), "cargo.view");
+    const url = new URL(request.url);
+    const { page, pageSize, skip, take } = parsePagination(url.searchParams);
+    const stationId = url.searchParams.get("stationId") ?? undefined;
+    if (stationId) requireStation(access, stationId);
+
+    const statusParam = url.searchParams.get("status") ?? undefined;
+    const origin = url.searchParams.get("origin") ?? undefined;
+    const destination = url.searchParams.get("destination") ?? undefined;
+    const airline = url.searchParams.get("airline") ?? undefined;
+    const customerId = url.searchParams.get("customerId") ?? undefined;
+    const isFragileParam = url.searchParams.get("isFragile") ?? undefined;
+    const startDate = url.searchParams.get("startDate") ?? undefined;
+    const endDate = url.searchParams.get("endDate") ?? undefined;
+    const search = url.searchParams.get("search")?.trim();
+
+    const where: any = {
+      companyId: access.companyId,
+      ...stationWhere(access, stationId),
+      ...(customerId ? { customerId } : {}),
+      ...(airline ? { airline: { equals: airline, mode: "insensitive" } } : {}),
+      ...(origin ? { origin: { equals: origin, mode: "insensitive" } } : {}),
+      ...(destination ? { destination: { equals: destination, mode: "insensitive" } } : {}),
+      ...(isFragileParam !== undefined ? { isFragile: isFragileParam === "true" } : {}),
+      ...(search
+        ? {
+            OR: [
+              { awbNumber: { contains: search, mode: "insensitive" as const } },
+              { senderName: { contains: search, mode: "insensitive" as const } },
+              { receiverName: { contains: search, mode: "insensitive" as const } },
+              { senderPhone: { contains: search, mode: "insensitive" as const } },
+              { receiverPhone: { contains: search, mode: "insensitive" as const } },
+              { commodity: { contains: search, mode: "insensitive" as const } },
+              { flightNumber: { contains: search, mode: "insensitive" as const } },
+            ],
+          }
+        : {}),
+    };
+
+    if (statusParam) {
+      const statuses = statusParam.split(",").map((s) => s.trim()).filter(Boolean);
+      if (statuses.length === 1) {
+        where.status = statuses[0];
+      } else if (statuses.length > 1) {
+        where.status = { in: statuses };
+      }
+    }
+
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate);
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.createdAt.lte = end;
+      }
+    }
+
+    const [items, total, aggregate] = await Promise.all([
+      db.cargoShipment.findMany({
+        where,
+        include: {
+          customer: { select: { id: true, customerNumber: true, displayName: true, primaryPhone: true } },
+          station: { select: { id: true, code: true, name: true } },
+          events: { orderBy: { occurredAt: "desc" }, take: 1 },
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take,
+      }),
+      db.cargoShipment.count({ where }),
+      db.cargoShipment.aggregate({
+        where,
+        _sum: { weightKg: true, declaredValue: true, pieces: true },
+      }),
+    ]);
+
+    return apiSuccess(items, requestId, {
+      page,
+      pageSize,
+      total,
+      summary: {
+        totalWeightKg: aggregate._sum.weightKg ? Number(aggregate._sum.weightKg) : 0,
+        totalPieces: aggregate._sum.pieces ?? 0,
+        totalDeclaredValue: aggregate._sum.declaredValue ? Number(aggregate._sum.declaredValue) : 0,
+      },
+    });
   } catch (error) { return apiFailure(error, requestId); }
 }
 

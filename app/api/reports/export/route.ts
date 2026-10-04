@@ -287,6 +287,129 @@ export async function GET(request: Request) {
       ]);
       filename = `cargo-manifest-${today}.csv`;
 
+    } else if (reportKey === "cargo_tonnage_breakdown") {
+      const rows = await db.cargoShipment.findMany({
+        where: { ...scoped, createdAt: dateRange },
+        include: { station: { select: { code: true } } },
+        take: 50_000,
+      });
+      const map = new Map<string, { route: string; origin: string; destination: string; station: string; count: number; weight: number; pieces: number; declared: number }>();
+      for (const r of rows) {
+        const key = `${r.origin}-${r.destination}-${r.station.code}`;
+        const item = map.get(key) || {
+          route: `${r.origin} -> ${r.destination}`,
+          origin: r.origin,
+          destination: r.destination,
+          station: r.station.code,
+          count: 0,
+          weight: 0,
+          pieces: 0,
+          declared: 0,
+        };
+        item.count++;
+        item.weight += Number(r.weightKg ?? 0);
+        item.pieces += Number(r.pieces ?? 0);
+        item.declared += Number(r.declaredValue ?? 0);
+        map.set(key, item);
+      }
+      headers = ["route", "origin", "destination", "station", "shipmentCount", "totalWeightKg", "totalPieces", "avgWeightKg", "totalDeclaredValue"];
+      csvRows = Array.from(map.values()).map((i) => [
+        i.route, i.origin, i.destination, i.station,
+        String(i.count), i.weight.toFixed(3), String(i.pieces),
+        (i.count > 0 ? (i.weight / i.count).toFixed(2) : "0"),
+        i.declared.toFixed(2),
+      ]);
+      filename = `cargo-tonnage-breakdown-${today}.csv`;
+
+    } else if (reportKey === "cargo_airline_performance") {
+      const rows = await db.cargoShipment.findMany({
+        where: { ...scoped, createdAt: dateRange },
+        take: 50_000,
+      });
+      const map = new Map<string, { airline: string; flightNumber: string; count: number; weight: number; pieces: number; delivered: number }>();
+      for (const r of rows) {
+        const air = r.airline?.trim() || "Unassigned / General";
+        const fl = r.flightNumber?.trim() || "N/A";
+        const key = `${air}-${fl}`;
+        const item = map.get(key) || { airline: air, flightNumber: fl, count: 0, weight: 0, pieces: 0, delivered: 0 };
+        item.count++;
+        item.weight += Number(r.weightKg ?? 0);
+        item.pieces += Number(r.pieces ?? 0);
+        if (r.status === "DELIVERED") item.delivered++;
+        map.set(key, item);
+      }
+      headers = ["airline", "flightNumber", "shipmentCount", "totalWeightKg", "totalPieces", "deliveredCount", "deliveryRate"];
+      csvRows = Array.from(map.values()).map((i) => [
+        i.airline, i.flightNumber, String(i.count),
+        i.weight.toFixed(3), String(i.pieces), String(i.delivered),
+        `${i.count > 0 ? Math.round((i.delivered / i.count) * 100) : 0}%`,
+      ]);
+      filename = `cargo-airline-performance-${today}.csv`;
+
+    } else if (reportKey === "cargo_delivery_sla") {
+      const rows = await db.cargoShipment.findMany({
+        where: { ...scoped, createdAt: dateRange },
+        include: { station: { select: { code: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 50_000,
+      });
+      headers = ["awbNumber", "createdAt", "station", "origin", "destination", "airline", "flightNumber", "dispatchedAt", "deliveredAt", "transitHours", "status"];
+      csvRows = rows.map((r) => {
+        let transitHours = "";
+        if (r.dispatchedAt && r.deliveredAt) {
+          const diffMs = r.deliveredAt.getTime() - r.dispatchedAt.getTime();
+          transitHours = (diffMs / (1000 * 60 * 60)).toFixed(1);
+        } else if (r.dispatchedAt) {
+          const diffMs = Date.now() - r.dispatchedAt.getTime();
+          transitHours = (diffMs / (1000 * 60 * 60)).toFixed(1);
+        }
+        return [
+          r.awbNumber, r.createdAt.toISOString(), r.station.code,
+          r.origin, r.destination, r.airline || "", r.flightNumber || "",
+          r.dispatchedAt?.toISOString() ?? "", r.deliveredAt?.toISOString() ?? "",
+          transitHours, r.status,
+        ];
+      });
+      filename = `cargo-delivery-sla-${today}.csv`;
+
+    } else if (reportKey === "cargo_customer_volume") {
+      const rows = await db.cargoShipment.findMany({
+        where: { ...scoped, createdAt: dateRange, customerId: { not: null } },
+        include: {
+          customer: { select: { customerNumber: true, displayName: true, primaryPhone: true } },
+          station: { select: { code: true } },
+        },
+        take: 50_000,
+      });
+      const map = new Map<string, { customerNumber: string; name: string; phone: string; station: string; count: number; weight: number; pieces: number; declared: number }>();
+      for (const r of rows) {
+        if (!r.customer) continue;
+        const key = r.customer.customerNumber;
+        const item = map.get(key) || {
+          customerNumber: r.customer.customerNumber,
+          name: r.customer.displayName,
+          phone: r.customer.primaryPhone || "",
+          station: r.station.code,
+          count: 0,
+          weight: 0,
+          pieces: 0,
+          declared: 0,
+        };
+        item.count++;
+        item.weight += Number(r.weightKg ?? 0);
+        item.pieces += Number(r.pieces ?? 0);
+        item.declared += Number(r.declaredValue ?? 0);
+        map.set(key, item);
+      }
+      headers = ["customerNumber", "customerName", "phone", "station", "shipmentCount", "totalWeightKg", "totalPieces", "totalDeclaredValue"];
+      csvRows = Array.from(map.values())
+        .sort((a, b) => b.weight - a.weight)
+        .map((i) => [
+          i.customerNumber, i.name, i.phone, i.station,
+          String(i.count), i.weight.toFixed(3), String(i.pieces), i.declared.toFixed(2),
+        ]);
+      filename = `cargo-customer-volume-${today}.csv`;
+
     // ── FINANCE ──────────────────────────────────────────────────────────
 
     } else if (reportKey === "cashbook_ledger") {
