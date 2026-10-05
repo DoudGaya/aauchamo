@@ -65,6 +65,7 @@ export async function GET(request: Request) {
     const officerId = url.searchParams.get("officerId") ?? undefined;
     const customerId = url.searchParams.get("customerId") ?? undefined;
     const airline = url.searchParams.get("airline") ?? undefined;
+    const productQuery = (url.searchParams.get("product") ?? url.searchParams.get("productId") ?? "").trim();
 
     const startDate = url.searchParams.get("startDate") ?? undefined;
     const endDate = url.searchParams.get("endDate") ?? undefined;
@@ -73,7 +74,7 @@ export async function GET(request: Request) {
     const compareEndDate = url.searchParams.get("compareEndDate") ?? undefined;
 
     // Build base filter
-    const baseWhere = {
+    const baseWhere: any = {
       companyId: access.companyId,
       ...stationWhere(access, stationId),
       ...businessUnitWhere(access, businessUnitId),
@@ -81,6 +82,18 @@ export async function GET(request: Request) {
       ...(customerId ? { customerId } : {}),
       ...(airline ? { customer: { defaultAirline: airline } } : {}),
     };
+
+    if (productQuery) {
+      baseWhere.lines = {
+        some: {
+          OR: [
+            { productId: productQuery },
+            { productName: { contains: productQuery, mode: "insensitive" } },
+            { productCode: { contains: productQuery, mode: "insensitive" } },
+          ],
+        },
+      };
+    }
 
     const limitDate = getSalesHistoryLimitDate(access);
 
@@ -164,6 +177,7 @@ export async function GET(request: Request) {
     const byCustomerMap = new Map<string, { name: string; net: number }>();
     const byOfficerMap = new Map<string, { name: string; net: number }>();
     const byAirlineMap = new Map<string, { net: number }>();
+    const byProductMap = new Map<string, { id: string; name: string; code: string; gross: number; net: number; cost: number; quantity: number; transactions: Set<string> }>();
 
     for (const s of sales) {
       if (s.status === "CANCELLED") continue;
@@ -174,11 +188,35 @@ export async function GET(request: Request) {
       let saleCost = 0;
 
       for (const line of s.lines) {
-        const qty = Number(line.quantity);
-        saleGross += qty * Number(line.unitPrice);
-        saleDiscount += Number(line.discountAmount);
-        saleTax += Number(line.taxAmount);
-        saleCost += Number(line.costPrice) * qty;
+        const qty = Number(line.quantity || 0);
+        const lineGross = qty * Number(line.unitPrice || 0);
+        const lineDiscount = Number(line.discountAmount || 0);
+        const lineTax = Number(line.taxAmount || 0);
+        const lineCost = Number(line.costPrice || 0) * qty;
+
+        saleGross += lineGross;
+        saleDiscount += lineDiscount;
+        saleTax += lineTax;
+        saleCost += lineCost;
+
+        // Group by Product
+        const pKey = line.productId || line.productCode || line.productName || "Other";
+        const prod = byProductMap.get(pKey) || {
+          id: line.productId || pKey,
+          name: line.productName || line.productCode || "Product",
+          code: line.productCode || "",
+          gross: 0,
+          net: 0,
+          cost: 0,
+          quantity: 0,
+          transactions: new Set<string>(),
+        };
+        prod.gross += lineGross;
+        prod.net += (lineGross - lineDiscount + lineTax);
+        prod.cost += lineCost;
+        prod.quantity += qty;
+        prod.transactions.add(s.id);
+        byProductMap.set(pKey, prod);
       }
 
       let saleRefunds = 0;
@@ -228,6 +266,65 @@ export async function GET(request: Request) {
       }
     }
 
+    // Calculate specific product summary if product is queried
+    let selectedProductSummary = null;
+    if (productQuery) {
+      const qLower = productQuery.toLowerCase();
+      let matchedGross = 0;
+      let matchedNet = 0;
+      let matchedCost = 0;
+      let matchedQty = 0;
+      const matchedTxIds = new Set<string>();
+      let primaryName = "";
+      let primaryCode = "";
+
+      for (const [key, p] of byProductMap.entries()) {
+        const matches = key.toLowerCase() === qLower ||
+                        p.id.toLowerCase() === qLower ||
+                        p.name.toLowerCase().includes(qLower) ||
+                        p.code.toLowerCase() === qLower;
+        if (matches) {
+          if (!primaryName) {
+            primaryName = p.name;
+            primaryCode = p.code;
+          }
+          matchedGross += p.gross;
+          matchedNet += p.net;
+          matchedCost += p.cost;
+          matchedQty += p.quantity;
+          p.transactions.forEach((tx) => matchedTxIds.add(tx));
+        }
+      }
+
+      if (primaryName || matchedGross > 0 || matchedQty > 0) {
+        selectedProductSummary = {
+          name: primaryName || productQuery,
+          code: primaryCode,
+          grossSales: matchedGross,
+          netSales: matchedNet,
+          quantity: matchedQty,
+          transactions: matchedTxIds.size,
+          avgTransaction: matchedTxIds.size > 0 ? matchedGross / matchedTxIds.size : 0,
+          profit: includeProfit ? matchedNet - matchedCost : null,
+          pctOfTotal: summary.grossSales > 0 ? (matchedGross / summary.grossSales) * 100 : 0,
+        };
+      }
+    }
+
+    const byProduct = Array.from(byProductMap.values())
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        code: p.code,
+        grossSales: p.gross,
+        netSales: p.net,
+        quantity: p.quantity,
+        transactions: p.transactions.size,
+        profit: includeProfit ? p.net - p.cost : null,
+        pctOfTotal: summary.grossSales > 0 ? (p.gross / summary.grossSales) * 100 : 0,
+      }))
+      .sort((a, b) => b.grossSales - a.grossSales);
+
     const byStation = Array.from(byStationMap.entries()).map(([id, val]) => ({
       id,
       name: val.name,
@@ -270,6 +367,8 @@ export async function GET(request: Request) {
     return apiSuccess({
       summary,
       compareSummary,
+      selectedProductSummary,
+      byProduct,
       byStation,
       byBusinessUnit,
       byPaymentMethod,

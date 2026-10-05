@@ -416,3 +416,28 @@ export type GeneratedDocument = Prisma.GeneratedDocumentModel
  * 
  */
 export type PrintEvent = Prisma.PrintEventModel
+/**
+ * Model WebsiteUser
+ * 
+ */
+export type WebsiteUser = Prisma.WebsiteUserModel
+/**
+ * Model WebsiteUserSession
+ * 
+ */
+export type WebsiteUserSession = Prisma.WebsiteUserSessionModel
+/**
+ * Model WebsiteEnquiry
+ * 
+ */
+export type WebsiteEnquiry = Prisma.WebsiteEnquiryModel
+/**
+ * Model EnquiryStatusEvent
+ * 
+ */
+export type EnquiryStatusEvent = Prisma.EnquiryStatusEventModel
+/**
+ * Model NotificationOutbox
+ * 
+ */
+export type NotificationOutbox = Prisma.NotificationOutboxModel

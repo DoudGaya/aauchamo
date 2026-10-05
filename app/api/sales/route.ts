@@ -27,6 +27,7 @@ export async function GET(request: Request) {
     const startDate = url.searchParams.get("startDate") ?? undefined;
     const endDate = url.searchParams.get("endDate") ?? undefined;
     const statusParam = url.searchParams.get("status") ?? undefined;
+    const productQuery = (url.searchParams.get("product") ?? url.searchParams.get("productId") ?? "").trim();
 
     const where: any = {
       companyId: access.companyId,
@@ -36,6 +37,18 @@ export async function GET(request: Request) {
       ...(customerId ? { customerId } : {}),
       ...(airline ? { customer: { defaultAirline: airline } } : {}),
     };
+
+    if (productQuery) {
+      where.lines = {
+        some: {
+          OR: [
+            { productId: productQuery },
+            { productName: { contains: productQuery, mode: "insensitive" } },
+            { productCode: { contains: productQuery, mode: "insensitive" } },
+          ],
+        },
+      };
+    }
 
     if (statusParam) {
       const statuses = statusParam.split(",").map((s) => s.trim()).filter(Boolean);

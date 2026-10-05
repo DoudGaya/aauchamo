@@ -2141,3 +2141,107 @@ model PrintEvent {
   @@index([documentId, printedAt])
   @@map("print_events")
 }
+
+model WebsiteUser {
+  id               String   @id @default(cuid())
+  fullName         String   @map("full_name") @db.VarChar(160)
+  email            String   @unique @db.VarChar(254)
+  phone            String   @db.VarChar(40)
+  companyName      String?  @map("company_name") @db.VarChar(160)
+  accountType      String   @default("INDIVIDUAL") @map("account_type") @db.VarChar(40)
+  selectedServices Json     @default("[]") @map("selected_services")
+  passwordHash     String   @map("password_hash") @db.VarChar(255)
+  address          String?  @db.Text
+  city             String?  @db.VarChar(80)
+  country          String   @default("Nigeria") @db.VarChar(80)
+  status           String   @default("ACTIVE") @db.VarChar(40)
+  notes            String?  @db.Text
+  metadata         Json     @default("{}")
+  lastLoginAt      DateTime? @map("last_login_at") @db.Timestamptz(6)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  sessions         WebsiteUserSession[]
+  enquiries        WebsiteEnquiry[]
+
+  @@index([email], name: "website_users_email_idx")
+  @@index([status, createdAt(sort: Desc)], name: "website_users_status_created_idx")
+  @@map("website_users")
+}
+
+model WebsiteUserSession {
+  id        String      @id @default(cuid())
+  token     String      @unique @db.VarChar(128)
+  userId    String      @map("user_id")
+  user      WebsiteUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime    @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([token], name: "website_user_sessions_token_idx")
+  @@index([userId], name: "website_user_sessions_user_idx")
+  @@map("website_user_sessions")
+}
+
+model WebsiteEnquiry {
+  id                BigInt   @id @default(autoincrement())
+  reference         String   @unique @db.VarChar(32)
+  type              String   @db.VarChar(40)
+  customerName      String   @map("customer_name") @db.VarChar(160)
+  customerEmail     String   @map("customer_email") @db.VarChar(254)
+  customerPhone     String   @map("customer_phone") @db.VarChar(40)
+  message           String?  @db.Text
+  details           Json     @default("{}")
+  status            String   @default("New") @db.VarChar(40)
+  department        String   @db.VarChar(80)
+  source            String   @default("web") @db.VarChar(20)
+  consentVersion    String   @default("v1") @map("consent_version") @db.VarChar(10)
+  consentAt         DateTime @default(now()) @map("consent_at") @db.Timestamptz(6)
+  idempotencyHash   String?  @unique @map("idempotency_hash") @db.VarChar(64)
+  notificationState String   @default("Pending") @map("notification_state") @db.VarChar(40)
+  notificationError String?  @map("notification_error") @db.Text
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  userId            String?  @map("user_id")
+  user              WebsiteUser? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  statusEvents      EnquiryStatusEvent[]
+
+  @@index([customerEmail, reference], name: "website_enquiries_email_reference_idx")
+  @@index([status, createdAt(sort: Desc)], name: "website_enquiries_status_created_idx")
+  @@index([userId], name: "website_enquiries_user_idx")
+  @@map("website_enquiries")
+}
+
+model EnquiryStatusEvent {
+  id                BigInt   @id @default(autoincrement())
+  enquiryRef        String   @map("enquiry_ref") @db.VarChar(32)
+  oldStatus         String?  @map("old_status") @db.VarChar(40)
+  newStatus         String   @map("new_status") @db.VarChar(40)
+  actor             String   @db.VarChar(80)
+  note              String?  @db.Text
+  isCustomerVisible Boolean  @default(false) @map("is_customer_visible")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  enquiry WebsiteEnquiry @relation(fields: [enquiryRef], references: [reference], onDelete: Cascade)
+
+  @@index([enquiryRef], name: "enquiry_status_events_ref_idx")
+  @@map("enquiry_status_events")
+}
+
+model NotificationOutbox {
+  id            BigInt    @id @default(autoincrement())
+  enquiryRef    String    @map("enquiry_ref") @db.VarChar(32)
+  channel       String    @db.VarChar(20)
+  recipient     String    @db.VarChar(254)
+  templateId    String    @map("template_id") @db.VarChar(40)
+  attemptCount  Int       @default(0) @map("attempt_count")
+  nextRetryAt   DateTime? @map("next_retry_at") @db.Timestamptz(6)
+  deliveryState String    @default("Pending") @map("delivery_state") @db.VarChar(20)
+  providerMsgId String?   @map("provider_msg_id") @db.VarChar(100)
+  safeErrorCode String?   @map("safe_error_code") @db.VarChar(20)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@index([deliveryState, nextRetryAt], name: "notification_outbox_retry_idx")
+  @@map("notification_outbox")
+}

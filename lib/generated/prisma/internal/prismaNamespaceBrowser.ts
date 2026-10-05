@@ -125,7 +125,12 @@ export const ModelName = {
   Reconciliation: 'Reconciliation',
   TicketBooking: 'TicketBooking',
   GeneratedDocument: 'GeneratedDocument',
-  PrintEvent: 'PrintEvent'
+  PrintEvent: 'PrintEvent',
+  WebsiteUser: 'WebsiteUser',
+  WebsiteUserSession: 'WebsiteUserSession',
+  WebsiteEnquiry: 'WebsiteEnquiry',
+  EnquiryStatusEvent: 'EnquiryStatusEvent',
+  NotificationOutbox: 'NotificationOutbox'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1527,6 +1532,97 @@ export const PrintEventScalarFieldEnum = {
 } as const
 
 export type PrintEventScalarFieldEnum = (typeof PrintEventScalarFieldEnum)[keyof typeof PrintEventScalarFieldEnum]
+
+
+export const WebsiteUserScalarFieldEnum = {
+  id: 'id',
+  fullName: 'fullName',
+  email: 'email',
+  phone: 'phone',
+  companyName: 'companyName',
+  accountType: 'accountType',
+  selectedServices: 'selectedServices',
+  passwordHash: 'passwordHash',
+  address: 'address',
+  city: 'city',
+  country: 'country',
+  status: 'status',
+  notes: 'notes',
+  metadata: 'metadata',
+  lastLoginAt: 'lastLoginAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WebsiteUserScalarFieldEnum = (typeof WebsiteUserScalarFieldEnum)[keyof typeof WebsiteUserScalarFieldEnum]
+
+
+export const WebsiteUserSessionScalarFieldEnum = {
+  id: 'id',
+  token: 'token',
+  userId: 'userId',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+} as const
+
+export type WebsiteUserSessionScalarFieldEnum = (typeof WebsiteUserSessionScalarFieldEnum)[keyof typeof WebsiteUserSessionScalarFieldEnum]
+
+
+export const WebsiteEnquiryScalarFieldEnum = {
+  id: 'id',
+  reference: 'reference',
+  type: 'type',
+  customerName: 'customerName',
+  customerEmail: 'customerEmail',
+  customerPhone: 'customerPhone',
+  message: 'message',
+  details: 'details',
+  status: 'status',
+  department: 'department',
+  source: 'source',
+  consentVersion: 'consentVersion',
+  consentAt: 'consentAt',
+  idempotencyHash: 'idempotencyHash',
+  notificationState: 'notificationState',
+  notificationError: 'notificationError',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  userId: 'userId'
+} as const
+
+export type WebsiteEnquiryScalarFieldEnum = (typeof WebsiteEnquiryScalarFieldEnum)[keyof typeof WebsiteEnquiryScalarFieldEnum]
+
+
+export const EnquiryStatusEventScalarFieldEnum = {
+  id: 'id',
+  enquiryRef: 'enquiryRef',
+  oldStatus: 'oldStatus',
+  newStatus: 'newStatus',
+  actor: 'actor',
+  note: 'note',
+  isCustomerVisible: 'isCustomerVisible',
+  createdAt: 'createdAt'
+} as const
+
+export type EnquiryStatusEventScalarFieldEnum = (typeof EnquiryStatusEventScalarFieldEnum)[keyof typeof EnquiryStatusEventScalarFieldEnum]
+
+
+export const NotificationOutboxScalarFieldEnum = {
+  id: 'id',
+  enquiryRef: 'enquiryRef',
+  channel: 'channel',
+  recipient: 'recipient',
+  templateId: 'templateId',
+  attemptCount: 'attemptCount',
+  nextRetryAt: 'nextRetryAt',
+  deliveryState: 'deliveryState',
+  providerMsgId: 'providerMsgId',
+  safeErrorCode: 'safeErrorCode',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type NotificationOutboxScalarFieldEnum = (typeof NotificationOutboxScalarFieldEnum)[keyof typeof NotificationOutboxScalarFieldEnum]
 
 
 export const SortOrder = {

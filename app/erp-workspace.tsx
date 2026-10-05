@@ -2962,6 +2962,7 @@ function SalesView({ station, allowedStations, identity, period }: { station: st
   if (airline) filterParams.set("airline", airline);
   if (startDate) filterParams.set("startDate", startDate);
   if (endDate) filterParams.set("endDate", endDate);
+  if (productSearch) filterParams.set("product", productSearch);
   if (compareActive && compareStartDate) filterParams.set("compareStartDate", compareStartDate);
   if (compareActive && compareEndDate) filterParams.set("compareEndDate", compareEndDate);
   filterParams.set("interval", interval);
@@ -2973,6 +2974,7 @@ function SalesView({ station, allowedStations, identity, period }: { station: st
   if (airline) listParams.set("airline", airline);
   if (startDate) listParams.set("startDate", startDate);
   if (endDate) listParams.set("endDate", endDate);
+  if (productSearch) listParams.set("product", productSearch);
   const statusParam =
     tab === "Completed"
       ? "PAID,POSTED"
@@ -3020,7 +3022,7 @@ function SalesView({ station, allowedStations, identity, period }: { station: st
   // Reset to page 1 whenever any server-side filter changes
   useEffect(() => {
     setListPage(1);
-  }, [startDate, endDate, stationId, businessUnitId, airline, tab]);
+  }, [startDate, endDate, stationId, businessUnitId, airline, tab, productSearch]);
 
   const chartData = (trendApi.data?.trend ?? []).map((t: any) => ({
     date: t.bucket,
@@ -3127,7 +3129,7 @@ function SalesView({ station, allowedStations, identity, period }: { station: st
             <select value={productSearch} onChange={(e) => setProductSearch(e.target.value)}>
               <option value="">All products</option>
               {productApi.data?.map((p) => (
-                <option key={p.id} value={p.name.toLowerCase()}>
+                <option key={p.id} value={p.name}>
                   {p.name}
                 </option>
               ))}
@@ -3172,6 +3174,132 @@ function SalesView({ station, allowedStations, identity, period }: { station: st
           </div>
         )}
       </Panel>
+
+      {/* Specific Product Sales Highlight (When queried) */}
+      {(summaryApi.data?.selectedProductSummary || (productSearch && summaryApi.data?.byProduct?.find((p: any) => p.name.toLowerCase().includes(productSearch.toLowerCase())))) && (() => {
+        const prod = summaryApi.data?.selectedProductSummary || summaryApi.data?.byProduct?.find((p: any) => p.name.toLowerCase().includes(productSearch.toLowerCase()));
+        if (!prod) return null;
+        return (
+          <div
+            style={{
+              background: "linear-gradient(135deg, #fff7ed 0%, #fff 100%)",
+              border: "1.5px solid #f97316",
+              borderRadius: "12px",
+              padding: "20px 24px",
+              boxShadow: "0 4px 14px rgba(249, 115, 22, 0.08)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <span
+                  style={{
+                    background: "#ea580c",
+                    color: "#fff",
+                    padding: "4px 10px",
+                    borderRadius: "6px",
+                    fontSize: "12px",
+                    fontWeight: "700",
+                    letterSpacing: "0.5px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Product Total Sales
+                </span>
+                <h3 style={{ margin: 0, fontSize: "20px", fontWeight: "700", color: "#1e293b" }}>
+                  {prod.name}
+                  {prod.code ? <span style={{ fontSize: "14px", fontWeight: "500", color: "#64748b", marginLeft: "8px" }}>({prod.code})</span> : null}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setProductSearch("")}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  color: "#ea580c",
+                  background: "#fff",
+                  border: "1px solid #fdba74",
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                }}
+              >
+                Clear product filter
+              </button>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" }}>
+              <div style={{ background: "#fff", padding: "14px 18px", borderRadius: "10px", border: "1px solid #fed7aa" }}>
+                <div style={{ fontSize: "12px", color: "#9a3412", fontWeight: "600", textTransform: "uppercase", marginBottom: "4px" }}>
+                  {prod.name} Total Sales
+                </div>
+                <div style={{ fontSize: "24px", fontWeight: "800", color: "#c2410c" }}>
+                  {formatNaira(prod.grossSales || 0)}
+                </div>
+                <div style={{ fontSize: "11px", color: "#78716c", marginTop: "2px" }}>
+                  {prod.pctOfTotal ? `${Number(prod.pctOfTotal).toFixed(1)}% of filtered revenue` : "Product Gross Revenue"}
+                </div>
+              </div>
+
+              <div style={{ background: "#fff", padding: "14px 18px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                <div style={{ fontSize: "12px", color: "#475569", fontWeight: "600", textTransform: "uppercase", marginBottom: "4px" }}>
+                  Net Product Revenue
+                </div>
+                <div style={{ fontSize: "24px", fontWeight: "800", color: "#16a34a" }}>
+                  {formatNaira(prod.netSales || 0)}
+                </div>
+                <div style={{ fontSize: "11px", color: "#64748b", marginTop: "2px" }}>
+                  After discounts & refunds
+                </div>
+              </div>
+
+              <div style={{ background: "#fff", padding: "14px 18px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                <div style={{ fontSize: "12px", color: "#475569", fontWeight: "600", textTransform: "uppercase", marginBottom: "4px" }}>
+                  Quantity / Volume Sold
+                </div>
+                <div style={{ fontSize: "24px", fontWeight: "800", color: "#0f172a" }}>
+                  {Number(prod.quantity || 0).toLocaleString("en-US")}
+                </div>
+                <div style={{ fontSize: "11px", color: "#64748b", marginTop: "2px" }}>
+                  Total units in {prod.transactions || 0} transactions
+                </div>
+              </div>
+
+              <div style={{ background: "#fff", padding: "14px 18px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                <div style={{ fontSize: "12px", color: "#475569", fontWeight: "600", textTransform: "uppercase", marginBottom: "4px" }}>
+                  Avg. Sale Value
+                </div>
+                <div style={{ fontSize: "24px", fontWeight: "800", color: "#2563eb" }}>
+                  {formatNaira(prod.avgTransaction || (prod.transactions ? prod.grossSales / prod.transactions : 0))}
+                </div>
+                <div style={{ fontSize: "11px", color: "#64748b", marginTop: "2px" }}>
+                  Per transaction
+                </div>
+              </div>
+
+              {canViewProfit && prod.profit !== null && prod.profit !== undefined && (
+                <div style={{ background: "#fff", padding: "14px 18px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                  <div style={{ fontSize: "12px", color: "#475569", fontWeight: "600", textTransform: "uppercase", marginBottom: "4px" }}>
+                    Product Profit
+                  </div>
+                  <div style={{ fontSize: "24px", fontWeight: "800", color: "#059669" }}>
+                    {formatNaira(prod.profit)}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "#64748b", marginTop: "2px" }}>
+                    Revenue minus cost
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Summary Cards strip */}
       <section className="summary-strip">
@@ -3248,6 +3376,136 @@ function SalesView({ station, allowedStations, identity, period }: { station: st
           </Panel>
         )}
       </div>
+
+      {/* Product Total Sales Breakdown */}
+      {summaryApi.data?.byProduct && summaryApi.data.byProduct.length > 0 && (
+        <Panel>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: "15px", fontWeight: "700", color: "#1e293b" }}>
+                Total Sales by Product
+              </h3>
+              <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#64748b" }}>
+                Individual total sales figures and revenue share for each product under current filters.
+              </p>
+            </div>
+            {productSearch && (
+              <span style={{ fontSize: "12px", background: "#fef3c7", color: "#92400e", padding: "4px 8px", borderRadius: "4px", fontWeight: "600" }}>
+                Filtered to: {productSearch}
+              </span>
+            )}
+          </div>
+
+          <div style={{ overflowX: "auto" }}>
+            <table className="data-table" style={{ width: "100%", textAlign: "left" }}>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Total Sales (Gross)</th>
+                  <th>Net Sales</th>
+                  <th>Qty Sold</th>
+                  <th>Transactions</th>
+                  <th>% Revenue Share</th>
+                  {canViewProfit && <th>Profit</th>}
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {summaryApi.data.byProduct.map((p: any) => {
+                  const isSelected = productSearch && (p.name.toLowerCase().includes(productSearch.toLowerCase()) || (p.code && p.code.toLowerCase().includes(productSearch.toLowerCase())));
+                  return (
+                    <tr
+                      key={p.id || p.name}
+                      style={{
+                        background: isSelected ? "rgba(249, 115, 22, 0.08)" : undefined,
+                        fontWeight: isSelected ? "600" : "normal",
+                      }}
+                    >
+                      <td>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ fontWeight: "600", color: "#0f172a" }}>{p.name}</span>
+                          {p.code && (
+                            <span style={{ fontSize: "11px", color: "#64748b", background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px" }}>
+                              {p.code}
+                            </span>
+                          )}
+                          {isSelected && (
+                            <span style={{ fontSize: "11px", background: "#ea580c", color: "#fff", padding: "2px 6px", borderRadius: "4px", fontWeight: "700" }}>
+                              Active
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td style={{ fontWeight: "700", color: "#ea580c" }}>{formatNaira(p.grossSales)}</td>
+                      <td style={{ fontWeight: "600", color: "#16a34a" }}>{formatNaira(p.netSales)}</td>
+                      <td>{Number(p.quantity).toLocaleString("en-US")}</td>
+                      <td>{p.transactions}</td>
+                      <td>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <div style={{ flex: 1, height: "6px", background: "#e2e8f0", borderRadius: "999px", overflow: "hidden", minWidth: "60px" }}>
+                            <div
+                              style={{
+                                width: `${Math.min(100, Math.max(0, p.pctOfTotal || 0))}%`,
+                                height: "100%",
+                                background: isSelected ? "#ea580c" : "#3b82f6",
+                                borderRadius: "999px",
+                              }}
+                            />
+                          </div>
+                          <span style={{ fontSize: "12px", minWidth: "36px", color: "#475569" }}>
+                            {Number(p.pctOfTotal || 0).toFixed(1)}%
+                          </span>
+                        </div>
+                      </td>
+                      {canViewProfit && (
+                        <td style={{ color: p.profit >= 0 ? "#16a34a" : "#dc2626" }}>
+                          {p.profit !== null ? formatNaira(p.profit) : "—"}
+                        </td>
+                      )}
+                      <td>
+                        {isSelected ? (
+                          <button
+                            type="button"
+                            onClick={() => setProductSearch("")}
+                            style={{
+                              fontSize: "12px",
+                              padding: "4px 8px",
+                              borderRadius: "4px",
+                              border: "1px solid #cbd5e1",
+                              background: "#fff",
+                              color: "#475569",
+                              cursor: "pointer",
+                            }}
+                          >
+                            Reset
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setProductSearch(p.name)}
+                            style={{
+                              fontSize: "12px",
+                              padding: "4px 8px",
+                              borderRadius: "4px",
+                              border: "1px solid #fdba74",
+                              background: "#fff7ed",
+                              color: "#c2410c",
+                              fontWeight: "600",
+                              cursor: "pointer",
+                            }}
+                          >
+                            Filter
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      )}
 
       {/* Data Table */}
       <Panel>
@@ -6982,27 +7240,316 @@ function CustomersView({
 }) {
   const [tab, setTab] = useState("All customers");
   const [editingCustomer, setEditingCustomer] = useState<CustomerRecord | null>(null);
+  const [convertingId, setConvertingId] = useState<string | null>(null);
+
   const { data, total, loading, error, reload } = useApiData<CustomerRecord[]>("/api/customers?pageSize=100");
+  const webUsersApi = useApiData<any[]>("/api/website-users?pageSize=100");
+
   const customerRecords = data ?? [];
+  const webUserRecords = webUsersApi.data ?? [];
+
   const visibleCustomers = customerRecords.filter((customer) =>
     tab === "Individuals" ? customer.type === "INDIVIDUAL" : tab === "Corporate" ? customer.type === "BUSINESS" : true,
   );
-  const table = useTableControls(visibleCustomers, (customer, q) => `${customer.displayName} ${customer.customerNumber} ${customer.primaryPhone} ${customer.primaryEmail ?? ""} ${customer.defaultPnr ?? ""} ${customer.homeStation.name}`.toLowerCase().includes(q));
+
+  const table = useTableControls(visibleCustomers, (customer, q) =>
+    `${customer.displayName} ${customer.customerNumber} ${customer.primaryPhone} ${customer.primaryEmail ?? ""} ${customer.defaultPnr ?? ""} ${customer.homeStation.name}`.toLowerCase().includes(q)
+  );
+
+  const webTable = useTableControls(webUserRecords, (u, q) =>
+    `${u.fullName} ${u.email} ${u.phone} ${u.companyName ?? ""} ${u.accountType} ${(u.selectedServices ?? []).join(" ")}`.toLowerCase().includes(q)
+  );
+
   const corporateCount = customerRecords.filter((customer) => customer.type === "BUSINESS").length;
+  const webCorporateCount = webUserRecords.filter((u) => u.accountType === "CORPORATE").length;
+
+  const handleConvertWebUser = async (user: any) => {
+    if (!allowedStations[0]?.id) {
+      alert("No station available to assign converted customer.");
+      return;
+    }
+    if (!window.confirm(`Convert ${user.fullName} (${user.companyName || user.accountType}) into an official ERP Customer?`)) return;
+
+    setConvertingId(user.id);
+    try {
+      await workflowPost("/api/website-users", {
+        websiteUserId: user.id,
+        homeStationId: allowedStations[0]?.id,
+      });
+      onToast({
+        title: "Customer Converted",
+        detail: `${user.fullName} has been added to the central ERP Customers register.`,
+      });
+      reload();
+      webUsersApi.reload();
+    } catch (err: any) {
+      alert(err.message || "Failed to convert website user.");
+    } finally {
+      setConvertingId(null);
+    }
+  };
+
+  const handleToggleWebUserStatus = async (user: any) => {
+    const nextStatus = user.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE";
+    try {
+      await workflowPost(
+        "/api/website-users",
+        {
+          id: user.id,
+          status: nextStatus,
+        },
+        "PATCH"
+      );
+      onToast({
+        title: "Status Updated",
+        detail: `${user.fullName} is now ${nextStatus}.`,
+      });
+      webUsersApi.reload();
+    } catch (err: any) {
+      alert(err.message || "Failed to update user status.");
+    }
+  };
+
   return (
     <div className="content-stack">
-      <section className="customer-insights">
-        <div><span>Total customers</span><strong>{total.toLocaleString()}</strong><em><ShieldCheck size={12} /> Scoped to your access</em></div>
-        <div><span>Individuals</span><strong>{Math.max(0, customerRecords.length - corporateCount)}</strong><small>Active loaded records</small></div>
-        <div><span>Corporate accounts</span><strong>{corporateCount}</strong><small>Active business records</small></div>
-        <div><span>Data status</span><strong>{loading ? "Syncing" : "Live"}</strong><button onClick={reload}>Refresh <RefreshCcw size={13} /></button></div>
-      </section>
+      {tab === "Website Portal Users" ? (
+        <section className="customer-insights">
+          <div>
+            <span>Total Portal Users</span>
+            <strong>{webUsersApi.total.toLocaleString()}</strong>
+            <em><ShieldCheck size={12} /> Stored in ERP Database</em>
+          </div>
+          <div>
+            <span>Corporate / Agents</span>
+            <strong>{webCorporateCount}</strong>
+            <small>Business portal accounts</small>
+          </div>
+          <div>
+            <span>Individuals</span>
+            <strong>{Math.max(0, webUserRecords.length - webCorporateCount)}</strong>
+            <small>Personal client registrations</small>
+          </div>
+          <div>
+            <span>Data status</span>
+            <strong>{webUsersApi.loading ? "Syncing" : "Live"}</strong>
+            <button onClick={webUsersApi.reload}>
+              Refresh <RefreshCcw size={13} />
+            </button>
+          </div>
+        </section>
+      ) : (
+        <section className="customer-insights">
+          <div><span>Total customers</span><strong>{total.toLocaleString()}</strong><em><ShieldCheck size={12} /> Scoped to your access</em></div>
+          <div><span>Individuals</span><strong>{Math.max(0, customerRecords.length - corporateCount)}</strong><small>Active loaded records</small></div>
+          <div><span>Corporate accounts</span><strong>{corporateCount}</strong><small>Active business records</small></div>
+          <div><span>Data status</span><strong>{loading ? "Syncing" : "Live"}</strong><button onClick={reload}>Refresh <RefreshCcw size={13} /></button></div>
+        </section>
+      )}
+
       <Panel>
-        <TableToolbar tabs={["All customers", "Individuals", "Corporate"]} activeTab={tab} onTab={(value) => { setTab(value); table.resetPage(); }} placeholder="Search name, phone, email or PNR" search={table.search} onSearch={table.setSearch} />
-        {error ? <EmptyState icon={AlertTriangle} title="Customers could not be loaded" detail={error} /> : loading ? <EmptyState icon={RefreshCcw} title="Loading customer records" detail="Retrieving permission-scoped records from the database." compact /> : table.filtered.length ? (
-          <div className="table-wrap"><table className="data-table"><thead><tr><th>Customer</th><th>Phone</th><th>Email</th><th>Type</th><th>Home station</th><th>PNR</th><th>Created</th><th /></tr></thead><tbody>{table.pageRows.map((customer) => <tr key={customer.id} onClick={() => setEditingCustomer(customer)} style={{ cursor: "pointer" }} title="Click to view details and history"><td><div className="agent-cell customer"><span>{customer.displayName.split(" ").map((part) => part[0]).join("").slice(0, 2)}</span><div><strong>{customer.displayName}</strong><small>{customer.customerNumber}</small></div></div></td><td>{customer.primaryPhone}</td><td>{customer.primaryEmail ?? "—"}</td><td><StatusPill value={customer.type === "BUSINESS" ? "Corporate" : "Individual"} /></td><td>{customer.homeStation.name}</td><td>{customer.defaultPnr ?? "—"}</td><td>{formatDate(customer.createdAt)}</td><td><button className="icon-ghost" onClick={(e) => { e.stopPropagation(); onModal("customer"); }} aria-label={`Add a customer from ${customer.displayName}`}><MoreHorizontal size={17} /></button></td></tr>)}</tbody></table></div>
-        ) : <EmptyState icon={Users} title={table.search ? "No matching customers" : "No customers yet"} detail={table.search ? "Try a different name, phone, email or PNR." : "Register the first customer to reuse their details across sales, cargo and bookings."} />}
-        <Pagination total={table.total} page={table.page} pageSize={table.pageSize} onPage={table.setPage} />
+        <TableToolbar
+          tabs={["All customers", "Individuals", "Corporate", "Website Portal Users"]}
+          activeTab={tab}
+          onTab={(value) => {
+            setTab(value);
+            table.resetPage();
+            webTable.resetPage();
+          }}
+          placeholder={tab === "Website Portal Users" ? "Search website user name, company, email or phone" : "Search name, phone, email or PNR"}
+          search={tab === "Website Portal Users" ? webTable.search : table.search}
+          onSearch={tab === "Website Portal Users" ? webTable.setSearch : table.setSearch}
+        />
+
+        {tab === "Website Portal Users" ? (
+          webUsersApi.error ? (
+            <EmptyState icon={AlertTriangle} title="Website users could not be loaded" detail={webUsersApi.error} />
+          ) : webUsersApi.loading ? (
+            <EmptyState icon={RefreshCcw} title="Loading website portal users" detail="Retrieving website customers from shared database." compact />
+          ) : webTable.filtered.length ? (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Website Customer</th>
+                    <th>Email & Phone</th>
+                    <th>Account Type</th>
+                    <th>Selected Services</th>
+                    <th>Enquiries</th>
+                    <th>Registered</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {webTable.pageRows.map((u: any) => (
+                    <tr key={u.id}>
+                      <td>
+                        <div className="agent-cell customer">
+                          <span>{u.fullName.split(" ").map((p: string) => p[0]).join("").slice(0, 2)}</span>
+                          <div>
+                            <strong>{u.fullName}</strong>
+                            {u.companyName && <small>{u.companyName}</small>}
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ fontSize: "13px" }}>
+                          <div>{u.email}</div>
+                          <div style={{ color: "#64748b" }}>{u.phone}</div>
+                        </div>
+                      </td>
+                      <td>
+                        <StatusPill value={u.accountType} />
+                      </td>
+                      <td>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", maxWidth: "240px" }}>
+                          {(u.selectedServices || []).map((s: string, idx: number) => (
+                            <span
+                              key={idx}
+                              style={{
+                                fontSize: "11px",
+                                background: "#f1f5f9",
+                                color: "#334155",
+                                padding: "2px 6px",
+                                borderRadius: "4px",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {s.split(" ")[0]}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td>
+                        <span style={{ fontWeight: "700", color: "#ea580c" }}>
+                          {u.enquiries?.length || 0}
+                        </span>
+                      </td>
+                      <td>{formatDate(u.createdAt)}</td>
+                      <td>
+                        <span
+                          style={{
+                            background: u.status === "ACTIVE" ? "#dcfce7" : "#fee2e2",
+                            color: u.status === "ACTIVE" ? "#166534" : "#991b1b",
+                            padding: "2px 8px",
+                            borderRadius: "4px",
+                            fontSize: "11px",
+                            fontWeight: "700",
+                          }}
+                        >
+                          {u.status}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                          <button
+                            type="button"
+                            disabled={convertingId === u.id}
+                            onClick={() => handleConvertWebUser(u)}
+                            style={{
+                              fontSize: "12px",
+                              padding: "4px 8px",
+                              borderRadius: "4px",
+                              border: "1px solid #fdba74",
+                              background: "#fff7ed",
+                              color: "#c2410c",
+                              fontWeight: "600",
+                              cursor: "pointer",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {convertingId === u.id ? "Converting..." : "Add to ERP Customers"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleWebUserStatus(u)}
+                            style={{
+                              fontSize: "11px",
+                              padding: "4px 8px",
+                              borderRadius: "4px",
+                              border: "1px solid #cbd5e1",
+                              background: "#fff",
+                              color: "#475569",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {u.status === "ACTIVE" ? "Suspend" : "Activate"}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState
+              icon={Users}
+              title={webTable.search ? "No matching website users" : "No website users yet"}
+              detail={webTable.search ? "Try a different name, email or company." : "New registrations from the corporate site onboarding portal will appear here automatically."}
+            />
+          )
+        ) : error ? (
+          <EmptyState icon={AlertTriangle} title="Customers could not be loaded" detail={error} />
+        ) : loading ? (
+          <EmptyState icon={RefreshCcw} title="Loading customer records" detail="Retrieving permission-scoped records from the database." compact />
+        ) : table.filtered.length ? (
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Type</th>
+                  <th>Home station</th>
+                  <th>PNR</th>
+                  <th>Created</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {table.pageRows.map((customer) => (
+                  <tr key={customer.id} onClick={() => setEditingCustomer(customer)} style={{ cursor: "pointer" }} title="Click to view details and history">
+                    <td>
+                      <div className="agent-cell customer">
+                        <span>{customer.displayName.split(" ").map((part) => part[0]).join("").slice(0, 2)}</span>
+                        <div>
+                          <strong>{customer.displayName}</strong>
+                          <small>{customer.customerNumber}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{customer.primaryPhone}</td>
+                    <td>{customer.primaryEmail ?? "—"}</td>
+                    <td><StatusPill value={customer.type === "BUSINESS" ? "Corporate" : "Individual"} /></td>
+                    <td>{customer.homeStation.name}</td>
+                    <td>{customer.defaultPnr ?? "—"}</td>
+                    <td>{formatDate(customer.createdAt)}</td>
+                    <td>
+                      <button className="icon-ghost" onClick={(e) => { e.stopPropagation(); onModal("customer"); }} aria-label={`Add a customer from ${customer.displayName}`}>
+                        <MoreHorizontal size={17} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState
+            icon={Users}
+            title={table.search ? "No matching customers" : "No customers yet"}
+            detail={table.search ? "Try a different name, phone, email or PNR." : "Register the first customer to reuse their details across sales, cargo and bookings."}
+          />
+        )}
+
+        <Pagination
+          total={tab === "Website Portal Users" ? webTable.total : table.total}
+          page={tab === "Website Portal Users" ? webTable.page : table.page}
+          pageSize={tab === "Website Portal Users" ? webTable.pageSize : table.pageSize}
+          onPage={tab === "Website Portal Users" ? webTable.setPage : table.setPage}
+        />
       </Panel>
       {editingCustomer && (
         <CustomerDetailModal
