@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useOfflineSync } from "@/lib/client/offline-sync";
 import Select from "react-select";
-import CreatableSelect from "react-select/creatable";
 
 import {
   Activity,
@@ -34,6 +33,7 @@ import {
   FileCheck2,
   FileDown,
   FileSearch,
+  FileText,
   Filter,
   Fingerprint,
   Gauge,
@@ -85,6 +85,7 @@ import { CargoTrendChart } from "./components/CargoTrendChart";
 import { PrinterSettingsSection } from "./components/PrinterSettingsSection";
 import { IframePrintModal } from "./components/IframePrintModal";
 import { ManualView } from "./components/ManualView";
+import { OfferLetterModal } from "./components/OfferLetterModal";
 import { exportTableToPDF } from "@/lib/client/pdf";
 import {
   formatNaira,
@@ -9126,7 +9127,10 @@ function StaffDetailModal({
   const [salary, setSalary] = useState("");
   const [employmentType, setEmploymentType] = useState<any>("PERMANENT");
   const [departmentId, setDepartmentId] = useState("");
+  const [departmentName, setDepartmentName] = useState("");
   const [positionId, setPositionId] = useState("");
+  const [positionName, setPositionName] = useState("");
+  const [offerLetterOpen, setOfferLetterOpen] = useState(false);
   const [passportPhoto, setPassportPhoto] = useState("");
   const [reason, setReason] = useState("");
 
@@ -9214,7 +9218,9 @@ function StaffDetailModal({
     setSalary(detail.salary === "••••••" ? "" : detail.salary ?? "");
     setEmploymentType(detail.employmentType ?? "PERMANENT");
     setDepartmentId(detail.departmentId ?? "");
+    setDepartmentName(detail.department?.name ?? "");
     setPositionId(detail.positionId ?? "");
+    setPositionName(detail.position?.name ?? "");
     setPassportPhoto(detail.passportPhotoUrl || detail.passportObjectKey || "");
     
     if (detail.nextOfKin && detail.nextOfKin[0]) {
@@ -9750,8 +9756,10 @@ function StaffDetailModal({
         nationalId: nationalId || undefined,
         salary: salary || null,
         employmentType,
-        departmentId,
-        positionId,
+        department: departmentName.trim() || undefined,
+        departmentId: departmentId || undefined,
+        position: positionName.trim() || undefined,
+        positionId: positionId || undefined,
         passportPhoto: passportPhoto || null,
         nextOfKin,
         reason
@@ -9840,29 +9848,35 @@ function StaffDetailModal({
               <Field label="National ID"><input className="field-input" value={nationalId} onChange={e => setNationalId(e.target.value)} /></Field>
               
               <Field label="Department">
-                <CreatableSelect
-                  name="departmentId"
-                  options={hrSetupApi.data?.departments.map(d => ({ value: d.id, label: d.name }))}
-                  value={departmentId ? { value: departmentId, label: hrSetupApi.data?.departments.find(d => d.id === departmentId)?.name || departmentId } : null}
-                  onChange={(val: any) => setDepartmentId(val?.value || "")}
-                  onCreateOption={(name) => handleCreateCatalogue("department", name)}
-                  placeholder="Select or create department"
-                  styles={{ control: (base) => ({ ...base, minHeight: '38px', borderRadius: '6px' }) }}
-                  isDisabled={hrSetupApi.loading}
+                <input
+                  name="department"
+                  className="field-input"
+                  placeholder="Type department (e.g. Finance, Operations)"
+                  value={departmentName}
+                  onChange={e => setDepartmentName(e.target.value)}
+                  list="staff-edit-departments"
                 />
+                <datalist id="staff-edit-departments">
+                  {hrSetupApi.data?.departments.map((d) => (
+                    <option key={d.id} value={d.name} />
+                  ))}
+                </datalist>
               </Field>
 
               <Field label="Position">
-                <CreatableSelect
-                  name="positionId"
-                  options={hrSetupApi.data?.positions.map(p => ({ value: p.id, label: p.name }))}
-                  value={positionId ? { value: positionId, label: hrSetupApi.data?.positions.find(p => p.id === positionId)?.name || positionId } : null}
-                  onChange={(val: any) => setPositionId(val?.value || "")}
-                  onCreateOption={(name) => handleCreateCatalogue("position", name)}
-                  placeholder="Select or create position"
-                  styles={{ control: (base) => ({ ...base, minHeight: '38px', borderRadius: '6px' }) }}
-                  isDisabled={hrSetupApi.loading}
+                <input
+                  name="position"
+                  className="field-input"
+                  placeholder="Type position (e.g. Sales Officer)"
+                  value={positionName}
+                  onChange={e => setPositionName(e.target.value)}
+                  list="staff-edit-positions"
                 />
+                <datalist id="staff-edit-positions">
+                  {hrSetupApi.data?.positions.map((p) => (
+                    <option key={p.id} value={p.name} />
+                  ))}
+                </datalist>
               </Field>
 
               <Field label="Employment type">
@@ -9935,11 +9949,12 @@ function StaffDetailModal({
               <button
                 type="button"
                 className="secondary-button"
-                onClick={printEmploymentLetter}
+                onClick={() => setOfferLetterOpen(true)}
                 style={{ display: "flex", alignItems: "center", gap: "6px" }}
+                title="Customize & print/save offer letter"
               >
-                <Printer size={15} />
-                <span>Print Letter</span>
+                <FileText size={15} />
+                <span>Offer Letter</span>
               </button>
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
@@ -10043,6 +10058,13 @@ function StaffDetailModal({
         </div>
         )}
       </div>
+      {offerLetterOpen && detail && (
+        <OfferLetterModal
+          target={detail}
+          company={settingsApi.data?.company}
+          onClose={() => setOfferLetterOpen(false)}
+        />
+      )}
     </div>
   );
 }
@@ -10057,6 +10079,8 @@ function StaffView({
   const [tab, setTab] = useState("All staff");
   const [editingStaff, setEditingStaff] = useState<StaffRecord | null>(null);
   const [stationId, setStationId] = useState("");
+  const [templateModalOpen, setTemplateModalOpen] = useState(false);
+  const settingsApi = useApiData<any>("/api/settings");
   
   const { data, total, loading, error, reload } = useApiData<StaffRecord[]>(
     `/api/staff?pageSize=100${stationId ? `&stationId=${stationId}` : ""}`
@@ -10100,11 +10124,22 @@ function StaffView({
               ))}
             </select>
           </div>
-          {onModal && (
-            <button className="primary-button" onClick={() => onModal("staff")} style={{ height: "36px", padding: "0 16px" }}>
-              <UserPlus size={15} /><span>Add staff</span>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => setTemplateModalOpen(true)}
+              style={{ height: "36px", padding: "0 14px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+              title="Customize AAU Chamo offer letter template, clauses & style"
+            >
+              <FileText size={15} /><span>Offer Letter Template</span>
             </button>
-          )}
+            {onModal && (
+              <button className="primary-button" onClick={() => onModal("staff")} style={{ height: "36px", padding: "0 16px" }}>
+                <UserPlus size={15} /><span>Add staff</span>
+              </button>
+            )}
+          </div>
         </div>
         {error ? (
           <EmptyState icon={AlertTriangle} title="Staff records could not be loaded" detail={error} />
@@ -10174,6 +10209,13 @@ function StaffView({
             setEditingStaff(null);
             reload();
           }}
+        />
+      )}
+      {templateModalOpen && (
+        <OfferLetterModal
+          isTemplateOnly
+          company={settingsApi?.data?.company}
+          onClose={() => setTemplateModalOpen(false)}
         />
       )}
     </div>
@@ -13595,30 +13637,8 @@ function StaffForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [passportPhoto, setPassportPhoto] = useState("");
-  
-  const [departmentId, setDepartmentId] = useState("");
-  const [positionId, setPositionId] = useState("");
-
-  const handleCreateCatalogue = async (kind: "department" | "position", name: string) => {
-    try {
-      const res = await fetch("/api/hr/catalogue", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          kind,
-          name,
-          code: name.toUpperCase().replace(/[^A-Z0-9-]/g, '').substring(0, 30) || (kind === "department" ? "DEPT" : "POS")
-        })
-      });
-      if (!res.ok) throw new Error("Failed to create");
-      const json = await res.json();
-      await api.reload();
-      if (kind === "department") setDepartmentId(json.data.id);
-      if (kind === "position") setPositionId(json.data.id);
-    } catch (err) {
-      alert(`Error creating ${kind}`);
-    }
-  };
+  const [department, setDepartment] = useState("");
+  const [position, setPosition] = useState("");
   // Next of kin
   const [nokName, setNokName] = useState("");
   const [nokRelationship, setNokRelationship] = useState("");
@@ -13663,8 +13683,8 @@ function StaffForm({
         salary: String(form.get("salary") || "") || undefined,
         employmentDate: String(form.get("employmentDate")),
         employmentType: String(form.get("employmentType")),
-        departmentId: departmentId || String(form.get("departmentId")),
-        positionId: positionId || String(form.get("positionId")),
+        department: department.trim() || undefined,
+        position: position.trim() || undefined,
         homeStationId: String(form.get("homeStationId")),
         passportPhoto: passportPhoto || undefined,
         nextOfKin,
@@ -13735,28 +13755,36 @@ function StaffForm({
           </Field>
 
           <Field label="Department">
-            <CreatableSelect
-              name="departmentId"
-              options={api.data?.departments.map(d => ({ value: d.id, label: d.name }))}
-              value={departmentId ? { value: departmentId, label: api.data?.departments.find(d => d.id === departmentId)?.name || departmentId } : null}
-              onChange={(val: any) => setDepartmentId(val?.value || "")}
-              onCreateOption={(name) => handleCreateCatalogue("department", name)}
-              placeholder="Select or create department"
-              styles={{ control: (base) => ({ ...base, minHeight: '38px', borderRadius: '6px' }) }}
-              isDisabled={api.loading}
+            <input
+              name="department"
+              className="field-input"
+              placeholder="Type department (e.g. Finance, Operations, Logistics)"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+              list="staff-form-departments"
+              required
             />
+            <datalist id="staff-form-departments">
+              {api.data?.departments.map((d) => (
+                <option key={d.id} value={d.name} />
+              ))}
+            </datalist>
           </Field>
           <Field label="Position">
-            <CreatableSelect
-              name="positionId"
-              options={api.data?.positions.map(p => ({ value: p.id, label: p.name }))}
-              value={positionId ? { value: positionId, label: api.data?.positions.find(p => p.id === positionId)?.name || positionId } : null}
-              onChange={(val: any) => setPositionId(val?.value || "")}
-              onCreateOption={(name) => handleCreateCatalogue("position", name)}
-              placeholder="Select or create position"
-              styles={{ control: (base) => ({ ...base, minHeight: '38px', borderRadius: '6px' }) }}
-              isDisabled={api.loading}
+            <input
+              name="position"
+              className="field-input"
+              placeholder="Type position (e.g. Sales Officer, Cargo Agent)"
+              value={position}
+              onChange={(e) => setPosition(e.target.value)}
+              list="staff-form-positions"
+              required
             />
+            <datalist id="staff-form-positions">
+              {api.data?.positions.map((p) => (
+                <option key={p.id} value={p.name} />
+              ))}
+            </datalist>
           </Field>
 
           <Field label="Salary">

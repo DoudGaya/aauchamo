@@ -27,8 +27,10 @@ const schema = z.object({
   nationalId: z.string().trim().min(4).max(80).nullable().optional(),
   salary: z.string().regex(/^\d+(\.\d{1,2})?$/).nullable().optional(),
   employmentType: z.enum(["PERMANENT", "CONTRACT", "TEMPORARY", "INTERN", "CONSULTANT"]),
-  departmentId: z.string().cuid(),
-  positionId: z.string().cuid(),
+  departmentId: z.string().optional(),
+  department: z.string().trim().min(1).max(120).optional(),
+  positionId: z.string().optional(),
+  position: z.string().trim().min(1).max(120).optional(),
   passportPhoto: z.string().nullable().optional(),
   reason: z.string().trim().min(5).max(500),
   nextOfKin: z.array(nextOfKinSchema).max(5).optional(),
@@ -70,6 +72,47 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ st
     const before = await db.staff.findFirst({ where: { id: staffId, companyId: access.companyId } });
     if (!before) throw new NotFoundError("Staff record not found.");
     requireStation(access, before.homeStationId, true);
+
+    // Resolve Department:
+    let resolvedDepartmentId = before.departmentId;
+    if (input.departmentId && input.departmentId.startsWith("c") && input.departmentId.length >= 20) {
+      const dept = await db.department.findFirst({ where: { id: input.departmentId, companyId: access.companyId, isActive: true } });
+      if (dept) resolvedDepartmentId = dept.id;
+    }
+    const deptName = (input.department || (!input.departmentId?.startsWith("c") ? input.departmentId : null))?.trim();
+    if (deptName) {
+      let dept = await db.department.findFirst({ where: { companyId: access.companyId, name: { equals: deptName, mode: "insensitive" } } });
+      if (!dept) {
+        let code = deptName.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 15) || "DEPT";
+        const existingCode = await db.department.findFirst({ where: { companyId: access.companyId, code } });
+        if (existingCode) code = `${code.slice(0, 10)}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+        dept = await db.department.create({
+          data: { companyId: access.companyId, name: deptName, code, isActive: true, createdById: access.userId, updatedById: access.userId }
+        });
+      }
+      resolvedDepartmentId = dept.id;
+    }
+
+    // Resolve Position:
+    let resolvedPositionId = before.positionId;
+    if (input.positionId && input.positionId.startsWith("c") && input.positionId.length >= 20) {
+      const pos = await db.position.findFirst({ where: { id: input.positionId, companyId: access.companyId, isActive: true } });
+      if (pos) resolvedPositionId = pos.id;
+    }
+    const posName = (input.position || (!input.positionId?.startsWith("c") ? input.positionId : null))?.trim();
+    if (posName) {
+      let pos = await db.position.findFirst({ where: { companyId: access.companyId, name: { equals: posName, mode: "insensitive" } } });
+      if (!pos) {
+        let code = posName.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 15) || "POS";
+        const existingCode = await db.position.findFirst({ where: { companyId: access.companyId, code } });
+        if (existingCode) code = `${code.slice(0, 10)}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+        pos = await db.position.create({
+          data: { companyId: access.companyId, name: posName, code, isActive: true, createdById: access.userId, updatedById: access.userId }
+        });
+      }
+      resolvedPositionId = pos.id;
+    }
+
     const after = await db.$transaction(async (tx) => {
       const count = await tx.staff.updateMany({
         where: { id: staffId, version: input.version },
@@ -77,7 +120,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ st
           firstName: input.firstName, middleName: input.middleName, lastName: input.lastName,
           preferredName: input.preferredName, phone: input.phone, email: input.email?.toLowerCase() ?? null,
           address: input.address, salary: input.salary, employmentType: input.employmentType,
-          departmentId: input.departmentId, positionId: input.positionId,
+          departmentId: resolvedDepartmentId, positionId: resolvedPositionId,
           ...(input.passportPhoto !== undefined ? { passportObjectKey: input.passportPhoto } : {}),
           ...(input.nationalId !== undefined ? { nationalIdCiphertext: input.nationalId ? encryptSensitive(input.nationalId) : null } : {}),
           version: { increment: 1 }, updatedById: access.userId,

@@ -28,8 +28,10 @@ const createStaffSchema = z.object({
   salary: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
   employmentDate: z.coerce.date(),
   employmentType: z.enum(["PERMANENT", "CONTRACT", "TEMPORARY", "INTERN", "CONSULTANT"]),
-  departmentId: z.string().cuid(),
-  positionId: z.string().cuid(),
+  departmentId: z.string().optional(),
+  department: z.string().trim().min(1).max(120).optional(),
+  positionId: z.string().optional(),
+  position: z.string().trim().min(1).max(120).optional(),
   homeStationId: z.string().cuid(),
   businessUnitId: z.string().cuid().optional(),
   userId: z.string().cuid().optional(),
@@ -106,11 +108,70 @@ export async function POST(request: Request) {
     const access = requirePermission(await requireAccess(), "staff.create");
     const input = await parseJson(request, createStaffSchema);
     requireStation(access, input.homeStationId, true);
-    const [department, position] = await Promise.all([
-      db.department.findFirst({ where: { id: input.departmentId, companyId: access.companyId, isActive: true } }),
-      db.position.findFirst({ where: { id: input.positionId, companyId: access.companyId, isActive: true } }),
-    ]);
-    if (!department || !position) throw new AppError("INVALID_HR_REFERENCE", "Department or position is invalid.", 422);
+
+    // Resolve Department:
+    let department = null;
+    if (input.departmentId && input.departmentId.startsWith("c") && input.departmentId.length >= 20) {
+      department = await db.department.findFirst({
+        where: { id: input.departmentId, companyId: access.companyId, isActive: true },
+      });
+    }
+    const deptName = (input.department || (!department ? input.departmentId : null))?.trim();
+    if (!department && deptName) {
+      department = await db.department.findFirst({
+        where: { companyId: access.companyId, name: { equals: deptName, mode: "insensitive" } },
+      });
+      if (!department) {
+        let code = deptName.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 15) || "DEPT";
+        const existingCode = await db.department.findFirst({ where: { companyId: access.companyId, code } });
+        if (existingCode) {
+          code = `${code.slice(0, 10)}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+        }
+        department = await db.department.create({
+          data: {
+            companyId: access.companyId,
+            name: deptName,
+            code,
+            isActive: true,
+            createdById: access.userId,
+            updatedById: access.userId,
+          },
+        });
+      }
+    }
+    if (!department) throw new AppError("DEPARTMENT_REQUIRED", "Department is required.", 422);
+
+    // Resolve Position:
+    let position = null;
+    if (input.positionId && input.positionId.startsWith("c") && input.positionId.length >= 20) {
+      position = await db.position.findFirst({
+        where: { id: input.positionId, companyId: access.companyId, isActive: true },
+      });
+    }
+    const posName = (input.position || (!position ? input.positionId : null))?.trim();
+    if (!position && posName) {
+      position = await db.position.findFirst({
+        where: { companyId: access.companyId, name: { equals: posName, mode: "insensitive" } },
+      });
+      if (!position) {
+        let code = posName.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 15) || "POS";
+        const existingCode = await db.position.findFirst({ where: { companyId: access.companyId, code } });
+        if (existingCode) {
+          code = `${code.slice(0, 10)}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+        }
+        position = await db.position.create({
+          data: {
+            companyId: access.companyId,
+            name: posName,
+            code,
+            isActive: true,
+            createdById: access.userId,
+            updatedById: access.userId,
+          },
+        });
+      }
+    }
+    if (!position) throw new AppError("POSITION_REQUIRED", "Position is required.", 422);
 
     const staff = await db.$transaction(async (tx) => {
       const staffNumber = await allocateSequence(tx, {
@@ -138,8 +199,8 @@ export async function POST(request: Request) {
           salary: input.salary,
           employmentDate: input.employmentDate,
           employmentType: input.employmentType,
-          departmentId: input.departmentId,
-          positionId: input.positionId,
+          departmentId: department.id,
+          positionId: position.id,
           homeStationId: input.homeStationId,
           passportObjectKey: input.passportPhoto,
           createdById: access.userId,

@@ -26,6 +26,7 @@ export async function GET(request: Request) {
     });
 
     let createdCount = 0;
+    let replenishedCount = 0;
 
     for (const product of products) {
       for (const station of stations) {
@@ -62,11 +63,39 @@ export async function GET(request: Request) {
             });
           });
           createdCount++;
+        } else if (existing.quantity.lte(0) || existing.quantity.lt(100000)) {
+          const delta = 9999999 - existing.quantity.toNumber();
+          await db.$transaction(async (tx) => {
+            await tx.inventoryBalance.update({
+              where: { id: existing.id },
+              data: {
+                quantity: 9999999,
+                version: { increment: 1 }
+              }
+            });
+
+            await tx.stockMovement.create({
+              data: {
+                companyId: station.companyId,
+                stationId: station.id,
+                productId: product.id,
+                movementType: "ADJUSTMENT",
+                quantityDelta: delta,
+                balanceAfter: 9999999,
+                unitCost: product.purchasePrice,
+                referenceType: "Product",
+                referenceId: product.id,
+                reason: "Restocked unlimited inventory balance",
+                occurredById: "SYSTEM"
+              }
+            });
+          });
+          replenishedCount++;
         }
       }
     }
 
-    return NextResponse.json({ ok: true, message: `Successfully backfilled ${createdCount} missing inventory balances.` });
+    return NextResponse.json({ ok: true, message: `Successfully backfilled ${createdCount} missing and replenished ${replenishedCount} depleted inventory balances.` });
   } catch (error: any) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
